@@ -227,6 +227,10 @@ CarpetaInstitucion
 │   ├── tipoInstitucion: TipoInstitucion [PUBLICA, PRIVADA, MIXTA]
 │   ├── sector: SectorInstitucion [EDUCACION, SALUD, NOTARIA, GOBIERNO, ...]
 │   └── personasAutorizadas: List<PersonaAutorizada>
+├── capacidades: CapacidadesInstitucion
+│   ├── rolEmisor: Boolean (puede emitir documentos certificados)
+│   ├── rolReceptor: Boolean (puede solicitar y recibir documentos)
+│   └── tiposDocumentosAutorizados: List<TipoDocumento>
 ├── operadorAfiliado: OperadorId
 ├── convenioOperador: ConvenioOperador
 ├── documentosEmitidos: List<DocumentoEmitido>
@@ -235,11 +239,14 @@ CarpetaInstitucion
 └── fechaRegistro: DateTime
 
 Métodos de negocio:
-+ emitirDocumentoCertificado(destinatario, documento, firmante)
-+ recibirPaqueteDocumentos(origen, documentos)
-+ solicitarDocumentos(ciudadano, documentosRequeridos, proposito)
++ emitirDocumentoCertificado(destinatario, documento, firmante) // Requiere rolEmisor = true
++ recibirPaqueteDocumentos(origen, documentos) // Requiere rolReceptor = true
++ solicitarDocumentos(ciudadano, documentosRequeridos, proposito) // Requiere rolReceptor = true
 + cancelarSolicitud(solicitudId, motivo)
 + consultarEstadoSolicitud(solicitudId)
++ habilitarRolEmisor(certificado)
++ habilitarRolReceptor()
++ validarCapacidad(accion): Boolean
 ```
 
 #### Entity: **DocumentoEmitido**

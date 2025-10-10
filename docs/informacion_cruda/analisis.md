@@ -31,14 +31,12 @@ Imagina que actualmente necesitas llevar tu diploma físico a 5 lugares diferent
 - NO almacena documentos, solo coordina
 - Mantiene el registro de qué ciudadano está con qué operador
 
-### D. **Entidades Emisoras**
-- Producen y firman documentos oficiales
-- Ejemplos: Registraduría, Ministerio de Educación, bancos, empleadores
+### D. **Entidades Institucionales**
+- Organizaciones públicas o privadas (identificadas por NIT) que pueden actuar en dos roles:
+  - **Rol Emisor**: Producen y firman documentos oficiales (ej: Registraduría, Ministerio de Educación, universidades)
+  - **Rol Receptor**: Reciben y solicitan documentos de los ciudadanos (ej: embajadas, empleadores, empresas de servicios)
+- Una misma entidad puede tener **ambos roles simultáneamente** (ej: una universidad emite diplomas y recibe documentos de candidatos)
 - Pueden estar o no afiliadas a un operador
-
-### E. **Entidades Receptoras**
-- Reciben documentos de los ciudadanos
-- Ejemplos: embajadas, empleadores, empresas de servicios
 
 
 ## 3. Flujos Principales del Sistema
@@ -67,7 +65,7 @@ sequenceDiagram
 - El email es único y permanente (nunca cambia)
 - Puede cambiar de operador, pero NO de email
 
-### **Flujo 2: Recepción de Documentos Oficiales (Diplomas)**
+### **Flujo 2: Recepción de Documentos Oficiales desde Entidad Institucional (Rol Emisor)**
 
 ```mermaid
 sequenceDiagram
@@ -75,8 +73,8 @@ sequenceDiagram
     participant MC as Mi Carpeta
     participant MT as Min TIC
     participant GC as GovCarpeta<br/>(Op. del MEN)
-    participant MEN as Min. Educación
-    
+    participant MEN as Min. Educación<br/>(Rol Emisor)
+
     A->>MEN: 1. Solicita diplomas
     MEN->>GC: 2. Genera documentos<br/>firmados digitalmente
     GC->>MT: 3. ¿Dónde está Andrés?
@@ -93,19 +91,19 @@ sequenceDiagram
 - Los documentos incluyen metadatos (clasificación, contexto, fechas, entidad emisora)
 - Firma digital garantiza autenticidad
 
-### **Flujo 3: Envío de Documentos a Entidad Pública**
+### **Flujo 3: Envío de Documentos a Entidad Institucional (Rol Receptor)**
 
 ```mermaid
 sequenceDiagram
     participant A as Andrés
     participant MC as Mi Carpeta
     participant MT as Min TIC
-    participant OP as Operador<br/>Entidad Pública
-    participant EP as Entidad Pública
-    
+    participant OP as Operador<br/>Entidad
+    participant EP as Entidad<br/>(Rol Receptor)
+
     A->>MC: 1. Selecciona documentos<br/>para enviar
     MC->>MT: 2. ¿La entidad tiene operador?
-    
+
     alt Entidad CON operador
         MT-->>MC: 3a. Sí, usa Operador X
         MC->>OP: 4a. Envía documentos firmados

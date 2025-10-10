@@ -80,7 +80,7 @@ El sistema debe crear una carpeta personal única para cada ciudadano registrado
 ### RF-CP-02: Almacenamiento de Documentos Certificados
 
 **Prioridad:** Alta
-**Actores:** Ciudadano, Entidad Emisora, Operador
+**Actores:** Ciudadano, Entidad Institucional (Rol Emisor), Operador
 
 **Descripción:**
 El sistema debe almacenar documentos certificados (firmados digitalmente) a perpetuidad sin límite de tamaño.
@@ -167,7 +167,7 @@ Los ciudadanos deben poder visualizar y descargar sus documentos.
 ### RF-CP-06: Compartir Documentos con Entidades
 
 **Prioridad:** Alta
-**Actores:** Ciudadano, Entidad Receptora
+**Actores:** Ciudadano, Entidad Institucional (Rol Receptor)
 
 **Descripción:**
 Los ciudadanos deben poder armar paquetes de documentos para enviar a entidades.
@@ -207,7 +207,7 @@ El sistema debe mantener un historial completo de accesos a los documentos del c
 ### RF-CP-08: Gestión de Metadatos
 
 **Prioridad:** Alta
-**Actores:** Operador, Entidad Emisora
+**Actores:** Operador, Entidad Institucional (Rol Emisor)
 
 **Descripción:**
 El sistema debe almacenar y gestionar metadatos detallados para cada documento.
@@ -256,7 +256,7 @@ El sistema debe crear carpetas institucionales para entidades públicas y privad
 ### RF-CI-02: Emisión de Documentos Certificados
 
 **Prioridad:** Alta
-**Actores:** Entidad Emisora, Operador
+**Actores:** Entidad Institucional (Rol Emisor), Operador
 
 **Descripción:**
 Las entidades deben poder generar y enviar documentos certificados a ciudadanos.
@@ -275,7 +275,7 @@ Las entidades deben poder generar y enviar documentos certificados a ciudadanos.
 ### RF-CI-03: Recepción de Documentos desde Ciudadanos
 
 **Prioridad:** Alta
-**Actores:** Entidad Receptora, Ciudadano
+**Actores:** Entidad Institucional (Rol Receptor), Ciudadano
 
 **Descripción:**
 Las entidades deben poder recibir documentos enviados por ciudadanos.
@@ -708,7 +708,7 @@ El sistema debe mantener logs de auditoría de todas las operaciones de segurida
 ### RF-FC-01: Firma Digital de Documentos
 
 **Prioridad:** Alta
-**Actores:** Entidad Emisora, Operador
+**Actores:** Entidad Institucional (Rol Emisor), Operador
 
 **Descripción:**
 El sistema debe soportar firma digital con validez legal.
@@ -743,10 +743,10 @@ El sistema debe validar firmas digitales de documentos recibidos.
 
 ---
 
-### RF-FC-03: Certificados de Entidades Emisoras
+### RF-FC-03: Certificados de Entidades con Rol Emisor
 
 **Prioridad:** Alta
-**Actores:** Entidad Emisora, Autoridad Certificadora
+**Actores:** Entidad Institucional (Rol Emisor), Autoridad Certificadora
 
 **Descripción:**
 El sistema debe gestionar certificados de entidades autorizadas a emitir documentos.

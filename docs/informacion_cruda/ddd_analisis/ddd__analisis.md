@@ -43,7 +43,7 @@ graph TB
         
         subgraph CI["Carpeta Institucional"]
             CI1["<b>Aggregate:</b> CarpetaInstitucion"]
-            CI2["<b>Responsabilidades:</b><br/>• Emitir docs certificados<br/>• Recibir documentos<br/>• Solicitar documentos<br/>• Gestionar convenios"]
+            CI2["<b>Responsabilidades:</b><br/>• Rol Emisor: Emitir docs certificados<br/>• Rol Receptor: Solicitar y recibir docs<br/>• Una entidad puede tener ambos roles<br/>• Gestionar convenios"]
             CI3["<b>Escala:</b> 5K instituciones"]
         end
         
@@ -191,8 +191,8 @@ graph LR
             
             subgraph BC2["BC: Carpeta Institucional"]
                 CI_AGG[/"Carpeta Institución<br/>(Aggregate)"/]
-                CI_ENT["Documento Emitido<br/>Documento Recibido<br/>Solicitud Documento"]
-                CI_VO["Tipo Institución<br/>Convenio Operador"]
+                CI_ENT["Documento Emitido<br/>Documento Recibido<br/>Solicitud Documento<br/>Rol Entidad (Emisor/Receptor)"]
+                CI_VO["Tipo Institución<br/>Convenio Operador<br/>Capacidades Activas"]
             end
             
             subgraph BC3["BC: Transferencia Documentos"]
