@@ -13,14 +13,13 @@ Este documento contiene los diagramas C4 (Context, Container, Component, Code) p
 El diagrama de contexto muestra el sistema Carpeta Ciudadana y cómo interactúa con usuarios y sistemas externos.
 
 ```mermaid
-graph LR
+flowchart LR
+    %%{init: {'theme': 'neutral', "flowchart" : { "curve" : "basis" } } }%%
     %% ============================================
     %% ACTORES (Izquierda)
     %% ============================================
     subgraph actors["<b>Actores</b>"]
-        ciudadano["<b>👤 Ciudadano</b><br/>Usuario final que almacena y<br/>comparte documentos personales.<br/>Interactúa mediante apps web/móvil"]
-        entidad["<b>🏛️ Entidad Institucional</b><br/>Organización con roles:<br/>Emisor y/o Receptor<br/>Ej: universidades, hospitales"]
-        admin["<b>⚙️ Administrador Operador</b><br/>Personal técnico que gestiona<br/>infraestructura y monitoreo"]
+        ciudadano["<b>👤 Ciudadano</b><br/>Usuario final que almacena y<br/>comparte documentos personales.<br/>Interactúa mediante apps web"]
     end
 
     %% ============================================
@@ -44,27 +43,25 @@ graph LR
 
     subgraph providers["<b>Proveedores de Servicios Externos</b>"]
         email["<b>📧 Servicio de Email</b><br/>Proveedor SMTP<br/>Notificaciones y docs<br/>a entidades sin operador"]
-        object_storage["<b>📄 Object storage</b><br/>Almacena documentos (S3, Google object storage)"]
+        cloud_service["<b>☁️ Cloud service</b><br/>Almacena documentos (S3, Google object storage, Dynamo, RDS)"]
     end
 
     %% ============================================
     %% RELACIONES: Actores → Sistema
     %% ============================================
-    ciudadano -->|"Registra cuenta,<br/>almacena/consulta docs,<br/>autoriza envíos<br/>(HTTPS/REST + JWT)"| carpeta
-    entidad -->|"EMISOR: Emite docs certificados<br/>RECEPTOR: Solicita docs<br/>(HTTPS/REST + OAuth2)"| carpeta
-    admin -->|"Configura sistema,<br/>monitoreo, gestión users<br/>(HTTPS/Admin Panel)"| carpeta
+    ciudadano <-->|"Registra cuenta,<br/>almacena/consulta docs,<br/>autoriza envíos<br/>(HTTPS/REST + JWT)"| carpeta
 
     %% ============================================
     %% RELACIONES: Sistema → Externos
     %% ============================================
-    carpeta -->|"Consulta ubicación<br/>Registra ciudadanos<br/>Actualiza portabilidad<br/>(HTTPS/REST + Redis)"| mintic
-    carpeta -->|"Valida identidad"| gov_auth
-    carpeta -->|"Autentica documento"| gov_authorization
+    carpeta <-->|"Consulta ubicación<br/>Registra ciudadanos<br/>Actualiza portabilidad<br/>(HTTPS/REST)"| mintic
+    carpeta <-->|"Valida identidad<br/>(HTTPS/REST)"| gov_auth
+    carpeta <-->|"Autentica documento<br/>(HTTPS/REST)"| gov_authorization
     
-    carpeta <-->|"Transferencias P2P<br/>directas de docs<br/>Coordina portabilidad<br/>(HTTPS/REST + mTLS)"| otro_operador
+    carpeta <-->|"Transferencias<br/>directas de docs<br/>Coordina portabilidad<br/>(HTTPS/REST)"| otro_operador
     
-    carpeta -->|"Notificaciones<br/>Docs a entidades<br/>sin operador<br/>(SMTP/TLS)"| email
-    carpeta -->|"Persistencia Documentos<br/>(HTTPS/REST)"| object_storage
+    carpeta <-->|"Notificaciones<br/>(HTTPS/REST)"| email
+    carpeta <-->|"Persistencia Documentos<br/>(HTTPS/REST)"| cloud_service
 
     %% ============================================
     %% ESTILOS
@@ -76,7 +73,7 @@ graph LR
 
     class ciudadano,entidad,admin actorStyle
     class carpeta systemStyle
-    class mintic,gov_auth,otro_operador,email,object_storage,gov_authorization externalStyle
+    class mintic,gov_auth,otro_operador,email,cloud_service,gov_authorization externalStyle
 ```
 
 ### Descripción del Contexto
@@ -99,13 +96,6 @@ El diagrama utiliza dos líneas conceptuales para organizar los elementos según
 
 - **Ciudadano**: Usuario final que almacena documentos personales (cédula, diplomas, certificados) y los comparte con entidades cuando lo necesita. Interactúa mediante aplicaciones web/móvil con autenticación multifactor.
 
-- **Entidad Institucional**: Organización (identificada por NIT) que puede actuar en dos roles:
-  - **Rol Emisor**: Genera y envía documentos certificados con firma digital X.509 directamente a la carpeta del ciudadano (ej: universidad emite diploma, hospital emite certificado médico).
-  - **Rol Receptor**: Solicita documentos específicos al ciudadano para trámites (ej: empleador solicita antecedentes, banco solicita extractos, embajada solicita documentación para visa).
-  - **Nota**: Una misma entidad puede tener ambos roles simultáneamente (ej: universidad emite diplomas Y recibe documentos al contratar profesores).
-
-- **Administrador Operador**: Personal técnico que gestiona la infraestructura del operador privado: configuración de sistemas, monitoreo, gestión de usuarios premium, y coordinación de portabilidades.
-
 #### Sistema Principal (Centro)
 
 **Sistema Operador Carpeta Ciudadana**: Plataforma de gestión documental que implementa los requisitos de interoperabilidad definidos por MinTIC. Almacena documentos certificados a perpetuidad sin límite de tamaño, gestiona transferencias P2P directas entre operadores (sin pasar por MinTIC), y permite portabilidad entre operadores en máximo 72 horas.
@@ -121,11 +111,11 @@ El diagrama utiliza dos líneas conceptuales para organizar los elementos según
 
 **3. Proveedores de Servicios Externos**
    - **Servicio de Email**: Proveedor SMTP/TLS para notificaciones a ciudadanos y entidades. También se usa para enviar documentos a entidades que no tienen operador (fallback cuando MinTIC responde "entidad sin operador").
-   - **Autoridad Certificadora**: Proveedor de certificados digitales X.509 con validez legal en Colombia. Valida firmas digitales, verifica cadenas de certificados, y consulta listas de revocación (OCSP/CRL).
+   - **Servicios de Nube**: Usado para la persistencia de la información, por ejemplo, donde se guardan los documentos que son subidos por el usuario.
 
 #### Flujos Clave de Información
 
-**Transferencia de Documentos (P2P):**
+**Transferencia de Documentos:**
 1. Operador A consulta a MinTIC: "¿Dónde está ciudadano X?" → MinTIC: "Operador B"
 2. Operador A transfiere documentos **DIRECTAMENTE** a Operador B (sin pasar por MinTIC)
 3. Operador B confirma recepción (ACK) y notifica al ciudadano
@@ -137,13 +127,6 @@ El diagrama utiliza dos líneas conceptuales para organizar los elementos según
 4. MinTIC actualiza registro: email → Operador B
 5. Proceso completo en máximo 72 horas
 
-**Emisión de Documento Certificado:**
-1. Entidad (Rol Emisor) genera documento con firma digital X.509
-2. Sistema valida firma contra Autoridad Certificadora
-3. Sistema consulta MinTIC para ubicar al ciudadano destinatario
-4. Sistema transfiere documento directamente al operador del ciudadano
-5. Ciudadano recibe notificación por email/SMS/push
-
 ---
 
 ## C4 Level 2: Container Diagram
@@ -152,120 +135,111 @@ El diagrama de contenedores muestra la arquitectura interna del Sistema Operador
 
 
 ```mermaid
-graph TB
-
+flowchart LR
+    %%{init: {'theme': 'neutral', "flowchart" : { "curve" : "basis" } } }%%
     %% ============================================
     %% SISTEMA OPERADOR CARPETA CIUDADANA
     %% ============================================
     subgraph operator["<b>💼 Mi Operador - Sistema Operador Carpeta Ciudadana</b>"]
         subgraph frontend["<b>Capa de Presentación</b>"]
             web_app["💻 <b>Aplicación Web Ciudadano</b><br/>SPA para gestionar documentos"]
-            web_entidad["🏢 <b>Aplicación Web Entidad</b><br/>SPA para emitir/recibir docs"]
-            mobile_app["📱 <b>App Móvil</b><br/>App para ciudadanos"]
-            admin_panel["🖥️ <b>Panel Administrativo</b><br/>Gestión del operador"]
         end
                 
         api_gateway["🚪 <b>API Gateway</b><br/>Autenticación, rate limiting, routing"]
         
-        subgraph services["<b>Microservicios</b>"]
-            carpeta_service["📁 <b>Carpeta Personal Service</b><br/>Gestiona carpetas de ciudadanos"]
-            carpeta_inst_service["🗂️ <b>Carpeta Institucional Service</b><br/>Gestiona carpetas de entidades"]
-            transfer_service["🔄 <b>Transferencia Service</b><br/>Coordina transferencias P2P"]
-            portability_service["📦 <b>Portabilidad Service</b><br/>Recepción nuevo ciudadano"]
-            identity_service["👥 <b>Identidad y Registro Service</b><br/>Registro, verificación, email inmutable"]
-            auth_service["🔐 <b>Autenticación Service</b><br/>JWT, MFA, sesiones"]
-            notification_service["🔔 <b>Notificaciones Service</b><br/>Email, SMS, push"]
-        end
-        
-        event_bus["⚡ <b>Event Bus</b><br/>Broker<br/>Comunicación asíncrona"]
-        
-        subgraph data["<b>Capa de Datos</b>"]
-            carpeta_db[("🗄️ <b>Carpeta DB</b><br/>Metadatos de documentos")]
-            identity_db[("🗄️ <b>Identity DB</b><br/>Registro ciudadanos/entidades")]
-            cache[("⚡ <b>Cache</b><br/>Cache consultas MinTIC")]
-        end
+        subgraph communication[" "]
+            subgraph services["<b>Microservicios</b>"]
+                carpeta_service["📁 <b>Carpeta Personal Service</b><br/>Gestiona carpetas de ciudadanos<br/>Genera pre-signed URLs"]
+                transfer_service["🔄 <b>Transferencia Service</b><br/>Coordina transferencias P2P"]
+                identity_service["👥 <b>Identidad y Registro Service</b><br/>Registro, verificación<br/>Centralizador genera email inmutable"]
+                portability_service["📦 <b>Portabilidad Service</b><br/>Recepción nuevo ciudadano<br/>Usa pre-signed URLs para migración"]
+                auth_service["🔐 <b>Autenticación Service</b><br/>JWT, MFA, sesiones<br/>OAuth 2.0 client credentials"]
+                notification_service["🔔 <b>Notificaciones Service</b><br/>Email, SMS, push"]
+                signature_service["✍️ <b>Digital Signature Service</b><br/>Coordina autenticación de docs"]
+            end
+            
+            event_bus["⚡ <b>Event Bus</b><br/>Broker<br/>Comunicación asíncrona"]@{ shape: h-cyl}
 
-        frontend --- api_gateway --- services
-    end
-
-    %% ============================================
-    %% ACTORES (Arriba)
-    %% ============================================
-    subgraph actors["Actores"]
-        ciudadano("👤 <b>Ciudadano</b><br/>Usuario final que almacena y<br/>comparte documentos personales")
-        entidad("🏛️ <b>Entidad Institucional</b><br/>Organización con roles:<br/>Emisor y/o Receptor")
-        admin("⚙️ <b>Administrador Operador</b><br/>Personal técnico que gestiona<br/>infraestructura y monitoreo")
+            subgraph data["<b>Capa de Datos</b>"]
+                carpeta_db[("🗄️ <b>Carpeta DB</b><br/>Metadatos de documentos")]
+                identity_db[("🗄️ <b>Identity DB</b><br/>Registro ciudadanos/entidades")]
+                cache[("⚡ <b>Cache</b><br/>Cache consultas Centralizador")]
+            end
+        end
     end
 
     %% ============================================
     %% SISTEMAS EXTERNOS
     %% ============================================
     subgraph externals["Sistemas externos"]
+        direction TB
         subgraph gov["<b>Gobierno de Colombia</b>"]
             mintic["🗂️ <b>Centralizador MinTIC</b><br/>Registro minimalista<br/>email → operador<br/>NO almacena documentos"]
             gov_auth["🔐 <b>Registraduría</b><br/>Valida identidad"]
             gov_authorization["🔐 <b>Notaría</b><br/>Autentica documento"]
         end
 
-        otro_operador["🔄 <b>Otros Operadores</b><br/>GovCarpeta, MiCarpeta<br/>Mismo estándar de interoperabilidad"]
-        
         subgraph providers["<b>Proveedores de Servicios Externos</b>"]
             email_provider["📧 <b>Servicio de Email</b><br/>Proveedor SMTP<br/>Notificaciones y docs"]
-            object_storage["☁️ <b>Object Storage</b><br/>S3/Google Cloud Storage<br/>Almacena documentos binarios"]
+            cloud_services["☁️ <b>Cloud service</b><br/>Almacena documentos (S3, Google object storage, Dynamo, RDS)"]
         end
+
+        otro_operador["🔄 <b>Otros Operadores</b><br/>GovCarpeta, MiCarpeta<br/>Mismo estándar de interoperabilidad"]
     end
 
-    actors --- operator --- externals
+    
+    %% ============================================
+    %% ACTORES (Arriba)
+    %% ============================================
+    subgraph actors["Actores"]
+        ciudadano("👤 <b>Ciudadano</b><br/>Usuario final que almacena y<br/>comparte documentos personales")
+    end
+
+    operator ~~~ externals
 
     %% ============================================
     %% RELACIONES: Frontend → Gateway
     %% ============================================
     web_app -->|"HTTPS/JSON<br/>JWT"| api_gateway
-    web_entidad -->|"HTTPS/JSON<br/>OAuth2"| api_gateway
-    mobile_app -->|"HTTPS/JSON<br/>JWT"| api_gateway
-    admin_panel -->|"HTTPS/JSON<br/>Admin Token"| api_gateway
 
     %% ============================================
     %% RELACIONES: Gateway → Servicios
     %% ============================================
-    api_gateway -->|"HTTP/REST"| carpeta_service
-    api_gateway -->|"HTTP/REST"| carpeta_inst_service
-    api_gateway -->|"HTTP/REST"| transfer_service
-    api_gateway -->|"HTTP/REST"| portability_service
-    api_gateway -->|"HTTP/REST"| identity_service
-    api_gateway -->|"Autentica<br/>HTTP/REST"| auth_service
-    api_gateway -->|"HTTP/REST"| notification_service
+    api_gateway <-->|"HTTP/REST"| carpeta_service
+    api_gateway <-->|"HTTP/REST"| transfer_service
+    api_gateway <-->|"HTTP/REST"| portability_service
+    api_gateway <-->|"HTTP/REST"| identity_service
+    api_gateway <-->|"Autentica<br/>"| auth_service
 
     %% ============================================
     %% RELACIONES: Carpeta Service
     %% ============================================
-    carpeta_service -->|"SQL"| carpeta_db
-    carpeta_service -->|"S3 API"| object_storage
+    carpeta_service -->|"Almacena Datos de Documentos"| carpeta_db
+    carpeta_service -->|"Object storage Service<br/>Pre-signed URLs"| cloud_services
     carpeta_service -->|"Publica eventos<br/>Broker"| event_bus
 
     %% ============================================
-    %% RELACIONES: Carpeta Institucional Service
+    %% RELACIONES: Digital Signature Service
     %% ============================================
-    carpeta_inst_service -->|"SQL"| carpeta_db
-    carpeta_inst_service -->|"Publica eventos<br/>Broker"| event_bus
-    carpeta_inst_service -->|"Valida firma"| gov_authorization
+    signature_service -->|"Consume eventos<br/>Broker"| event_bus
+    signature_service -->|"Autentica documento<br/>HTTPS/REST"| gov_authorization
 
     %% ============================================
     %% RELACIONES: Transfer Service
     %% ============================================
-    transfer_service -->|"Consulta ubicación<br/>HTTPS/REST"| mintic
-    transfer_service -->|"Cache<br/>Redis Protocol"| cache
-    transfer_service -->|"Envía docs P2P<br/>HTTPS/REST + mTLS"| otro_operador
-    transfer_service -->|"Publica eventos<br/>Broker"| event_bus
+    transfer_service <-->|"Consulta ubicación<br/>HTTPS/REST"| mintic
+    transfer_service <-->|"Cache<br/>Redis Protocol (fallback)"| cache
+    transfer_service <-->|"HTTPS/REST"| otro_operador
+    transfer_service <-->|"Publica/Consume eventos<br/>Broker"| event_bus
 
     %% ============================================
     %% RELACIONES: Portability Service
     %% ============================================
     portability_service -->|"Actualiza operador<br/>HTTP/REST"| identity_service
     portability_service -->|"Actualiza registro<br/>HTTPS/REST"| mintic
-    portability_service -->|"Coordina migración<br/>HTTPS/REST + mTLS"| otro_operador
+    portability_service -->|"Coordina migración<br/>HTTPS/REST"| otro_operador
     portability_service -->|"Publica eventos<br/>Broker"| event_bus
-    event_bus  -->|"Consume eventos<br/>Broker"| portability_service
+    
 
     %% ============================================
     %% RELACIONES: Identity Service
@@ -290,63 +264,101 @@ graph TB
     %% ============================================
     %% RELACIONES BIDIRECCIONALES
     %% ============================================
-    otro_operador -->|"Recibe Docs<br/>HTTPS/REST"| api_gateway
-    otro_operador -->|"OAuth2: two-legged-or-three-legged"| api_gateway
+    otro_operador <-->|"Envía/Recibe Docs<br/>HTTPS/REST"| api_gateway
+    otro_operador -->|"OAuth 2.0<br/>Client Credentials"| api_gateway
 
     %% ============================================
     %% RELACIONES: Actores → Frontend
     %% ============================================
     ciudadano -->|"HTTPS"| web_app
-    ciudadano -->|"HTTPS"| mobile_app
-    entidad -->|"HTTPS/OAuth2"| web_entidad
-    admin -->|"HTTPS"| admin_panel
 
     %% ============================================
     %% ESTILOS
     %% ============================================
     classDef actorStyle fill:#08427B,stroke:#052E56,color:#fff,stroke-width:2px
     classDef frontendStyle fill:#63B3ED,stroke:#2C5282,color:#000,stroke-width:2px
-    classDef gatewayStyle fill:#F6AD55,stroke:#C05621,color:#000,stroke-width:3px
-    classDef serviceStyle fill:#68D391,stroke:#22543D,color:#000,stroke-width:2px
+    classDef gatewayStyle fill:#F6AD55,stroke:#C05621,color:#000,stroke-width:5px
+    classDef serviceStyle fill:#68D391,stroke:#22543D,color:#000,stroke-width:5px
     classDef dataStyle fill:#B794F4,stroke:#44337A,color:#fff,stroke-width:2px
-    classDef eventStyle fill:#FC8181,stroke:#742A2A,color:#fff,stroke-width:2px
+    classDef eventStyle fill:#FC8181,stroke:#742A2A,color:#fff,stroke-width:2px,width:100px
     classDef externalStyle fill:#999999,stroke:#666666,color:#fff,stroke-width:2px
-    classDef systemStyle fill:#1168BD,stroke:#0B4884,color:#fff,stroke-width:3px
+    classDef systemStyle border:no-border,stroke-width:3px
 
     class ciudadano,entidad,admin actorStyle
-    class web_app,web_entidad,mobile_app,admin_panel frontendStyle
+    class web_app frontendStyle
     class api_gateway gatewayStyle
-    class carpeta_service,carpeta_inst_service,transfer_service,portability_service,identity_service,auth_service,notification_service serviceStyle
+    class carpeta_service,carpeta_inst_service,transfer_service,portability_service,identity_service,auth_service,notification_service,signature_service serviceStyle
     class carpeta_db,identity_db,cache dataStyle
     class event_bus eventStyle
-    class mintic,gov_auth,gov_authorization,otro_operador,email_provider,object_storage externalStyle
+    class mintic,gov_auth,gov_authorization,otro_operador,email_provider,cloud_services externalStyle
+
+    class system systemStyle
+
+    %% ============================================
+    %% ESTILOS DE LÍNEAS/ENLACES
+    %% ============================================
+    linkStyle 2,3,4,5,6 stroke:#F6AD55,stroke-width:2px %% API Gateway
+    linkStyle 7,8,9 stroke:#68D391,stroke-width:2px %% Carpeta Service
+    linkStyle 10,11 stroke:#FDB366,stroke-width:2px %% Digital Signature Service
+    linkStyle 12,13,14,15 stroke:#9F7AEA,stroke-width:2px %% Transfer Service
+    linkStyle 16,17,18,19 stroke:#38B2AC,stroke-width:2px %% Portability Service
+    linkStyle 20,21,22,23 stroke:#FC8181,stroke-width:2px %% Identity Service
+    linkStyle 24,25 stroke:#4ADE80,stroke-width:2px %% Auth Service
+    linkStyle 26,27 stroke:#FBB6CE,stroke-width:2px %% Notification Service
+    linkStyle 28,29 stroke:#06B6D4,stroke-width:2px %% Otro Operador Service
+
 ```
 
 ### Descripción de Contenedores
 
 **Frontend Applications:**
 - **Aplicación Web Ciudadano**: SPA para gestión de documentos personales
-- **Aplicación Web Entidad**: Portal para instituciones
-- **App Móvil**: Aplicación nativa para ciudadanos
 
 **Core Services (Microservicios):**
-- **Carpeta Personal Service**: CRUD de documentos ciudadanos, autorización de compartir
-- **Carpeta Institucional Service**: Emisión y recepción de documentos institucionales
-- **Transferencia Service**: Transferencias P2P entre operadores (sin pasar por MinTIC)
-- **Portabilidad Service**: Cambio de operador en 72h con migración de datos
-- **Identidad y Registro Service**: Registro inicial, email inmutable @carpetacolombia.co
-- **Autenticación Service**: MFA, JWT tokens, gestión de sesiones
-- **Notificaciones Service**: Envío de notificaciones multi-canal
+- **Carpeta Personal Service**: CRUD de documentos ciudadanos, genera pre-signed URLs para uploads directos a S3
+- **Transferencia Service**: Transferencias P2P entre operadores (sin pasar por Centralizador)
+- **Portabilidad Service**: Cambio de operador en 72h con migración de datos usando pre-signed URLs
+- **Identidad y Registro Service**: Registro inicial, Centralizador genera email inmutable @carpetacolombia.co
+- **Autenticación Service**: MFA, JWT tokens, gestión de sesiones, valida OAuth 2.0 client credentials para operadores
+- **Notificaciones Service**: Envío de notificaciones multi-canal (email, SMS, push)
+- **Digital Signature Service**: Consume eventos de autenticación, coordina con Notaría para validar documentos
 
 **Data Stores:**
 - **Carpeta DB**: Metadatos de documentos, historial de accesos
-- **Document Storage**: Archivos binarios (S3-compatible)
-- **Identity DB**: Ciudadanos, entidades, verificaciones
-- **Cache**: Redis para cachear consultas al Centralizador MinTIC
+- **Document Storage**: Archivos binarios (S3-compatible), accesible vía pre-signed URLs
+- **Identity DB**: Ciudadanos, entidades, verificaciones, credenciales OAuth 2.0 de operadores
+- **Cache**: Redis para cachear consultas al Centralizador (reduce latencia y carga)
 
 **Infrastructure:**
-- **API Gateway**: Kong/Nginx para routing, autenticación, rate limiting
-- **Event Bus**: Kafka/RabbitMQ para comunicación asíncrona
+- **API Gateway**: Kong/Nginx para routing, autenticación JWT/OAuth 2.0, rate limiting
+- **Event Bus**: Kafka/RabbitMQ para comunicación asíncrona entre servicios
+
+### Flujos Clave Implementados
+
+**1. Crear Perfil de Ciudadano:**
+- Ciudadano → Identity Service valida con Registraduría
+- Identity Service solicita email al Centralizador (genera `ciudadano@carpetacolombia.co`)
+- Identity Service registra ciudadano en Centralizador (email → operador actual)
+
+**2. Autenticar Usuario/Operador:**
+- **Ciudadanos**: Auth Service usa MFA + JWT, delega validación a Registraduría
+- **Operadores**: API Gateway valida OAuth 2.0 Client Credentials contra Identity DB
+
+**3. Subir Documentos:**
+- Carpeta Service genera pre-signed URL (válida 15 min)
+- Ciudadano sube documento directamente a Cloud Storage
+- Carpeta Service almacena metadatos en Carpeta DB
+
+**4. Autenticar Documento:**
+- Carpeta Service publica evento `DocumentoSubido` al Event Bus
+- Digital Signature Service consume evento
+- Digital Signature Service coordina con Notaría (Centralizador) para autenticación
+
+**5. Transferir Perfil (Portabilidad):**
+- Portability Service genera pre-signed URLs (válidas 72h) en Operador destino
+- Operador origen transfiere documentos usando pre-signed URLs directamente a Cloud Storage
+- Operadores se autentican usando OAuth 2.0 Client Credentials
+- Portability Service actualiza registro en Centralizador (email → nuevo operador)
 
 ---
 
