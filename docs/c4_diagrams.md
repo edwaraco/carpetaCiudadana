@@ -34,9 +34,8 @@ flowchart LR
     %% ============================================
     
     subgraph gov["<b>Gobierno de Colombia</b>"]
-        mintic["<b>🗂️ Centralizador MinTIC</b><br/>Registro minimalista<br/>email → operador<br/>NO almacena documentos<br/>Storage: 3-5 GB total"]
-        gov_auth["<b>🔐 Registraduria</b><br/>Valida identidad"]
-        gov_authorization["<b>🔐 Notaria</b><br/>Autentica documento"]
+        mintic["<b>🗂️ Centralizador MinTIC</b><br/>Registro minimalista<br/>email → operador<br/>NO almacena documentos"]
+        gov_authorization["<b>🔐 Notaria</b><br/>(Mismo centralizador)<br/>Autentica documento"]
     end
 
     otro_operador["<b>🔄 Otros Operadores</b><br/>GovCarpeta, MiCarpeta<br/>Mismo estándar de<br/>interoperabilidad<br/>Carpetas de otros ciudadanos"]
@@ -54,8 +53,7 @@ flowchart LR
     %% ============================================
     %% RELACIONES: Sistema → Externos
     %% ============================================
-    carpeta <-->|"Consulta ubicación<br/>Registra ciudadanos<br/>Actualiza portabilidad<br/>(HTTPS/REST)"| mintic
-    carpeta <-->|"Valida identidad<br/>(HTTPS/REST)"| gov_auth
+    carpeta <-->|"Consulta ubicación<br/>Registra ciudadanos<br/>Valida no asociación con otro operador<br/>Actualiza portabilidad<br/>(HTTPS/REST)"| mintic
     carpeta <-->|"Autentica documento<br/>(HTTPS/REST)"| gov_authorization
     
     carpeta <-->|"Transferencias<br/>directas de docs<br/>Coordina portabilidad<br/>(HTTPS/REST)"| otro_operador
@@ -73,7 +71,7 @@ flowchart LR
 
     class ciudadano,entidad,admin actorStyle
     class carpeta systemStyle
-    class mintic,gov_auth,otro_operador,email,cloud_service,gov_authorization externalStyle
+    class mintic,otro_operador,email,cloud_service,gov_authorization externalStyle
 ```
 
 ### Descripción del Contexto
@@ -103,8 +101,7 @@ El diagrama utiliza dos líneas conceptuales para organizar los elementos según
 #### Sistemas Externos (Derecha - Integration Boundary)
 
 **1. Gobierno de Colombia**
-   - **Centralizador MinTIC**: Registro minimalista que solo mantiene mapeo email → operador actual. NO almacena documentos, NO rutea información. Almacenamiento estimado: 3-5 GB para todo el país (~50M ciudadanos). Responde consultas en <100ms (p95).
-   - **Autenticación Gubernamental**: Sistema nacional de autenticación ciudadana (ej: Clave Única) que valida identidad contra la Registraduría Nacional. Proporciona tokens SAML 2.0 para Single Sign-On.
+   - **Centralizador MinTIC**: Registro minimalista que solo mantiene mapeo email → operador actual. NO almacena documentos, NO rutea información. Valida que el ciudadano no esté asociado con otro operador durante el registro. Almacenamiento estimado: 3-5 GB para todo el país (~50M ciudadanos). Responde consultas en <100ms (p95).
 
 **2. Ecosistema de Operadores Privados**
    - **Otros Operadores**: Operadores competidores (ej: GovCarpeta, MiCarpeta) que implementan el mismo estándar de interoperabilidad. Gestionan carpetas de otros ciudadanos/entidades. Las transferencias son **P2P directas** (operador A → operador B) sin pasar por MinTIC. Soportan coordinación de portabilidad con migración completa de datos.
@@ -175,8 +172,7 @@ flowchart LR
         direction TB
         subgraph gov["<b>Gobierno de Colombia</b>"]
             mintic["🗂️ <b>Centralizador MinTIC</b><br/>Registro minimalista<br/>email → operador<br/>NO almacena documentos"]
-            gov_auth["🔐 <b>Registraduría</b><br/>Valida identidad"]
-            gov_authorization["🔐 <b>Notaría</b><br/>Autentica documento"]
+            gov_authorization["🔐 <b>Notaría</b><br/>(Mismo centralizador)<br/>Autentica documento"]
         end
 
         subgraph providers["<b>Proveedores de Servicios Externos</b>"]
@@ -245,14 +241,12 @@ flowchart LR
     %% RELACIONES: Identity Service
     %% ============================================
     identity_service -->|"SQL"| identity_db
-    identity_service -->|"Registra inicial<br/>HTTPS/REST"| mintic
-    identity_service -->|"Valida identidad<br/>HTTPS"| gov_auth
+    identity_service -->|"Registra inicial<br/>Valida no asociación con otro operador<br/>HTTPS/REST"| mintic
     identity_service -->|"Publica eventos<br/>Broker"| event_bus
 
     %% ============================================
     %% RELACIONES: Auth Service
     %% ============================================
-    auth_service -->|"Delega validación<br/>HTTPS"| gov_auth
     auth_service -->|"Valida usuarios<br/>SQL"| identity_db
 
     %% ============================================
@@ -290,7 +284,7 @@ flowchart LR
     class carpeta_service,carpeta_inst_service,transfer_service,portability_service,identity_service,auth_service,notification_service,signature_service serviceStyle
     class carpeta_db,identity_db,cache dataStyle
     class event_bus eventStyle
-    class mintic,gov_auth,gov_authorization,otro_operador,email_provider,cloud_services externalStyle
+    class mintic,gov_authorization,otro_operador,email_provider,cloud_services externalStyle
 
     class system systemStyle
 
@@ -302,10 +296,10 @@ flowchart LR
     linkStyle 10,11 stroke:#FDB366,stroke-width:2px %% Digital Signature Service
     linkStyle 12,13,14,15 stroke:#9F7AEA,stroke-width:2px %% Transfer Service
     linkStyle 16,17,18,19 stroke:#38B2AC,stroke-width:2px %% Portability Service
-    linkStyle 20,21,22,23 stroke:#FC8181,stroke-width:2px %% Identity Service
-    linkStyle 24,25 stroke:#4ADE80,stroke-width:2px %% Auth Service
-    linkStyle 26,27 stroke:#FBB6CE,stroke-width:2px %% Notification Service
-    linkStyle 28,29 stroke:#06B6D4,stroke-width:2px %% Otro Operador Service
+    linkStyle 20,21,22 stroke:#FC8181,stroke-width:2px %% Identity Service
+    linkStyle 23 stroke:#4ADE80,stroke-width:2px %% Auth Service
+    linkStyle 24,25 stroke:#FBB6CE,stroke-width:2px %% Notification Service
+    linkStyle 26,27 stroke:#06B6D4,stroke-width:2px %% Otro Operador Service
 
 ```
 
@@ -336,12 +330,12 @@ flowchart LR
 ### Flujos Clave Implementados
 
 **1. Crear Perfil de Ciudadano:**
-- Ciudadano → Identity Service valida con Registraduría
-- Identity Service solicita email al Centralizador (genera `ciudadano@carpetacolombia.co`)
+- Ciudadano solicita registro → Identity Service valida que no esté asociado con otro operador consultando al Centralizador
+- Operador envía email de confirmación → Ciudadano establece contraseña
 - Identity Service registra ciudadano en Centralizador (email → operador actual)
 
 **2. Autenticar Usuario/Operador:**
-- **Ciudadanos**: Auth Service usa MFA + JWT, delega validación a Registraduría
+- **Ciudadanos**: Auth Service valida credenciales contra Identity DB, genera JWT token (válido 15 min)
 - **Operadores**: API Gateway valida OAuth 2.0 Client Credentials contra Identity DB
 
 **3. Subir Documentos:**
@@ -362,6 +356,306 @@ flowchart LR
 
 ---
 
+## Diagramas de Secuencia - 5 Escenarios
+
+### Escenario 1: Crear Perfil de Ciudadano
+
+```mermaid
+sequenceDiagram
+    actor C as Ciudadano
+    participant OP as Sistema Operador
+    participant CENT as Centralizador MinTIC
+
+    C->>OP: 1. Solicita crear perfil<br/>(cédula, datos personales)
+
+    Note over OP,CENT: Validación de no asociación con otros operadores
+    OP->>CENT: 2. Valida ciudadano no esté asociado con otro Operador<br/>(consulta por cédula)
+
+    alt Ciudadano existe en otro operador
+        CENT-->>OP: 3a. Sí, registrado con Operador X
+        OP-->>C: 4a. Error: Ya tiene cuenta en Operador X<br/>Use portabilidad para migrar
+    else Ciudadano SIN operador
+        CENT-->>OP: 3b. No tiene operador
+
+        OP-->>C: 4b. Envía correo con enlace de validación de cuenta
+        C->>OP: 5. Accede al correo y genera su contraseña
+
+        Note over OP,CENT: Registro en Centralizador
+        OP->>CENT: 6. Registra ciudadano<br/>(email → operador actual)
+        CENT-->>OP: 7. Confirma registro exitoso
+
+        OP->>OP: 8. Crea carpeta personal<br/>Almacena datos del ciudadano
+        OP-->>C: 9. Perfil creado exitosamente
+
+        Note over C: Email es inmutable y permanente
+    end
+```
+
+### Escenario 2: Autenticar Usuario/Operadores
+
+#### 2.1 Autenticación de Ciudadano
+
+```mermaid
+sequenceDiagram
+    actor C as Ciudadano
+    participant OP as Sistema Operador
+
+    C->>OP: 1. Ingresa credenciales<br/>(email, contraseña)
+
+    OP->>OP: 2. Valida credenciales<br/>contra Identity DB
+
+    OP->>OP: 3. Genera JWT token<br/>(válido 15 min)
+
+    OP-->>C: 4. Acceso concedido<br/>Retorna JWT token
+
+    Note over C: Ciudadano autenticado<br/>Todas las peticiones incluyen:<br/>Authorization: Bearer JWT_TOKEN
+```
+
+#### 2.2 Autenticación entre Operadores
+
+```mermaid
+sequenceDiagram
+    participant OPA as Operador A
+    participant OPB as Operador B
+
+    Note over OPA,OPB: OAuth 2.0 Client Credentials
+
+    OPA->>OPB: 1. Solicita autenticación<br/>OAuth 2.0 Client Credentials<br/>(client_id, client_secret)
+
+    OPB->>OPB: 2. Valida credenciales del operador
+
+    OPB-->>OPA: 3. Emite token de acceso<br/>(válido por 15 minutos)
+
+    Note over OPA: Operador A puede realizar<br/>transferencias usando el token
+
+    OPA->>OPB: 4. Operaciones autenticadas<br/>Authorization: Bearer TOKEN
+
+    Note over OPA,OPB: Token permite transferencias P2P<br/>directas entre operadores
+```
+
+### Escenario 3: Subir Documentos
+
+```mermaid
+sequenceDiagram
+    participant ciudadano as Ciudadano (Navegador/App)
+    participant operador as Operador
+    participant cloud_srv as Cloud<br>(OS, malware scanner)
+
+    %% --- Fase de Subida ---
+    ciudadano->>operador: 1. Solicitar subida de archivo (auth, metadatos)
+    
+    operador->>cloud_srv: 2. Solicitar URL pre-firmada para subir archivo
+    cloud_srv-->>operador: 3. Devolver URL pre-firmada
+    
+    operador-->>ciudadano: 4. Enviar URL pre-firmada al cliente
+    
+    ciudadano->>cloud_srv: 5. Subir archivo directamente usando la URL
+    cloud_srv-->>ciudadano: 6. Responder con HTTP 200 OK (Éxito)
+
+    ciudadano->>operador: 7. Notificar al servidor: "Subida completada"
+    %% --- Fase de Notificación y Escaneo (Interno en la Nube) ---
+    par operador to ciudadano
+        operador->>ciudadano: 8. Notifica al ciudadano proceso de escanerar el archivo
+    and operador to cloud_srv
+        operador->>cloud_srv: 9. Disparar proceso post-subida (Escaneo de malware)
+        note over cloud_srv: La nube ejecuta el flujo interno de:<br/>1. obtención de documento recien subido.<br/>2. Validación de malware.<br/>3. Mueve o elimina el archivo según el resultado.
+        
+        cloud_srv-->>operador: 10. Notificar al servidor el resultado del escaneo
+        operador->>operador: 11. Actualiza estado del documento (malware/no malware)
+        
+        operador-->>ciudadano: 12. Acusar recibo y confirmar finalización
+    end
+```
+
+### Escenario 4: Autenticar Documento
+
+```mermaid
+sequenceDiagram
+    actor C as Ciudadano
+    participant OP as Sistema Operador
+    participant NOT as Notaría (Centralizador)
+
+    C->>OP: 1. Solicita autenticación de documento<br/>(diploma universitario)
+
+    Note over OP,NOT: Proceso de Autenticación
+    OP->>NOT: 2. Envía documento para autenticación<br/>(documento + metadatos)
+
+    NOT->>NOT: 3. Valida autenticidad del documento<br/>Verifica origen y emisor
+
+    NOT->>NOT: 4. Genera "firma digital"<br/>con timestamp confiable
+
+    NOT-->>OP: 5. Retorna certificado de autenticación<br/>(firma digital + cadena de confianza)
+
+    OP->>OP: 6. Almacena certificado con el documento<br/>Marca documento como AUTENTICADO
+
+    OP-->>C: 7. Documento autenticado exitosamente<br/>Ahora tiene validez legal
+
+    Note over C: Documento certificado<br/>puede ser compartido con entidades<br/>con garantía de autenticidad
+```
+
+### Escenario 5: Transferir Perfil de Ciudadano (Portabilidad)
+
+#### 5a. Portabilidad: Fase 1 - Iniciar Portabilidad y Registro
+
+**Perspectiva: Coordinación inicial entre operadores (proceso síncrono)**
+
+```mermaid
+sequenceDiagram
+    actor C as Ciudadano
+    participant OPA as Operador Origen
+    participant OPB as Operador Destino
+    participant CENT as Centralizador
+
+    C->>OPA: 1. Solicita cambio a Operador Destino
+
+    OPA->>OPA: 2. Valida elegibilidad del ciudadano<br/>(sin transferencias pendientes)
+    OPA->>CENT: 3. Solicita operadores disponibles para transferencia
+    CENT-->>OPA: 4. Retorna operadores disponibles
+    OPA-->>C: 5. Muestra operadores disponibles
+    C-->>C: 6. Selecciona operador
+    C-->>OPA: 7. Inicia proceso de transferencia
+
+    Note over OPA,OPB: Coordinación entre operadores
+    OPA->>OPB: 8. Notifica intención de transferir ciudadano<br/>(email, metadatos básicos, cantidad docs)
+
+    OPB->>OPB: 9. Valida capacidad de recibir<br/>Crea perfil preliminar (PENDING)
+
+    Note over OPB: Genera mecanismo de transferencia
+    OPB->>OPB: 10. Genera URLs pre-firmadas para recibir docs<br/>(válidas 72 horas)
+
+    OPB-->>OPA: 11. Confirma aceptación<br/>Proporciona URLs/tokens para transferencia
+
+    Note over OPA,CENT: Marca transferencia en proceso
+    OPA->>CENT: 12. Marca ciudadano EN_TRANSFERENCIA<br/>(email → temporal)
+    CENT-->>OPA: 13. Confirmación
+
+    OPA->>OPA: 14. Marca ciudadano como EN_TRANSFERENCIA<br/>Genera lista de documentos a transferir
+
+    OPA-->>C: 15. Portabilidad iniciada<br/>La transferencia de documentos comenzará
+
+    Note over C: Fase 1 completada<br/>Fase 2 comenzará automáticamente
+```
+
+#### 5b. Portabilidad: Fase 2 - Transferencia Asíncrona de Documentos
+
+**Perspectiva: Migración de documentos (proceso asíncrono en background)**
+
+```mermaid
+sequenceDiagram
+    participant OPA as Operador Origen
+    participant OPB as Operador Destino
+    participant CENT as Centralizador
+    actor C as Ciudadano
+
+    Note over OPA: Proceso asíncrono inicia<br/>tras completar Fase 1
+
+    loop Por cada documento del ciudadano
+        OPA->>OPA: 1. Obtiene documento de almacenamiento
+
+        OPA->>OPB: 2. Transfiere documento<br/>usando URL pre-firmada
+
+        OPB->>OPB: 3. Almacena documento<br/>Actualiza progreso
+
+        OPB-->>OPA: 4. Confirma recepción individual
+    end
+
+    Note over OPB: Validación de integridad
+    OPB->>OPB: 5. Valida cantidad y completitud<br/>de todos los documentos
+
+    alt Transferencia exitosa
+        Note over OPB: Activa el ciudadano
+        OPB->>OPB: 6a. Actualiza perfil a ACTIVO
+
+        OPB->>CENT: 7a. Registra ciudadano oficialmente<br/>(email → Operador Destino)
+        CENT-->>OPB: 8a. Confirmación
+
+        OPB->>OPA: 9a. Confirma transferencia COMPLETA<br/>(puede eliminar datos)
+
+        Note over OPA: Eliminación segura
+        OPA->>OPA: 10a. Elimina documentos del ciudadano
+        OPA->>OPA: 11a. Elimina perfil del ciudadano
+
+        OPA->>C: 12a. Notifica: Transferencia completada<br/>Tu cuenta está en Operador Destino
+
+        OPB->>C: 13a. Bienvenida a Operador Destino<br/>Todos tus documentos están disponibles
+
+        Note over C: Portabilidad exitosa<br/>Plazo total: < 72 horas
+
+    else Transferencia falló
+        OPB->>OPB: 6b. Marca perfil como FALLIDO<br/>Elimina documentos parciales
+
+        OPB->>OPA: 7b. Notifica FALLO en transferencia
+
+        OPA->>OPA: 8b. Revierte estado a ACTIVO
+
+        OPA->>CENT: 9b. Re-registra ciudadano<br/>(email → Operador Origen)
+        CENT-->>OPA: 10b. Confirmación
+
+        OPA->>C: 11b. Transferencia falló<br/>Tu cuenta permanece aquí<br/>Puedes reintentar
+
+        Note over C: Ciudadano permanece<br/>en operador origen
+    end
+```
+
+#### 5c. Recibir Ciudadano: Perspectiva del Operador Destino
+
+**Perspectiva: Mi operador RECIBE un ciudadano (ambas fases)**
+
+```mermaid
+sequenceDiagram
+    participant OPA as Operador Origen
+    participant OPB as Mi Operador<br/>(Destino)
+    participant CENT as Centralizador
+    actor C as Ciudadano
+
+    Note over OPA,OPB: FASE 1: Coordinación Inicial
+
+    OPA->>OPB: 1. Solicita transferir ciudadano<br/>(email, metadatos, cantidad docs)
+
+    OPB->>OPB: 2. Valida capacidad y autenticación
+
+    OPB->>OPB: 3. Crea perfil preliminar<br/>(estado: PENDING)
+
+    OPB->>OPB: 4. Genera URLs pre-firmadas<br/>para recibir documentos (72h)
+
+    OPB-->>OPA: 5. Acepta transferencia<br/>Proporciona URLs/tokens
+
+    Note over OPB: Espera transferencia de docs<br/>(Fase 1 completa)
+
+    Note over OPA,OPB: FASE 2: Transferencia de Documentos
+
+    loop Por cada documento
+        OPA->>OPB: 6. Envía documento<br/>usando URL pre-firmada
+
+        OPB->>OPB: 7. Almacena documento<br/>Actualiza progreso (ej: 45/100)
+    end
+
+    Note over OPB: Validación final
+
+    OPB->>OPB: 8. Valida integridad completa<br/>(cantidad correcta, sin corrupción)
+
+    alt Validación exitosa
+        OPB->>OPB: 9a. Activa perfil del ciudadano<br/>(estado: ACTIVO)
+
+        OPB->>CENT: 10a. Registro oficial<br/>(email → Mi Operador)
+        CENT-->>OPB: 11a. Confirmación
+
+        OPB->>OPA: 12a. Confirma recepción EXITOSA<br/>(puede eliminar datos)
+
+        OPB->>C: 13a. Bienvenido<br/>Tu cuenta está activa con nosotros
+
+        Note over OPB: Ciudadano activo<br/>en mi operador
+
+    else Validación falló
+        OPB->>OPB: 9b. Elimina datos parciales
+
+        OPB->>OPA: 10b. Notifica FALLO<br/>(mantener ciudadano)
+
+        Note over OPB: Transferencia rechazada<br/>Ciudadano permanece en origen
+    end
+```
+
+---
 
 ## Decisiones de Diseño Clave
 
