@@ -349,9 +349,11 @@ flowchart LR
 - Digital Signature Service coordina con Notaría (Centralizador) para autenticación
 
 **5. Transferir Perfil (Portabilidad):**
-- Portability Service genera pre-signed URLs (válidas 72h) en Operador destino
-- Operador origen transfiere documentos usando pre-signed URLs directamente a Cloud Storage
-- Operadores se autentican usando OAuth 2.0 Client Credentials
+- Operador destino orquesta la transferencia (pull-based approach)
+- Portability Service solicita lista de documentos al operador origen (OAuth 2.0 Bearer token)
+- Operador destino genera pre-signed URLs (válidas 72h) en su Cloud Storage
+- Operador origen genera pre-signed URLs temporales (válidas 1h) para descarga
+- Operador destino descarga, valida checksums, y confirma integridad total
 - Portability Service actualiza registro en Centralizador (email → nuevo operador)
 
 ---
@@ -512,86 +514,96 @@ sequenceDiagram
     OPA->>CENT: 3. Solicita operadores disponibles para transferencia
     CENT-->>OPA: 4. Retorna operadores disponibles
     OPA-->>C: 5. Muestra operadores disponibles
-    C-->>C: 6. Selecciona operador
-    C-->>OPA: 7. Inicia proceso de transferencia
+    C->>C: 6. Selecciona operador
+    C->>OPA: 7. Inicia proceso de transferencia
 
     Note over OPA,OPB: Coordinación entre operadores
     OPA->>OPB: 8. Notifica intención de transferir ciudadano<br/>(email, metadatos básicos, cantidad docs)
 
     OPB->>OPB: 9. Valida capacidad de recibir<br/>Crea perfil preliminar (PENDING)
 
-    Note over OPB: Genera mecanismo de transferencia
-    OPB->>OPB: 10. Genera URLs pre-firmadas para recibir docs<br/>(válidas 72 horas)
-
-    OPB-->>OPA: 11. Confirma aceptación<br/>Proporciona URLs/tokens para transferencia
+    OPB-->>OPA: 10. Confirma aceptación<br/>Listo para solicitar documentos
 
     Note over OPA,CENT: Marca transferencia en proceso
-    OPA->>CENT: 12. Marca ciudadano EN_TRANSFERENCIA<br/>(email → temporal)
-    CENT-->>OPA: 13. Confirmación
+    OPA->>CENT: 11. Marca ciudadano EN_TRANSFERENCIA<br/>(email → temporal)
+    CENT-->>OPA: 12. Confirmación
 
-    OPA->>OPA: 14. Marca ciudadano como EN_TRANSFERENCIA<br/>Genera lista de documentos a transferir
+    OPA->>OPA: 13. Marca ciudadano como EN_TRANSFERENCIA<br/>Genera lista de documentos a transferir
 
-    OPA-->>C: 15. Portabilidad iniciada<br/>La transferencia de documentos comenzará
+    OPA-->>C: 14. Portabilidad iniciada<br/>La transferencia de documentos comenzará
 
     Note over C: Fase 1 completada<br/>Fase 2 comenzará automáticamente
 ```
 
 #### 5b. Portabilidad: Fase 2 - Transferencia Asíncrona de Documentos
 
-**Perspectiva: Migración de documentos (proceso asíncrono en background)**
+**Perspectiva: Migración de documentos (proceso asíncrono - Destino orquesta la transferencia)**
 
 ```mermaid
 sequenceDiagram
-    participant OPA as Operador Origen
     participant OPB as Operador Destino
+    participant OPA as Operador Origen (Mi operador)
     participant CENT as Centralizador
+    participant cloud_srv as Cloud<br>(OS, malware scanner)
     actor C as Ciudadano
 
-    Note over OPA: Proceso asíncrono inicia<br/>tras completar Fase 1
+    Note over OPB: Proceso asíncrono inicia<br/>Destino orquesta la transferencia
 
-    loop Por cada documento del ciudadano
-        OPA->>OPA: 1. Obtiene documento de almacenamiento
 
-        OPA->>OPB: 2. Transfiere documento<br/>usando URL pre-firmada
+    loop Por cada lote de documentos
+        OPB->>OPA: 1. Solicita lista de documentos<br/>(OAuth 2.0 Bearer token)
+        OPA-->>OPB: 2. Retorna lista completa<br/>(IDs, metadatos, checksums)
 
-        OPB->>OPB: 3. Almacena documento<br/>Actualiza progreso
+        OPB->>OPB: 3. Crea espacio de almacenamiento<br/>Genera pre-signed URLs (válidas 72h)
 
-        OPB-->>OPA: 4. Confirma recepción individual
+        OPB->>OPA: 4. Solicita lote de documentos<br/>(IDs del lote, pre-signed URLs destino)
+
+        OPA->>cloud_srv: 5. Genera pre-signed URLs origen<br/>para descarga (válidas 1h)
+
+        OPA-->>OPB: 6. Retorna pre-signed URLs origen
+
+        OPB->>cloud_srv: 7. Descarga documentos usando URLs origen
+
+        OPB->>OPB: 8. Sube a almacenamiento destino<br/>usando pre-signed URLs destino<br/>Valida checksums
+
+        OPB->>OPB: 9. Actualiza progreso<br/>(ej: 45/100 documentos)
     end
 
-    Note over OPB: Validación de integridad
-    OPB->>OPB: 5. Valida cantidad y completitud<br/>de todos los documentos
+    Note over OPB: Validación de integridad completa
+    OPB->>OPB: 10. Valida cantidad y checksums<br/>de todos los documentos
 
     alt Transferencia exitosa
         Note over OPB: Activa el ciudadano
-        OPB->>OPB: 6a. Actualiza perfil a ACTIVO
+        OPB->>OPB: 11a. Actualiza perfil a ACTIVO
 
-        OPB->>CENT: 7a. Registra ciudadano oficialmente<br/>(email → Operador Destino)
-        CENT-->>OPB: 8a. Confirmación
+        OPB->>CENT: 12a. Registra ciudadano oficialmente<br/>(email → Operador Destino)
+        CENT-->>OPB: 13a. Confirmación
 
-        OPB->>OPA: 9a. Confirma transferencia COMPLETA<br/>(puede eliminar datos)
+        OPB->>OPA: 14a. Confirma transferencia COMPLETA<br/>(puede eliminar datos)
 
-        Note over OPA: Eliminación segura
-        OPA->>OPA: 10a. Elimina documentos del ciudadano
-        OPA->>OPA: 11a. Elimina perfil del ciudadano
+        
+        par Mi operador al Ciudadano
+            Note over OPA: Eliminación segura
+            OPA->>cloud_srv: 15a. Elimina documentos del ciudadano
+            OPA->>OPA: 16a. Elimina perfil del ciudadano
 
-        OPA->>C: 12a. Notifica: Transferencia completada<br/>Tu cuenta está en Operador Destino
-
-        OPB->>C: 13a. Bienvenida a Operador Destino<br/>Todos tus documentos están disponibles
-
-        Note over C: Portabilidad exitosa<br/>Plazo total: < 72 horas
+            OPA->>C: 17a. Notifica: Transferencia completada<br/>Tu cuenta está en Operador Destino
+        and Nuevo operador al Ciudadano
+            OPB->>C: 14b. Bienvenida a Operador Destino<br/>Todos tus documentos están disponibles
+        end
+        Note over C: Portabilidad exitosa
 
     else Transferencia falló
-        OPB->>OPB: 6b. Marca perfil como FALLIDO<br/>Elimina documentos parciales
+        OPB->>OPB: 11b. Marca perfil como FALLIDO<br/>Elimina documentos parciales
 
-        OPB->>OPA: 7b. Notifica FALLO en transferencia
+        OPB->>OPA: 12b. Notifica FALLO en transferencia
 
-        OPA->>OPA: 8b. Revierte estado a ACTIVO
+        OPA->>OPA: 13b. Revierte estado a ACTIVO
 
-        OPA->>CENT: 9b. Re-registra ciudadano<br/>(email → Operador Origen)
-        CENT-->>OPA: 10b. Confirmación
+        OPA->>CENT: 14b. Re-registra ciudadano<br/>(email → Operador Origen)
+        CENT-->>OPA: 15b. Confirmación
 
-        OPA->>C: 11b. Transferencia falló<br/>Tu cuenta permanece aquí<br/>Puedes reintentar
+        OPA->>C: 16b. Transferencia falló<br/>Tu cuenta permanece aquí<br/>Puedes reintentar
 
         Note over C: Ciudadano permanece<br/>en operador origen
     end
@@ -599,7 +611,7 @@ sequenceDiagram
 
 #### 5c. Recibir Ciudadano: Perspectiva del Operador Destino
 
-**Perspectiva: Mi operador RECIBE un ciudadano (ambas fases)**
+**Perspectiva: Mi operador RECIBE un ciudadano (ambas fases - Yo orquesto la transferencia)**
 
 ```mermaid
 sequenceDiagram
@@ -612,44 +624,51 @@ sequenceDiagram
 
     OPA->>OPB: 1. Solicita transferir ciudadano<br/>(email, metadatos, cantidad docs)
 
-    OPB->>OPB: 2. Valida capacidad y autenticación
+    OPB->>OPB: 2. Valida capacidad y autenticación OAuth 2.0
 
     OPB->>OPB: 3. Crea perfil preliminar<br/>(estado: PENDING)
 
-    OPB->>OPB: 4. Genera URLs pre-firmadas<br/>para recibir documentos (72h)
+    OPB-->>OPA: 4. Acepta transferencia<br/>Listo para solicitar documentos
 
-    OPB-->>OPA: 5. Acepta transferencia<br/>Proporciona URLs/tokens
+    Note over OPB: Fase 1 completa<br/>Inicio fase asíncrona
 
-    Note over OPB: Espera transferencia de docs<br/>(Fase 1 completa)
+    Note over OPA,OPB: FASE 2: Transferencia Orquestada por Destino
 
-    Note over OPA,OPB: FASE 2: Transferencia de Documentos
+    OPB->>OPA: 5. Solicita lista completa de documentos<br/>(OAuth 2.0 Bearer token)
+    OPA-->>OPB: 6. Retorna lista (IDs, metadatos, checksums)
 
-    loop Por cada documento
-        OPA->>OPB: 6. Envía documento<br/>usando URL pre-firmada
+    OPB->>OPB: 7. Genera pre-signed URLs destino<br/>(válidas 72h)
 
-        OPB->>OPB: 7. Almacena documento<br/>Actualiza progreso (ej: 45/100)
+    loop Por cada lote de documentos
+        OPB->>OPA: 8. Solicita lote de documentos<br/>(IDs, pre-signed URLs destino)
+
+        OPA-->>OPB: 9. Retorna pre-signed URLs origen
+
+        OPB->>OPA: 10. Descarga documentos usando URLs origen
+
+        OPB->>OPB: 11. Sube a mi almacenamiento<br/>Valida checksums<br/>Actualiza progreso (ej: 45/100)
     end
 
-    Note over OPB: Validación final
+    Note over OPB: Validación final de integridad
 
-    OPB->>OPB: 8. Valida integridad completa<br/>(cantidad correcta, sin corrupción)
+    OPB->>OPB: 12. Valida cantidad total y checksums
 
     alt Validación exitosa
-        OPB->>OPB: 9a. Activa perfil del ciudadano<br/>(estado: ACTIVO)
+        OPB->>OPB: 13a. Activa perfil del ciudadano<br/>(estado: ACTIVO)
 
-        OPB->>CENT: 10a. Registro oficial<br/>(email → Mi Operador)
-        CENT-->>OPB: 11a. Confirmación
+        OPB->>CENT: 14a. Registro oficial<br/>(email → Mi Operador)
+        CENT-->>OPB: 15a. Confirmación
 
-        OPB->>OPA: 12a. Confirma recepción EXITOSA<br/>(puede eliminar datos)
+        OPB->>OPA: 16a. Confirma recepción EXITOSA<br/>(puede eliminar datos)
 
-        OPB->>C: 13a. Bienvenido<br/>Tu cuenta está activa con nosotros
+        OPB->>C: 17a. Bienvenido<br/>Tu cuenta está activa con nosotros
 
         Note over OPB: Ciudadano activo<br/>en mi operador
 
     else Validación falló
-        OPB->>OPB: 9b. Elimina datos parciales
+        OPB->>OPB: 13b. Elimina datos parciales
 
-        OPB->>OPA: 10b. Notifica FALLO<br/>(mantener ciudadano)
+        OPB->>OPA: 14b. Notifica FALLO<br/>(mantener ciudadano)
 
         Note over OPB: Transferencia rechazada<br/>Ciudadano permanece en origen
     end
