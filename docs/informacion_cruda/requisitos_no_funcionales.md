@@ -29,7 +29,7 @@ Los RNF se organizan en categorías clave para Arquitecturas Avanzadas:
 7. Eficiencia (Arquitectónica)
 8. Interoperabilidad
 
-## 1. Disponibilidad y Resiliencia
+## 1. Disponibilidad y Resiliencia *
 
 __Propósito:__ Garantizar el acceso 24/7 a documentos críticos e inmutabilidad de datos.
 
@@ -41,7 +41,7 @@ __Propósito:__ Garantizar el acceso 24/7 a documentos críticos e inmutabilidad
 | RNF-04 |	Tolerancia a Fallos |	El sistema debe ser resiliente al fallo de una región completa (o un centro de datos principal) sin interrupción del servicio. |	Alta |
 | RNF-05 |	Respaldo de Documentos |	Se debe realizar copia de seguridad diaria de todos los documentos y metadatos, con retención mínima de 5 años. |	Alta |
 
-## 2. Escalabilidad
+## 2. Escalabilidad *
 
 __Propósito:__ Soportar la demanda masiva de la ciudadanía.
 
@@ -64,7 +64,7 @@ __Propósito:__ Asegurar que los procesos de Seguridad Crítica (cifrado, valida
 | RNF-13 |	Tiempo de Transferencia |	La transferencia P2P de documentos debe ser menor a 8 segundos para archivos de hasta 10MB. |	Alta |
 | RNF-14 |	Transacciones por Segundo |	El sistema debe ser capaz de procesar 2.000 transacciones por segundo (TPS) en la capa de persistencia de metadatos. |	Media |
 
-## 4. Seguridad
+## 4. Seguridad *
 
 __Propósito:__ Reforzar los aspectos de confidencialidad, autorización compleja y mecanismo de autenticación sólido elevándolos a estándares de "No Negociable" y endureciendo las métricas.
 
