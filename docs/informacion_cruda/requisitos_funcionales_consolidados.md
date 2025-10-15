@@ -143,7 +143,7 @@ Este documento se enfoca en los siguientes casos de uso críticos:
 
 ---
 
-### FR-AU-02: Autenticación de Funcionarios Institucionales
+### FR-AU-02: Autenticación de Funcionarios Institucionales ****
 
 **Como** funcionario de entidad institucional  
 **Quiero** autenticarme con credenciales institucionales  
@@ -244,7 +244,7 @@ Este documento se enfoca en los siguientes casos de uso críticos:
 
 ---
 
-### FR-SD-02: Almacenamiento de Documentos Temporales
+### FR-SD-02: Almacenamiento de Documentos Temporales ****
 
 **Como** ciudadano  
 **Quiero** almacenar documentos temporales (no certificados)  
@@ -424,7 +424,7 @@ Este documento se enfoca en los siguientes casos de uso críticos:
 
 ---
 
-### FR-TO-03: Envío a Ciudadanos sin Operador
+### FR-TO-03: Envío a Ciudadanos sin Operador ***
 
 **Como** operador  
 **Quiero** enviar documentos a ciudadanos que no tienen operador  
@@ -466,8 +466,6 @@ Este documento se enfoca en los siguientes casos de uso críticos:
 - ✅ El sistema debe exportar TODOS los documentos (certificados y temporales)
 - ✅ El sistema debe exportar TODOS los metadatos
 - ✅ El sistema debe validar integridad de todos los documentos transferidos
-- ✅ El proceso debe completarse en máximo 72 horas
-- ✅ El sistema debe mantener backup por 30 días adicionales
 
 **Flujo de transferencia:**
 
@@ -511,7 +509,7 @@ Este documento se enfoca en los siguientes casos de uso críticos:
 
 ---
 
-### FR-TO-06: Gestión de Documentos en Tránsito
+### FR-TO-06: Gestión de Documentos en Tránsito ****
 
 **Como** operador origen  
 **Quiero** manejar documentos que llegan durante la portabilidad  
