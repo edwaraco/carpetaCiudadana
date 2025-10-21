@@ -1,0 +1,77 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: carpeta-ciudadana-service
+
+  # Configuración de carga de archivos
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      enabled: true
+
+  # Configuración para DynamoDB Local
+  cloud:
+    aws:
+      dynamodb:
+        endpoint: ${AWS_DYNAMODB_ENDPOINT:http://localhost:8000}
+        region: ${AWS_REGION:us-east-1}
+        credentials:
+          access-key: ${AWS_ACCESS_KEY_ID:dummy}
+          secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
+
+# Configuración de MinIO
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin123}
+  bucket-name: ${MINIO_BUCKET_NAME:carpeta-ciudadana-docs}
+  presigned-url-expiry-minutes: ${MINIO_PRESIGNED_URL_EXPIRY:15}
+
+# Configuración de logging
+logging:
+  level:
+    co.edu.eafit.carpeta: DEBUG
+    software.amazon.awssdk: INFO
+    io.minio: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Configuración de actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Configuración de Feign para comunicación con otros microservicios
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 5000
+        read-timeout: 10000
+        logger-level: basic
+
+# Configuración de SpringDoc OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

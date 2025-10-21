@@ -1,0 +1,10 @@
+# Configuración adicional para el microservicio de firma digital
+digital-signature:
+  service:
+    url: ${DIGITAL_SIGNATURE_SERVICE_URL:http://localhost:8081}
+    timeout:
+      connect: 5000
+      read: 10000
+    retry:
+      max-attempts: 3
+      backoff-delay: 1000
