@@ -9,19 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
-/**
- * Mapper para operaciones de creación de documentos
- * Utiliza MapStruct para mapear entre DTOs y entidades
- */
 @Mapper(componentModel = "spring")
 public interface CrearDocumentoMapper {
 
-    /**
-     * Mapea un request de subir documento a una entidad Documento
-     * @param request Request con los datos del documento
-     * @param archivo Archivo multipart
-     * @return Entidad Documento lista para persistir
-     */
     @Mapping(target = "carpetaId", source = "request.carpetaId")
     @Mapping(target = "documentoId", expression = "java(generarDocumentoId())")
     @Mapping(target = "titulo", source = "request.titulo")
@@ -36,13 +26,8 @@ public interface CrearDocumentoMapper {
     @Mapping(target = "fechaUltimaModificacion", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "hashDocumento", ignore = true) // Se calcula en el servicio
     @Mapping(target = "urlAlmacenamiento", ignore = true) // Se asigna en el servicio después de subir a MinIO
-    @Mapping(target = "firmadoPor", ignore = true) // Solo para documentos certificados
-    @Mapping(target = "certificadoValidez", ignore = true) // Solo para documentos certificados
     Documento toEntity(SubirDocumentoConArchivoRequest request, MultipartFile archivo);
 
-    /**
-     * Genera un ID único para el documento
-     */
     @Named("generarDocumentoId")
     default String generarDocumentoId() {
         return UUID.randomUUID().toString();

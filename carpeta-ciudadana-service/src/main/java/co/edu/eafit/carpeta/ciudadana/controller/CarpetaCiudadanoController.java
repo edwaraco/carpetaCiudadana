@@ -30,10 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-/**
- * Controlador REST para la gestión de carpetas ciudadanas
- * Implementa las 4 funcionalidades básicas requeridas del MVP
- */
 @Slf4j
 @RestController
 @RequestMapping("/carpetas")
@@ -49,9 +45,6 @@ public class CarpetaCiudadanoController {
 
     private final CarpetaCiudadanoService carpetaService;
 
-    /**
-     * 1. Crear carpeta ciudadana única
-     */
     @Operation(
         summary = "Crear carpeta ciudadana",
         description = "Crea una carpeta ciudadana única para un ciudadano. " +
@@ -177,7 +170,7 @@ public class CarpetaCiudadanoController {
             @RequestBody CrearCarpetaRequest request) {
         
         log.info("Creando carpeta para ciudadano con cédula: {}", request.cedula());
-        
+
         var carpeta = carpetaService.crearCarpeta(request);
         var response = ResponseUtil.toCrearCarpetaResponse(carpeta);
         
@@ -256,7 +249,7 @@ public class CarpetaCiudadanoController {
             @PathVariable String carpetaId) {
         
         log.info("Buscando carpeta con ID: {}", carpetaId);
-        
+
         return carpetaService.buscarCarpetaPorId(carpetaId)
                 .map(ResponseUtil::toCarpetaResponse)
                 .map(ResponseUtil::ok)
@@ -292,8 +285,8 @@ public class CarpetaCiudadanoController {
             @PathVariable String cedula) {
         
         log.info("Buscando carpeta con cédula: {}", cedula);
-        
-        BuscarCarpetaRequest request = new BuscarCarpetaRequest(cedula);
+
+            BuscarCarpetaRequest request = new BuscarCarpetaRequest(cedula);
         
         return carpetaService.buscarCarpetaPorCedula(request)
                 .map(ResponseUtil::toCarpetaResponse)
@@ -309,7 +302,7 @@ public class CarpetaCiudadanoController {
         description = "Almacena un documento en la carpeta ciudadana. " +
                       "El documento puede ser temporal o certificado. " +
                       "Se calcula automáticamente el hash SHA-256 y se almacena en MinIO/S3. " +
-                      "Tipos de documento: CEDULA, DIPLOMA, ACTA_GRADO, CERTIFICADO_LABORAL, etc. " +
+                      "Tipos de documento: CEDULA, DIPLOMA, ACTA_GRADO, PROCESADO_LABORAL, etc. " +
                       "Contextos: EDUCACION, NOTARIA, REGISTRADURIA, SALUD, etc.",
         tags = {"Carpeta Ciudadana"}
     )
@@ -401,7 +394,7 @@ public class CarpetaCiudadanoController {
             
             @Parameter(description = "Tipo de documento", required = true, 
                       example = "DIPLOMA", 
-                      schema = @Schema(allowableValues = {"CEDULA", "DIPLOMA", "ACTA_GRADO", "CERTIFICADO_LABORAL", "CERTIFICADO_MEDICO"}))
+                      schema = @Schema(allowableValues = {"CEDULA", "DIPLOMA", "ACTA_GRADO", "PROCESADO_LABORAL", "PROCESADO_MEDICO"}))
             @RequestParam("tipoDocumento") String tipoDocumento,
             
             @Parameter(description = "Contexto del documento", required = true,
@@ -412,8 +405,8 @@ public class CarpetaCiudadanoController {
         log.info("Subiendo documento '{}' a carpeta: {}", titulo, carpetaId);
 
         var request = new SubirDocumentoConArchivoRequest(
-                carpetaId, titulo, tipoDocumento, contextoDocumento, null
-        );
+                    carpetaId, titulo, tipoDocumento, contextoDocumento, null
+            );
         
         var documento = carpetaService.subirDocumento(request, archivo);
         var response = ResponseUtil.toSubirDocumentoResponse(documento);
@@ -421,9 +414,6 @@ public class CarpetaCiudadanoController {
         return ResponseUtil.created(response, "Documento subido exitosamente");
     }
 
-    /**
-     * Obtener documento por ID
-     */
     @Operation(
         summary = "Obtener documento por ID",
         description = "Obtiene los metadatos completos de un documento específico de la carpeta. " +
@@ -447,7 +437,7 @@ public class CarpetaCiudadanoController {
                             "titulo": "Diploma Universitario",
                             "tipoDocumento": "DIPLOMA",
                             "contextoDocumento": "EDUCACION",
-                            "estadoDocumento": "CERTIFICADO",
+                            "estadoDocumento": "PROCESADO",
                             "fechaRecepcion": "2025-10-21T16:00:00",
                             "fechaUltimaModificacion": "2025-10-21T17:30:00",
                             "esDescargable": true,
@@ -476,7 +466,7 @@ public class CarpetaCiudadanoController {
         
         log.info("Obteniendo documento: {} de carpeta: {}", documentoId, carpetaId);
 
-        ObtenerDocumentoRequest request = new ObtenerDocumentoRequest(carpetaId, documentoId);
+            ObtenerDocumentoRequest request = new ObtenerDocumentoRequest(carpetaId, documentoId);
         
         return carpetaService.obtenerDocumento(request)
                 .map(ResponseUtil::toDocumentoResponse)
@@ -513,7 +503,7 @@ public class CarpetaCiudadanoController {
                               "titulo": "Diploma Universitario",
                               "tipoDocumento": "DIPLOMA",
                               "contextoDocumento": "EDUCACION",
-                              "estadoDocumento": "CERTIFICADO",
+                              "estadoDocumento": "PROCESADO",
                               "fechaRecepcion": "2025-10-21T16:00:00",
                               "fechaUltimaModificacion": "2025-10-21T17:30:00",
                               "esDescargable": true,
@@ -526,7 +516,7 @@ public class CarpetaCiudadanoController {
                               "titulo": "Cédula de Ciudadanía",
                               "tipoDocumento": "CEDULA",
                               "contextoDocumento": "REGISTRADURIA",
-                              "estadoDocumento": "CERTIFICADO",
+                              "estadoDocumento": "PROCESADO",
                               "fechaRecepcion": "2025-10-20T10:00:00",
                               "fechaUltimaModificacion": "2025-10-20T10:00:00",
                               "esDescargable": true,
@@ -571,7 +561,7 @@ public class CarpetaCiudadanoController {
         
         log.info("Obteniendo documentos de carpeta: {}", carpetaId);
 
-        ObtenerDocumentosCarpetaRequest request = new ObtenerDocumentosCarpetaRequest(carpetaId);
+            ObtenerDocumentosCarpetaRequest request = new ObtenerDocumentosCarpetaRequest(carpetaId);
         
         List<DocumentoResponse> documentos = carpetaService.obtenerDocumentosCarpeta(request)
                 .stream()
@@ -581,9 +571,6 @@ public class CarpetaCiudadanoController {
         return ResponseUtil.ok(documentos, "Documentos obtenidos exitosamente");
     }
 
-    /**
-     * Generar URL de descarga prefirmada para un documento
-     */
     @Operation(
         summary = "Generar URL de descarga para documento",
         description = "Genera una URL temporal y segura (prefirmada) para descargar un documento específico. " +
@@ -670,22 +657,19 @@ public class CarpetaCiudadanoController {
         
         log.info("Generando URL de descarga para documento: {} en carpeta: {}", documentoId, carpetaId);
 
-        // Obtener información del documento
         ObtenerDocumentoRequest request = new ObtenerDocumentoRequest(carpetaId, documentoId);
         DocumentoResponse documento = carpetaService.obtenerDocumento(request)
                 .map(ResponseUtil::toDocumentoResponse)
                 .orElseThrow(() -> new co.edu.eafit.carpeta.ciudadana.exception.ResourceNotFoundException(
                         "Documento", "documentoId", documentoId));
         
-        // Generar URL prefirmada
         String urlDescarga = carpetaService.generarUrlDescarga(carpetaId, documentoId);
         
-        // Crear respuesta con información del documento y URL
         DocumentoUrlResponse response = DocumentoUrlResponse.of(
                 documentoId, 
                 documento.titulo(), 
                 urlDescarga, 
-                15 // Minutos de validez (configurado en application.yml)
+                15
         );
         
         return ResponseUtil.ok(response, "URL de descarga generada exitosamente");

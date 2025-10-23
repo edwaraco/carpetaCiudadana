@@ -1,8 +1,5 @@
 package co.edu.eafit.carpeta.ciudadana.exception;
 
-/**
- * Excepción lanzada cuando hay un error al subir un documento
- */
 public class DocumentUploadException extends RuntimeException {
     
     private final String carpetaId;

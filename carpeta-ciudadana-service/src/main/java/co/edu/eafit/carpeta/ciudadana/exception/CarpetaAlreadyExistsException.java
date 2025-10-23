@@ -1,8 +1,5 @@
 package co.edu.eafit.carpeta.ciudadana.exception;
 
-/**
- * Excepción lanzada cuando se intenta crear una carpeta que ya existe
- */
 public class CarpetaAlreadyExistsException extends RuntimeException {
     
     private final String cedula;

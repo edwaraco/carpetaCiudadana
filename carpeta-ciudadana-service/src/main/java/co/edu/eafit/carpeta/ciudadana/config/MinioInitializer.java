@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-/**
- * Inicializador de bucket MinIO al arrancar la aplicación
- */
 @Slf4j
 @Component
 public class MinioInitializer implements CommandLineRunner {
@@ -25,7 +22,6 @@ public class MinioInitializer implements CommandLineRunner {
         log.info("Inicializando bucket MinIO: {}", bucketName);
         
         try {
-            // Verificar si el bucket existe
             boolean bucketExists = minioClient.bucketExists(
                     BucketExistsArgs.builder()
                             .bucket(bucketName)
@@ -33,7 +29,6 @@ public class MinioInitializer implements CommandLineRunner {
             );
 
             if (!bucketExists) {
-                // Crear el bucket si no existe (privado por defecto)
                 minioClient.makeBucket(
                         MakeBucketArgs.builder()
                                 .bucket(bucketName)
@@ -45,8 +40,6 @@ public class MinioInitializer implements CommandLineRunner {
                 log.info("Bucket {} ya existe", bucketName);
             }
             
-            // Verificar que el bucket NO tenga política pública
-            // MinIO crea buckets privados por defecto, pero verificamos por seguridad
             try {
                 String policy = minioClient.getBucketPolicy(
                         GetBucketPolicyArgs.builder()
@@ -54,14 +47,13 @@ public class MinioInitializer implements CommandLineRunner {
                                 .build()
                 );
                 if (policy != null && !policy.isEmpty()) {
-                    log.warn("⚠️ ADVERTENCIA: El bucket {} tiene una política configurada. " +
-                            "Asegúrate de que sea privado.", bucketName);
+                    log.warn("ADVERTENCIA: El bucket {} tiene una política configurada. " +
+                            "Asegúrese de que sea privado.", bucketName);
                 } else {
-                    log.info("✅ Bucket {} configurado como PRIVADO correctamente", bucketName);
+                    log.info("Bucket {} configurado como PRIVADO correctamente", bucketName);
                 }
             } catch (Exception e) {
-                // Si no hay política, es privado por defecto
-                log.info("✅ Bucket {} es PRIVADO (sin política pública)", bucketName);
+                log.info("Bucket {} es PRIVADO (sin política pública)", bucketName);
             }
 
         } catch (Exception e) {

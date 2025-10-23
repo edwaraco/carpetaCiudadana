@@ -3,9 +3,6 @@ package co.edu.eafit.carpeta.ciudadana.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO para subir un documento
- */
 public record SubirDocumentoRequest(
     @NotBlank(message = "El título del documento es requerido")
     @Size(min = 2, max = 200, message = "El título debe tener entre 2 y 200 caracteres")

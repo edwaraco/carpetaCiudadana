@@ -10,17 +10,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-/**
- * Manejador global de excepciones para toda la aplicación
- * Proporciona manejo centralizado y consistente de errores
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Maneja excepciones cuando un recurso no es encontrado
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
@@ -39,9 +32,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones cuando una carpeta ya existe
-     */
     @ExceptionHandler(CarpetaAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Void>> handleCarpetaAlreadyExistsException(
             CarpetaAlreadyExistsException ex, WebRequest request) {
@@ -60,9 +50,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones al subir documentos
-     */
     @ExceptionHandler(DocumentUploadException.class)
     public ResponseEntity<ApiResponse<Void>> handleDocumentUploadException(
             DocumentUploadException ex, WebRequest request) {
@@ -81,9 +68,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones de validación de peticiones
-     */
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidRequestException(
             InvalidRequestException ex, WebRequest request) {
@@ -101,9 +85,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones del sistema de almacenamiento
-     */
     @ExceptionHandler(StorageException.class)
     public ResponseEntity<ApiResponse<Void>> handleStorageException(
             StorageException ex, WebRequest request) {
@@ -120,9 +101,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones de validación de Bean Validation
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(
             MethodArgumentNotValidException ex, WebRequest request) {
@@ -148,9 +126,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja excepciones cuando el archivo es demasiado grande
-     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException ex, WebRequest request) {
@@ -167,9 +142,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja IllegalArgumentException
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
@@ -186,9 +158,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(error));
     }
 
-    /**
-     * Maneja todas las demás excepciones no específicas
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(
             Exception ex, WebRequest request) {

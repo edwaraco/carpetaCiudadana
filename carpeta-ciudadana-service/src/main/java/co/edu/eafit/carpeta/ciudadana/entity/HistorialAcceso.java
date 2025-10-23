@@ -10,15 +10,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 
 import java.time.LocalDateTime;
 
-/**
- * Entidad para el historial de accesos a documentos
- * Permite auditoría y seguimiento de accesos
- * 
- * Simplificada para MVP - incluye solo campos esenciales para:
- * 1. Auditoría básica de accesos
- * 2. Trazabilidad de operaciones
- * 3. Cumplimiento de requisitos legales mínimos
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,19 +17,16 @@ import java.time.LocalDateTime;
 @DynamoDbBean
 public class HistorialAcceso {
 
-    // Claves de DynamoDB
-    private String carpetaId; // ID de la carpeta (Partition Key)
-    private String accesoId; // UUID único del acceso (Sort Key - incluye timestamp para ordenación)
+    private String carpetaId;
+    private String accesoId;
 
-    // Información del acceso
-    private String documentoId; // ID del documento accedido (puede ser null para accesos a carpeta)
-    private String tipoAcceso; // SUBIDA, CONSULTA, DESCARGA, COMPARTIR, MODIFICACION, ELIMINACION
-    private String usuarioAcceso; // Usuario/Sistema que realizó el acceso
+    private String documentoId;
+    private String tipoAcceso;
+    private String usuarioAcceso;
     
-    // Resultado y contexto
-    private LocalDateTime fechaAcceso; // Fecha y hora del acceso
-    private String resultadoAcceso; // EXITOSO, FALLIDO, DENEGADO
-    private String motivoAcceso; // Motivo/descripción del acceso
+    private LocalDateTime fechaAcceso;
+    private String resultadoAcceso;
+    private String motivoAcceso;
 
     @DynamoDbPartitionKey
     public String getCarpetaId() {

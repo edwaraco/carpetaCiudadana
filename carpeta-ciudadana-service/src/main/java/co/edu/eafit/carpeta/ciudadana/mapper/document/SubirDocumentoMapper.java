@@ -5,19 +5,9 @@ import co.edu.eafit.carpeta.ciudadana.entity.Documento;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-/**
- * Mapper para operaciones de subida de documentos
- * Convierte entidades Documento a DTOs de respuesta de subida
- */
 @Mapper(componentModel = "spring")
 public interface SubirDocumentoMapper {
 
-    /**
-     * Convierte una entidad Documento a SubirDocumentoResponse
-     * @param documento Entidad Documento
-     * @param mensaje Mensaje de respuesta personalizado
-     * @return SubirDocumentoResponse DTO
-     */
     @Mapping(target = "documentoId", source = "documento.documentoId")
     @Mapping(target = "titulo", source = "documento.titulo")
     @Mapping(target = "tipoDocumento", source = "documento.tipoDocumento")
@@ -27,11 +17,6 @@ public interface SubirDocumentoMapper {
     @Mapping(target = "mensaje", source = "mensaje")
     SubirDocumentoResponse toResponse(Documento documento, String mensaje);
 
-    /**
-     * Convierte una entidad Documento a SubirDocumentoResponse con mensaje por defecto
-     * @param documento Entidad Documento
-     * @return SubirDocumentoResponse DTO
-     */
     @Mapping(target = "documentoId", source = "documentoId")
     @Mapping(target = "titulo", source = "titulo")
     @Mapping(target = "tipoDocumento", source = "tipoDocumento")

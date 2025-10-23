@@ -10,15 +10,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 
 import java.time.LocalDateTime;
 
-/**
- * Entidad que representa un documento en la carpeta del ciudadano
- * Basada en la Entity Documento del análisis DDD
- * 
- * Simplificada para MVP - incluye solo campos esenciales para:
- * 1. Almacenar documentos (firmados o no)
- * 2. Ver mis documentos
- * 3. Integración básica con firma digital
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,31 +17,24 @@ import java.time.LocalDateTime;
 @DynamoDbBean
 public class Documento {
 
-    // Claves de DynamoDB
-    private String carpetaId; // ID de la carpeta propietaria (Partition Key)
-    private String documentoId; // UUID único del documento (Sort Key)
+    private String carpetaId;
+    private String documentoId;
 
-    // Metadatos básicos del documento
-    private String titulo; // Título del documento
-    private String tipoDocumento; // CEDULA, DIPLOMA, ACTA_GRADO, CERTIFICADO_LABORAL, etc.
-    private String contextoDocumento; // EDUCACION, NOTARIA, REGISTRADURIA, SALUD, etc.
-    private String descripcion; // Descripción opcional del documento
+    private String titulo;
+    private String tipoDocumento;
+    private String contextoDocumento;
+    private String descripcion;
 
-    // Contenido del documento (almacenamiento)
     private String formatoArchivo; // PDF, JPEG, PNG, etc.
-    private Long tamanoBytes; // Tamaño en bytes
-    private String hashDocumento; // SHA-256 del contenido (para integridad)
-    private String urlAlmacenamiento; // Ruta/URL en MinIO/S3
+    private Long tamanoBytes;
+    private String hashDocumento;
+    private String urlAlmacenamiento;
 
-    // Estado y certificación (simplificado para MVP)
-    private String estadoDocumento; // TEMPORAL, CERTIFICADO, REVOCADO
-    private String firmadoPor; // Entidad que firmó (opcional - para documentos certificados)
-    private String certificadoValidez; // ID/referencia del certificado (opcional)
+    private String estadoDocumento;
 
-    // Control y auditoría
-    private Boolean esDescargable; // Si el documento puede ser descargado
-    private LocalDateTime fechaRecepcion; // Fecha de recepción en el sistema
-    private LocalDateTime fechaUltimaModificacion; // Última modificación
+    private Boolean esDescargable;
+    private LocalDateTime fechaRecepcion;
+    private LocalDateTime fechaUltimaModificacion;
 
     @DynamoDbPartitionKey
     public String getCarpetaId() {

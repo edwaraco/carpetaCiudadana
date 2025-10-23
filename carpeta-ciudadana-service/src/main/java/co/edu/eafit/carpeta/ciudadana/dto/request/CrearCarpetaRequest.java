@@ -4,9 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO para crear una carpeta ciudadana
- */
 public record CrearCarpetaRequest(
     @NotBlank(message = "La cédula es requerida")
     @Pattern(regexp = "^[0-9]{6,12}$", message = "La cédula debe contener entre 6 y 12 dígitos")

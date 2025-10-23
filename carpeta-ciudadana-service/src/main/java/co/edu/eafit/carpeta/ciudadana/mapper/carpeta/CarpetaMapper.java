@@ -10,18 +10,9 @@ import org.mapstruct.Named;
 
 import java.util.UUID;
 
-/**
- * Mapper para operaciones de carpeta ciudadana
- * Utiliza MapStruct para mapear entre DTOs y entidades
- */
 @Mapper(componentModel = "spring")
 public interface CarpetaMapper {
 
-    /**
-     * Mapea un request de crear carpeta a una entidad CarpetaCiudadano
-     * @param request Request con los datos de la carpeta
-     * @return Entidad CarpetaCiudadano lista para persistir
-     */
     @Mapping(target = "carpetaId", expression = "java(generarCarpetaId())")
     @Mapping(target = "propietarioCedula", source = "cedula")
     @Mapping(target = "propietarioNombre", source = "nombreCompleto")
@@ -33,12 +24,6 @@ public interface CarpetaMapper {
     @Mapping(target = "fechaUltimaModificacion", expression = "java(java.time.LocalDateTime.now())")
     CarpetaCiudadano toEntity(CrearCarpetaRequest request);
 
-    /**
-     * Convierte una entidad CarpetaCiudadano a CrearCarpetaResponse
-     * @param carpeta Entidad CarpetaCiudadano
-     * @param mensaje Mensaje de respuesta personalizado
-     * @return CrearCarpetaResponse DTO
-     */
     @Mapping(target = "carpetaId", source = "carpeta.carpetaId")
     @Mapping(target = "emailCarpeta", source = "carpeta.emailCarpeta")
     @Mapping(target = "estadoCarpeta", source = "carpeta.estadoCarpeta")
@@ -46,11 +31,6 @@ public interface CarpetaMapper {
     @Mapping(target = "mensaje", source = "mensaje")
     CrearCarpetaResponse toCrearResponse(CarpetaCiudadano carpeta, String mensaje);
 
-    /**
-     * Convierte una entidad CarpetaCiudadano a CarpetaResponse
-     * @param carpeta Entidad CarpetaCiudadano
-     * @return CarpetaResponse DTO
-     */
     @Mapping(target = "carpetaId", source = "carpetaId")
     @Mapping(target = "propietarioCedula", source = "propietarioCedula")
     @Mapping(target = "propietarioNombre", source = "propietarioNombre")
@@ -62,20 +42,13 @@ public interface CarpetaMapper {
     @Mapping(target = "fechaUltimaModificacion", source = "fechaUltimaModificacion")
     CarpetaResponse toResponse(CarpetaCiudadano carpeta);
 
-    /**
-     * Genera un ID único para la carpeta
-     */
     @Named("generarCarpetaId")
     default String generarCarpetaId() {
         return UUID.randomUUID().toString();
     }
 
-    /**
-     * Genera el email inmutable para la carpeta
-     */
     @Named("generarEmailCarpeta")
     default String generarEmailCarpeta(String nombreCompleto, String cedula) {
-        // Normalizar nombre: convertir a minúsculas, reemplazar espacios con puntos
         String nombreNormalizado = nombreCompleto.toLowerCase()
                 .replaceAll("\\s+", ".")
                 .replaceAll("[^a-z0-9.]", "");

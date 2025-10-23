@@ -52,7 +52,7 @@ services:
       - dynamodb-local
     restart: unless-stopped
 
-  # Microservicio de Carpeta Ciudadana (Comentado - ejecutar localmente con IDE)
+  # Microservicio de Carpeta Ciudadana
   # carpeta-ciudadana-service:
   #   build:
   #     context: .

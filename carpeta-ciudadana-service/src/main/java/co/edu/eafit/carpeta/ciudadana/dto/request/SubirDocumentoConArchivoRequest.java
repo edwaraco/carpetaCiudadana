@@ -3,9 +3,6 @@ package co.edu.eafit.carpeta.ciudadana.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO para subir documento con archivo
- */
 public record SubirDocumentoConArchivoRequest(
     @NotBlank(message = "El ID de la carpeta es requerido")
     String carpetaId,

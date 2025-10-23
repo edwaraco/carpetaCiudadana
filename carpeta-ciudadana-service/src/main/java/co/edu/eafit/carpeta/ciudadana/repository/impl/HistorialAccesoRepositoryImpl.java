@@ -15,9 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementación del repositorio para la entidad HistorialAcceso usando DynamoDB
- */
 @Repository
 public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository {
 
@@ -32,17 +29,11 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 TableSchema.fromBean(HistorialAcceso.class));
     }
 
-    /**
-     * Guarda un registro de acceso en DynamoDB
-     */
     public HistorialAcceso save(HistorialAcceso historialAcceso) {
         historialTable.putItem(historialAcceso);
         return historialAcceso;
     }
 
-    /**
-     * Busca el historial de accesos de una carpeta
-     */
     public List<HistorialAcceso> findByCarpetaId(String carpetaId) {
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(Key.builder()
@@ -56,9 +47,6 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca el historial de accesos de un documento específico
-     */
     public List<HistorialAcceso> findByDocumentoId(String carpetaId, String documentoId) {
         List<HistorialAcceso> historial = findByCarpetaId(carpetaId);
         return historial.stream()
@@ -66,9 +54,6 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca accesos por tipo
-     */
     public List<HistorialAcceso> findByTipoAcceso(String carpetaId, String tipoAcceso) {
         List<HistorialAcceso> historial = findByCarpetaId(carpetaId);
         return historial.stream()
@@ -76,9 +61,6 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca accesos por usuario
-     */
     public List<HistorialAcceso> findByUsuarioAcceso(String carpetaId, String usuarioAcceso) {
         List<HistorialAcceso> historial = findByCarpetaId(carpetaId);
         return historial.stream()
@@ -86,9 +68,6 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca accesos en un rango de fechas
-     */
     public List<HistorialAcceso> findByRangoFechas(String carpetaId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         List<HistorialAcceso> historial = findByCarpetaId(carpetaId);
         return historial.stream()
@@ -97,16 +76,10 @@ public class HistorialAccesoRepositoryImpl implements HistorialAccesoRepository 
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Cuenta el número de accesos a una carpeta
-     */
     public long countByCarpetaId(String carpetaId) {
         return findByCarpetaId(carpetaId).size();
     }
 
-    /**
-     * Cuenta el número de accesos a un documento
-     */
     public long countByDocumentoId(String carpetaId, String documentoId) {
         return findByDocumentoId(carpetaId, documentoId).size();
     }

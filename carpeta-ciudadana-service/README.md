@@ -7,16 +7,20 @@ Este microservicio implementa el **Core Domain "Carpeta Personal"** del sistema 
 - ✅ **Crear carpetas ciudadanas únicas**: Registro inicial con email inmutable
 - ✅ **Almacenar documentos**: Subida de documentos (firmados o no) en MinIO con metadatos en DynamoDB
 - ✅ **Ver mis documentos**: Consulta de documentos por carpeta
-- ✅ **Integración con microservicio de firma digital**: Autenticar documentos mediante servicio externo que implementa FR-AF-01
+- ✅ **Generar URLs de descarga seguras**: URLs prefirmadas temporales para descarga de documentos
 
 ## Arquitectura
 
 ### Tecnologías Utilizadas
 
-- **Spring Boot 3.2.0** - Framework principal
+- **Spring Boot 3.2.12** - Framework principal
+- **Java 21** - Lenguaje de programación
 - **DynamoDB Local** - Persistencia de metadatos
 - **MinIO** - Almacenamiento de archivos (S3-compatible)
 - **Spring Cloud OpenFeign** - Comunicación con microservicios
+- **MapStruct** - Mapeo de objetos
+- **SpringDoc OpenAPI** - Documentación de API
+- **Resilience4j** - Circuit Breaker y Retry
 - **Docker Compose** - Orquestación de servicios
 
 ### Estructura por Capas
@@ -29,7 +33,7 @@ Controller (REST) -> Service (Lógica de Negocio) -> Repository (Persistencia) -
 
 ### Prerrequisitos
 
-- Java 17+
+- Java 21+
 - Docker y Docker Compose
 - Maven 3.6+
 
@@ -43,8 +47,14 @@ mvn clean package
 ### 2. Ejecutar con Docker Compose
 
 ```bash
-docker-compose up --build
+# Solo servicios de infraestructura (MinIO, DynamoDB)
+docker-compose up
+
+# Para ejecutar la aplicación completa (comentado en docker-compose.yml)
+# docker-compose up --build
 ```
+
+**Nota**: El servicio de aplicación está comentado en `docker-compose.yml`. Para ejecutarlo, descomenta las líneas correspondientes y actualiza el Dockerfile para usar Java 21.
 
 ### 3. Verificar Servicios
 
@@ -93,7 +103,6 @@ archivo: [archivo]
 titulo: "Diploma Universitario"
 tipoDocumento: "DIPLOMA"
 contextoDocumento: "EDUCACION"
-descripcion: "Diploma de Ingeniería de Sistemas"
 ```
 
 #### Obtener Documentos de Carpeta
@@ -108,49 +117,18 @@ GET /api/v1/carpetas/{carpetaId}/documentos
 GET /api/v1/carpetas/{carpetaId}/documentos/{documentoId}
 ```
 
-### Autenticación/Firma Digital
-
-#### Autenticar Documento (FR-AF-01)
+#### Generar URL de Descarga
 
 ```http
-POST /api/v1/firma-digital/{carpetaId}/documentos/{documentoId}/autenticar?funcionarioSolicitante=JuanPerez&entidadSolicitante=UniversidadEAFIT
+GET /api/v1/carpetas/{carpetaId}/documentos/{documentoId}/descargar
 ```
 
-#### Verificar Estado de Autenticación
+## Documentación de API
 
-```http
-GET /api/v1/firma-digital/{carpetaId}/documentos/{documentoId}/estado
-```
+La API está documentada usando **SpringDoc OpenAPI** y está disponible en:
 
-#### Obtener Certificado
-
-```http
-GET /api/v1/firma-digital/{carpetaId}/documentos/{documentoId}/certificado
-```
-
-## Integración con Microservicio de Autenticación
-
-El microservicio se comunica con un servicio externo que implementa **FR-AF-01** usando la API de MinTIC `/apis/authenticateDocument`:
-
-### Request al Microservicio de Autenticación
-
-```json
-{
-  "idCitizen": "1234567890",
-  "urlDocument": "https://bucket.s3.amazonaws.com/documento.pdf?AWSAccessKeyId=...",
-  "documentTitle": "Diploma Grado",
-  "funcionarioSolicitante": "Juan Pérez",
-  "entidadSolicitante": "Universidad EAFIT",
-  "motivoAutenticacion": "Autenticación de documento para validez legal"
-}
-```
-
-### Códigos de Respuesta de MinTIC
-
-- **200**: Autenticación exitosa
-- **204**: Sin contenido - documento no válido para autenticación
-- **501**: Parámetros incorrectos
-- **500**: Error de aplicación
+- **Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html
+- **API Docs**: http://localhost:8080/api/v1/api-docs
 
 ## Configuración
 
@@ -169,8 +147,8 @@ MINIO_ACCESS_KEY: admin
 MINIO_SECRET_KEY: admin123
 MINIO_BUCKET_NAME: carpeta-ciudadana-docs
 
-# Microservicio de Autenticación/Firma Digital
-DIGITAL_SIGNATURE_SERVICE_URL: http://localhost:8081
+# Configuración adicional
+MINIO_PRESIGNED_URL_EXPIRY: 15
 ```
 
 ## Estructura del Proyecto
@@ -182,60 +160,95 @@ src/main/java/co/edu/eafit/carpeta/ciudadana/
 │   ├── DynamoDbConfig.java
 │   ├── MinioConfig.java
 │   ├── DynamoDbInitializer.java
-│   └── MinioInitializer.java
+│   ├── MinioInitializer.java
+│   └── OpenApiConfig.java
 ├── controller/                               # Controladores REST
-│   ├── CarpetaCiudadanoController.java
-│   └── FirmaDigitalController.java
+│   └── CarpetaCiudadanoController.java
 ├── service/                                 # Lógica de negocio
 │   ├── CarpetaCiudadanoService.java
-│   └── FirmaDigitalService.java
+│   ├── MinioStorageService.java
+│   └── impl/
+│       └── CarpetaCiudadanoServiceImpl.java
 ├── repository/                              # Acceso a datos
 │   ├── CarpetaCiudadanoRepository.java
 │   ├── DocumentoRepository.java
-│   └── HistorialAccesoRepository.java
+│   ├── HistorialAccesoRepository.java
+│   └── impl/
+│       ├── CarpetaCiudadanoRepositoryImpl.java
+│       ├── DocumentoRepositoryImpl.java
+│       └── HistorialAccesoRepositoryImpl.java
 ├── entity/                                  # Entidades de dominio
 │   ├── CarpetaCiudadano.java
 │   ├── Documento.java
 │   └── HistorialAcceso.java
 ├── dto/                                     # Objetos de transferencia
-│   ├── CarpetaRequest.java
-│   ├── DocumentoRequest.java
-│   ├── ResponseDTOs.java
-│   ├── FirmaDigitalRequest.java
-│   └── FirmaDigitalResponse.java
-└── client/                                  # Clientes Feign
-    ├── DigitalSignatureClient.java
-    ├── DigitalSignatureClientConfig.java
-    └── DigitalSignatureErrorDecoder.java
+│   ├── request/
+│   │   ├── BuscarCarpetaRequest.java
+│   │   ├── CrearCarpetaRequest.java
+│   │   ├── ObtenerDocumentoRequest.java
+│   │   ├── ObtenerDocumentosCarpetaRequest.java
+│   │   ├── SubirDocumentoConArchivoRequest.java
+│   │   └── SubirDocumentoRequest.java
+│   └── response/
+│       ├── ApiResponse.java
+│       ├── CarpetaResponse.java
+│       ├── CrearCarpetaResponse.java
+│       ├── DocumentoResponse.java
+│       ├── DocumentoUrlResponse.java
+│       ├── HistorialAccesoResponse.java
+│       ├── ListaDocumentosResponse.java
+│       ├── SubirDocumentoResponse.java
+│       └── UrlDescargaResponse.java
+├── mapper/                                   # Mappers con MapStruct
+│   ├── carpeta/
+│   │   └── CarpetaMapper.java
+│   ├── document/
+│   │   ├── CrearDocumentoMapper.java
+│   │   ├── DocumentoResponseMapper.java
+│   │   └── SubirDocumentoMapper.java
+│   └── historial/
+│       └── HistorialAccesoMapper.java
+├── exception/                               # Manejo de excepciones
+│   ├── CarpetaAlreadyExistsException.java
+│   ├── DocumentUploadException.java
+│   ├── GlobalExceptionHandler.java
+│   ├── InvalidRequestException.java
+│   ├── ResourceNotFoundException.java
+│   └── StorageException.java
+└── util/                                    # Utilidades
+    └── ResponseUtil.java
 ```
 
 ## Modelo de Datos
 
 ### CarpetaCiudadano
 
-- `carpetaId`: UUID único de la carpeta
+- `carpetaId`: UUID único de la carpeta (PK)
 - `propietarioCedula`: Cédula del ciudadano propietario
 - `propietarioNombre`: Nombre completo del propietario
 - `emailCarpeta`: Email inmutable de la carpeta (@carpetacolombia.co)
-- `estadoCarpeta`: ACTIVA, SUSPENDIDA, MIGRACION
-- `operadorActual`: ID del operador actual
+- `estadoCarpeta`: ACTIVA, SUSPENDIDA, EN_TRANSFERENCIA
+- `operadorActual`: ID del operador actual (para portabilidad)
 - `espacioUtilizadoBytes`: Espacio utilizado en bytes
+- `fechaCreacion`: Fecha de creación de la carpeta
+- `fechaUltimaModificacion`: Fecha de última modificación
 
 ### Documento
 
 - `carpetaId`: ID de la carpeta propietaria (PK)
 - `documentoId`: UUID único del documento (SK)
 - `titulo`: Título del documento
-- `tipoDocumento`: CEDULA, DIPLOMA, ACTA_GRADO, etc.
-- `contextoDocumento`: EDUCACION, NOTARIA, REGISTRADURIA, etc.
-- `formatoArchivo`: PDF, JPEG, PNG
+- `tipoDocumento`: CEDULA, DIPLOMA, ACTA_GRADO, PROCESADO_LABORAL, PROCESADO_MEDICO
+- `contextoDocumento`: EDUCACION, NOTARIA, REGISTRADURIA, SALUD, LABORAL
+- `descripcion`: Descripción opcional del documento
+- `formatoArchivo`: PDF, JPEG, PNG, etc.
 - `tamanoBytes`: Tamaño en bytes
 - `hashDocumento`: SHA-256 del contenido
 - `urlAlmacenamiento`: URL en MinIO/S3
-- `estadoDocumento`: TEMPORAL, CERTIFICADO, REVOCADO
-- `firmadoPor`: Entidad que firmó el documento
-- `firmaDigital`: Firma digital del documento
-- `certificadoValidez`: Certificado de validez
+- `estadoDocumento`: TEMPORAL, PROCESADO, CERTIFICADO, REVOCADO
+- `esDescargable`: Indica si el documento es descargable
+- `fechaRecepcion`: Fecha de recepción del documento
+- `fechaUltimaModificacion`: Fecha de última modificación
 
 ### HistorialAcceso
 
@@ -248,11 +261,12 @@ src/main/java/co/edu/eafit/carpeta/ciudadana/
 - `resultadoAcceso`: EXITOSO, FALLIDO, DENEGADO
 - `motivoAcceso`: Motivo del acceso
 
-## Monitoreo y Logs
+### Configuración de Archivos
 
-- **Actuator**: http://localhost:8080/api/v1/actuator/health
-- **Logs**: Configurados con nivel DEBUG para desarrollo
-- **Métricas**: Disponibles en `/actuator/metrics`
+- **Tamaño máximo de archivo**: 50MB
+- **Tamaño máximo de request**: 50MB
+- **URLs prefirmadas**: Válidas por 15 minutos
+- **Logging**: Nivel DEBUG para desarrollo
 
 ## Desarrollo
 
@@ -274,13 +288,3 @@ mvn test
 mvn clean package
 java -jar target/carpeta-ciudadana-service-1.0.0.jar
 ```
-
-## Próximas Funcionalidades
-
-- [ ] Autenticación y autorización (JWT)
-- [ ] Compartir documentos entre ciudadanos
-- [ ] Transferencias P2P entre operadores
-- [ ] Portabilidad de carpetas
-- [ ] Notificaciones por email/SMS
-- [ ] Servicios premium
-- [ ] Analytics y reportes

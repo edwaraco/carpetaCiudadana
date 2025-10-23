@@ -7,18 +7,9 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-/**
- * Mapper para operaciones de respuesta de documentos
- * Convierte entidades Documento a DTOs de respuesta
- */
 @Mapper(componentModel = "spring")
 public interface DocumentoResponseMapper {
 
-    /**
-     * Convierte una entidad Documento a DocumentoResponse
-     * @param documento Entidad Documento
-     * @return DocumentoResponse DTO
-     */
     @Mapping(target = "documentoId", source = "documentoId")
     @Mapping(target = "titulo", source = "titulo")
     @Mapping(target = "tipoDocumento", source = "tipoDocumento")
@@ -32,10 +23,5 @@ public interface DocumentoResponseMapper {
     @Mapping(target = "hashDocumento", source = "hashDocumento")
     DocumentoResponse toResponse(Documento documento);
 
-    /**
-     * Convierte una lista de entidades Documento a lista de DocumentoResponse
-     * @param documentos Lista de entidades Documento
-     * @return Lista de DocumentoResponse DTOs
-     */
     List<DocumentoResponse> toResponseList(List<Documento> documentos);
 }

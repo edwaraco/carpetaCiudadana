@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Implementación del repositorio para la entidad CarpetaCiudadano usando DynamoDB
- */
 @Repository
 public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepository {
 
@@ -32,17 +29,11 @@ public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepositor
                 TableSchema.fromBean(CarpetaCiudadano.class));
     }
 
-    /**
-     * Guarda una carpeta ciudadano en DynamoDB
-     */
     public CarpetaCiudadano save(CarpetaCiudadano carpeta) {
         carpetaTable.putItem(carpeta);
         return carpeta;
     }
 
-    /**
-     * Busca una carpeta por su ID
-     */
     public Optional<CarpetaCiudadano> findById(String carpetaId) {
         Key key = Key.builder()
                 .partitionValue(carpetaId)
@@ -52,12 +43,7 @@ public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepositor
         return Optional.ofNullable(carpeta);
     }
 
-    /**
-     * Busca una carpeta por la cédula del propietario
-     */
     public Optional<CarpetaCiudadano> findByPropietarioCedula(String cedula) {
-        // En DynamoDB necesitamos un GSI para buscar por cédula
-        // Por ahora implementamos una búsqueda secuencial (no recomendado para producción)
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(Key.builder()
                         .partitionValue(cedula)
@@ -72,11 +58,7 @@ public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepositor
         return carpetas.isEmpty() ? Optional.empty() : Optional.of(carpetas.get(0));
     }
 
-    /**
-     * Busca una carpeta por el email de la carpeta
-     */
     public Optional<CarpetaCiudadano> findByEmailCarpeta(String emailCarpeta) {
-        // Similar al método anterior, necesitaríamos un GSI
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(Key.builder()
                         .partitionValue(emailCarpeta)
@@ -91,9 +73,6 @@ public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepositor
         return carpetas.isEmpty() ? Optional.empty() : Optional.of(carpetas.get(0));
     }
 
-    /**
-     * Elimina una carpeta por su ID
-     */
     public void deleteById(String carpetaId) {
         Key key = Key.builder()
                 .partitionValue(carpetaId)
@@ -102,9 +81,6 @@ public class CarpetaCiudadanoRepositoryImpl implements CarpetaCiudadanoRepositor
         carpetaTable.deleteItem(key);
     }
 
-    /**
-     * Verifica si existe una carpeta con el ID dado
-     */
     public boolean existsById(String carpetaId) {
         return findById(carpetaId).isPresent();
     }

@@ -2,9 +2,6 @@ package co.edu.eafit.carpeta.ciudadana.dto.response;
 
 import java.time.LocalDateTime;
 
-/**
- * Response DTO para información de documento
- */
 public record DocumentoResponse(
     String documentoId,
     String titulo,

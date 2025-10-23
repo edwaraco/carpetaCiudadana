@@ -10,9 +10,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
 
-/**
- * Configuración para DynamoDB Local
- */
 @Configuration
 public class DynamoDbConfig {
 

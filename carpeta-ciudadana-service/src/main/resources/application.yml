@@ -51,15 +51,6 @@ management:
     health:
       show-details: always
 
-# Configuración de Feign para comunicación con otros microservicios
-feign:
-  client:
-    config:
-      default:
-        connect-timeout: 5000
-        read-timeout: 10000
-        logger-level: basic
-
 # Configuración de SpringDoc OpenAPI/Swagger
 springdoc:
   api-docs:

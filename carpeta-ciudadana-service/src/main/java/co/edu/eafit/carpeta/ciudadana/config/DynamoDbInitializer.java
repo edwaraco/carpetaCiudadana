@@ -11,9 +11,6 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Inicializador de tablas DynamoDB al arrancar la aplicación
- */
 @Slf4j
 @Component
 public class DynamoDbInitializer implements CommandLineRunner {

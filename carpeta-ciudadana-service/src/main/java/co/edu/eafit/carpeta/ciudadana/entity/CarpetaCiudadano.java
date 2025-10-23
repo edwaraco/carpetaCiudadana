@@ -9,16 +9,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 
 import java.time.LocalDateTime;
 
-/**
- * Entidad principal que representa la carpeta de un ciudadano
- * Basada en el Aggregate Root CarpetaCiudadano del análisis DDD
- * 
- * Simplificada para MVP - incluye solo campos esenciales para:
- * 1. Crear carpetas ciudadanas únicas
- * 2. Almacenar documentos
- * 3. Ver documentos
- * 4. Gestión de portabilidad
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,23 +16,19 @@ import java.time.LocalDateTime;
 @DynamoDbBean
 public class CarpetaCiudadano {
 
-    private String carpetaId; // UUID único de la carpeta (Partition Key)
+    private String carpetaId;
 
-    // Datos del propietario
-    private String propietarioCedula; // Cédula del ciudadano propietario
-    private String propietarioNombre; // Nombre completo del propietario
-    private String emailCarpeta; // Email inmutable de la carpeta (@carpetacolombia.co)
+    private String propietarioCedula;
+    private String propietarioNombre;
+    private String emailCarpeta;
 
-    // Estado y gestión
     private String estadoCarpeta; // ACTIVA, SUSPENDIDA, EN_TRANSFERENCIA
     private String operadorActual; // ID del operador actual (para portabilidad)
 
-    // Métricas
-    private Long espacioUtilizadoBytes; // Espacio utilizado en bytes
+    private Long espacioUtilizadoBytes;
 
-    // Auditoría
-    private LocalDateTime fechaCreacion; // Fecha de creación de la carpeta
-    private LocalDateTime fechaUltimaModificacion; // Última modificación
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaUltimaModificacion;
 
     @DynamoDbPartitionKey
     public String getCarpetaId() {

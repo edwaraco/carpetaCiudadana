@@ -1,8 +1,5 @@
 package co.edu.eafit.carpeta.ciudadana.exception;
 
-/**
- * Excepción lanzada cuando un recurso solicitado no existe
- */
 public class ResourceNotFoundException extends RuntimeException {
     
     private final String resourceName;
