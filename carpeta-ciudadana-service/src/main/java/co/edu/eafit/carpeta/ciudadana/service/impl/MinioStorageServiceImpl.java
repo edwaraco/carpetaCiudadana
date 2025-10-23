@@ -128,4 +128,40 @@ public class MinioStorageServiceImpl implements MinioStorageService {
             return false;
         }
     }
+
+    @Override
+    public void uploadFileForUser(String userId, String fileName, MultipartFile file, String contentType) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        uploadFile(objectName, file, contentType);
+    }
+
+    @Override
+    public String generatePresignedUrlForUser(String userId, String fileName) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        return generatePresignedUrl(objectName);
+    }
+
+    @Override
+    public String generatePresignedUrlForUser(String userId, String fileName, int expiryMinutes) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        return generatePresignedUrl(objectName, expiryMinutes);
+    }
+
+    @Override
+    public InputStream getFileAsStreamForUser(String userId, String fileName) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        return getFileAsStream(objectName);
+    }
+
+    @Override
+    public void deleteFileForUser(String userId, String fileName) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        deleteFile(objectName);
+    }
+
+    @Override
+    public boolean fileExistsForUser(String userId, String fileName) {
+        String objectName = String.format("%s/%s", userId, fileName);
+        return fileExists(objectName);
+    }
 }

@@ -96,14 +96,16 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
             String hashDocumento = calcularHash(archivo.getBytes());
             documento.setHashDocumento(hashDocumento);
 
-            String objectName = String.format("%s/%s/%s",
-                    request.carpetaId(),
-                    documento.getDocumentoId(),
-                    archivo.getOriginalFilename());
+            CarpetaCiudadano carpeta = carpetaRepository.findById(request.carpetaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Carpeta", "carpetaId", request.carpetaId()));
+            
+            String userId = carpeta.getPropietarioCedula();
+            String fileName = archivo.getOriginalFilename();
 
-            minioStorageService.uploadFile(objectName, archivo, archivo.getContentType());
+            minioStorageService.uploadFileForUser(userId, fileName, archivo, archivo.getContentType());
 
-            documento.setUrlAlmacenamiento(objectName);
+            String urlAlmacenamiento = String.format("%s/%s", userId, fileName);
+            documento.setUrlAlmacenamiento(urlAlmacenamiento);
 
             documento = documentoRepository.save(documento);
 
@@ -146,8 +148,12 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
         if (!documento.getEsDescargable()) {
             throw new IllegalStateException("El documento no está disponible para descarga");
         }
-
-        String urlDescarga = minioStorageService.generatePresignedUrl(documento.getUrlAlmacenamiento());
+        
+        String[] urlParts = documento.getUrlAlmacenamiento().split("/", 2);
+        String userId = urlParts[0];
+        String fileName = urlParts[1];
+        
+        String urlDescarga = minioStorageService.generatePresignedUrlForUser(userId, fileName);
 
         HistorialAcceso acceso = historialAccesoMapper.crearAcceso(
                 carpetaId, documentoId, "DESCARGA", "USUARIO", "URL de descarga generada");
