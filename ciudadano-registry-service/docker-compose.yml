@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  # DynamoDB Local
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local-registry
+    ports:
+      - "8002:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    working_dir: /home/dynamodblocal
+    networks:
+      - carpeta-ciudadana-network
+    restart: unless-stopped
+
+  # DynamoDB Admin (Interfaz Web para DynamoDB)
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: dynamodb-admin-registry
+    ports:
+      - "8003:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    networks:
+      - carpeta-ciudadana-network
+    depends_on:
+      - dynamodb-local
+    restart: unless-stopped
+
+  # ciudadano-registry-service:
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile
+  #  container_name: ciudadano-registry-service
+  #  environment:
+  #    SPRING_PROFILES_ACTIVE: docker
+  #    AWS_DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+  #    AWS_REGION: us-east-1
+  #    AWS_ACCESS_KEY_ID: dummy
+  #    AWS_SECRET_ACCESS_KEY: dummy
+  #  ports:
+  #    - "8081:8081"
+  #  depends_on:
+  #    - dynamodb-local
+  #  networks:
+  #    - carpeta-ciudadana-network
+  #  restart: unless-stopped
+
+networks:
+  carpeta-ciudadana-network:
+    external: true
