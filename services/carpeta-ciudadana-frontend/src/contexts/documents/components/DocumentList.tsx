@@ -22,6 +22,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useDocuments, useDeleteDocument } from '../hooks';
 import { DocumentCard } from './DocumentCard';
 import { documentService } from '../infrastructure';
+import { isFeatureEnabled } from '@/shared/config/featureFlags';
 
 interface DocumentListProps {
   onUploadClick?: () => void;
@@ -35,6 +36,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { documents, isLoading, error, pagination, refetch } = useDocuments(currentPage);
   const { deleteDocument, isLoading: isDeleting } = useDeleteDocument();
+
+  const canDownload = isFeatureEnabled('DOWNLOAD_DOCUMENTS');
+  const canDelete = isFeatureEnabled('DELETE_DOCUMENTS');
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
@@ -135,8 +139,8 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 <DocumentCard
                   document={document}
                   onView={onViewDocument}
-                  onDownload={handleDownload}
-                  onDelete={handleDeleteClick}
+                  onDownload={canDownload ? handleDownload : undefined}
+                  onDelete={canDelete ? handleDeleteClick : undefined}
                 />
               </Grid>
             ))}

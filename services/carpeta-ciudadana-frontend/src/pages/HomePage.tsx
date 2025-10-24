@@ -23,6 +23,7 @@ import {
   SwapHoriz,
   Description,
 } from '@mui/icons-material';
+import { isFeatureEnabled } from '@/shared/config/featureFlags';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -75,16 +76,18 @@ export const HomePage: React.FC = () => {
                 {t('homePage.hero.description')}
               </Typography>
               <Box sx={{ mt: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  color="secondary"
-                  startIcon={<PersonAdd />}
-                  onClick={() => navigate('/register')}
-                  sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
-                >
-                  {t('homePage.hero.registerButton')}
-                </Button>
+                {isFeatureEnabled('REGISTRATION') && (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    color="secondary"
+                    startIcon={<PersonAdd />}
+                    onClick={() => navigate('/register')}
+                    sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
+                  >
+                    {t('homePage.hero.registerButton')}
+                  </Button>
+                )}
                 <Button
                   variant="outlined"
                   size="large"
@@ -127,27 +130,29 @@ export const HomePage: React.FC = () => {
       </Container>
 
       {/* CTA Section */}
-      <Box sx={{ bgcolor: 'grey.100', py: 6 }}>
-        <Container maxWidth="md">
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" gutterBottom>
-              {t('homePage.cta.title')}
-            </Typography>
-            <Typography variant="body1" paragraph color="text.secondary">
-              {t('homePage.cta.description')}
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<PersonAdd />}
-              onClick={() => navigate('/register')}
-              sx={{ mt: 2 }}
-            >
-              {t('homePage.cta.button')}
-            </Button>
-          </Box>
-        </Container>
-      </Box>
+      {isFeatureEnabled('REGISTRATION') && (
+        <Box sx={{ bgcolor: 'grey.100', py: 6 }}>
+          <Container maxWidth="md">
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" gutterBottom>
+                {t('homePage.cta.title')}
+              </Typography>
+              <Typography variant="body1" paragraph color="text.secondary">
+                {t('homePage.cta.description')}
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<PersonAdd />}
+                onClick={() => navigate('/register')}
+                sx={{ mt: 2 }}
+              >
+                {t('homePage.cta.button')}
+              </Button>
+            </Box>
+          </Container>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -17,6 +17,7 @@ import { FolderPage } from './pages/FolderPage';
 import { PortabilityPage } from './pages/PortabilityPage';
 import { RequestsPage } from './pages/RequestsPage';
 import { UploadDocumentForm } from './contexts/documents/components';
+import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
 
 // Create MUI theme
 const theme = createTheme({
@@ -41,28 +42,36 @@ const theme = createTheme({
   },
 });
 
-const autheticatedOptions = [
-  { path: "dashboard", Component: DashboardPage},
-  { path: "documents", Component: DocumentsPage},
-  { path: "documents/upload", Component: UploadDocumentForm},
-  { path: "folder", Component: FolderPage},
-  { path: "requests", Component: RequestsPage},
-  { path: "portability", Component: PortabilityPage},
+interface AuthenticatedRoute {
+  path: string;
+  Component: React.ComponentType;
+  feature?: FeatureFlag;
+}
+
+const autheticatedOptions: AuthenticatedRoute[] = [
+  { path: "dashboard", Component: DashboardPage },
+  { path: "documents", Component: DocumentsPage, feature: 'DOCUMENTS' },
+  { path: "documents/upload", Component: UploadDocumentForm, feature: 'UPLOAD_DOCUMENTS' },
+  { path: "folder", Component: FolderPage },
+  { path: "requests", Component: RequestsPage, feature: 'DOCUMENT_REQUESTS' },
+  { path: "portability", Component: PortabilityPage, feature: 'PORTABILITY' },
 ];
 
 
 function printProtectedOptions() {
-  return autheticatedOptions.map(({path, Component}) => 
-        <Route
-          key={`option_${path}`}
-          path={path}
-          element={
-            <ProtectedRoute>
-              <Component />
-            </ProtectedRoute>
-          }
-        />
-  );
+  return autheticatedOptions
+    .filter(({ feature }) => !feature || isFeatureEnabled(feature))
+    .map(({ path, Component }) =>
+      <Route
+        key={`option_${path}`}
+        path={path}
+        element={
+          <ProtectedRoute>
+            <Component />
+          </ProtectedRoute>
+        }
+      />
+    );
 }
 
 function App() {
@@ -76,7 +85,9 @@ function App() {
               {/* Public routes */}
               <Route index element={<HomePage />} />
               <Route path="login" element={<LoginPage />} />
-              <Route path="register" element={<RegisterPage />} />
+              {isFeatureEnabled('REGISTRATION') && (
+                <Route path="register" element={<RegisterPage />} />
+              )}
 
               {/* Protected routes */}
               {printProtectedOptions()}

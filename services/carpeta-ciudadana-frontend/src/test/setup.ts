@@ -4,7 +4,16 @@
  */
 
 import '@testing-library/jest-dom';
-import { beforeAll, afterAll } from 'vitest';
+import { beforeAll, afterAll, afterEach, vi } from 'vitest';
+import { mockFeatureFlagsModule, resetFeatureFlagsForTest } from './mocks/featureFlags';
+
+// Mock feature flags globally - todas las features habilitadas por defecto en tests
+vi.mock('@/shared/config/featureFlags', () => mockFeatureFlagsModule);
+
+// Reset feature flags después de cada test
+afterEach(() => {
+  resetFeatureFlagsForTest();
+});
 
 // Suppress console logs BEFORE any imports
 const originalLog = console.log;

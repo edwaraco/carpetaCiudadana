@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/authentication/context/AuthContext';
 import { TFunction } from 'i18next';
+import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
 
 const drawerWidth = 240;
 
@@ -43,14 +44,38 @@ interface MenuItem {
   icon: React.ReactNode;
   path: string;
   requiresAuth: boolean;
+  feature?: FeatureFlag;
 }
 
 function buildMenuItems(t: TFunction<"common", undefined>) {
   const menuItems: MenuItem[] = [
-    { text: t('navigation.dashboard'), icon: <Dashboard />, path: '/dashboard', requiresAuth: true},
-    { text: t('navigation.documents'), icon: <Folder />, path: '/documents', requiresAuth: true },
-    { text: t('navigation.requests'), icon: <Inbox />, path: '/requests', requiresAuth: true },
-    { text: t('navigation.portability'), icon: <SwapHoriz />, path: '/portability', requiresAuth: true },
+    {
+      text: t('navigation.dashboard'),
+      icon: <Dashboard />,
+      path: '/dashboard',
+      requiresAuth: true
+    },
+    {
+      text: t('navigation.documents'),
+      icon: <Folder />,
+      path: '/documents',
+      requiresAuth: true,
+      feature: 'DOCUMENTS'
+    },
+    {
+      text: t('navigation.requests'),
+      icon: <Inbox />,
+      path: '/requests',
+      requiresAuth: true,
+      feature: 'DOCUMENT_REQUESTS'
+    },
+    {
+      text: t('navigation.portability'),
+      icon: <SwapHoriz />,
+      path: '/portability',
+      requiresAuth: true,
+      feature: 'PORTABILITY'
+    },
   ];
   return menuItems;
 }
@@ -93,6 +118,7 @@ export const Layout: React.FC = () => {
       <List>
         {buildMenuItems(t)
           .filter(item => !item.requiresAuth || isAuthenticated)
+          .filter(item => !item.feature || isFeatureEnabled(item.feature))
           .map((item) => (
             <ListItem key={item.text} disablePadding>
               <ListItemButton
@@ -155,13 +181,15 @@ export const Layout: React.FC = () => {
               >
                 {t('homePage.hero.header.login')}
               </Button>
-              <Button
-                color="inherit"
-                startIcon={<PersonAdd />}
-                onClick={() => navigate('/register')}
-              >
-                {t('homePage.hero.header.register')}
-              </Button>
+              {isFeatureEnabled('REGISTRATION') && (
+                <Button
+                  color="inherit"
+                  startIcon={<PersonAdd />}
+                  onClick={() => navigate('/register')}
+                >
+                  {t('homePage.hero.header.register')}
+                </Button>
+              )}
             </Box>
           )}
         </Toolbar>

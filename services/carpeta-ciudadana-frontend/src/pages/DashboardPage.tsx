@@ -28,6 +28,7 @@ import { useAuth } from '../contexts/authentication/context/AuthContext';
 import { StorageStatistics } from '../contexts/folder/components';
 import { useFolderStatistics } from '../contexts/folder/hooks';
 import { useRequests } from '../contexts/requests/hooks';
+import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ export const DashboardPage: React.FC = () => {
       action: () => navigate('/documents'),
       color: 'primary',
       id: 'upload-document',
+      feature: 'UPLOAD_DOCUMENTS' as FeatureFlag,
     },
     {
       icon: <Folder sx={{ fontSize: 40 }} />,
@@ -83,6 +85,7 @@ export const DashboardPage: React.FC = () => {
       action: () => navigate('/documents'),
       color: 'info',
       id: 'my-documents',
+      feature: 'DOCUMENTS' as FeatureFlag,
     },
     {
       icon: <Inbox sx={{ fontSize: 40 }} />,
@@ -92,6 +95,7 @@ export const DashboardPage: React.FC = () => {
       color: 'warning',
       badge: pendingRequests > 0 ? pendingRequests : undefined,
       id: 'requested-document',
+      feature: 'DOCUMENT_REQUESTS' as FeatureFlag,
     },
     {
       icon: <SwapHoriz sx={{ fontSize: 40 }} />,
@@ -100,6 +104,7 @@ export const DashboardPage: React.FC = () => {
       action: () => navigate('/portability'),
       color: 'secondary',
       id: 'portability',
+      feature: 'PORTABILITY' as FeatureFlag,
     },
   ];
 
@@ -142,9 +147,11 @@ export const DashboardPage: React.FC = () => {
         </Grid>
 
         {/* Storage Statistics */}
-        <Box sx={{ mb: 4 }}>
-          <StorageStatistics />
-        </Box>
+        {isFeatureEnabled('STORAGE_STATS') && (
+          <Box sx={{ mb: 4 }}>
+            <StorageStatistics />
+          </Box>
+        )}
 
         {/* Quick Actions */}
         <Box sx={{ mb: 4 }}>
@@ -152,63 +159,67 @@ export const DashboardPage: React.FC = () => {
             {t('dashboardPage.quickActions.title')}
           </Typography>
           <Grid container spacing={2}>
-            {quickActions.map((action, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                    },
-                  }}
-                  onClick={action.action}
-                >
-                  <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
-                    {action.badge && (
-                      <Chip
-                        label={action.badge}
-                        color="error"
-                        size="small"
-                        sx={{ position: 'absolute', top: 8, right: 8 }}
-                        data-testid={`badge-${action.id}`}
-                      />
-                    )}
-                    <Box sx={{ color: `${action.color}.main`, mb: 1 }}>
-                      {action.icon}
-                    </Box>
-                    <Typography variant="h6" gutterBottom>
-                      {action.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {action.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+            {quickActions
+              .filter((action) => !action.feature || isFeatureEnabled(action.feature))
+              .map((action, index) => (
+                <Grid item xs={12} sm={6} md={3} key={index}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: 4,
+                      },
+                    }}
+                    onClick={action.action}
+                  >
+                    <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
+                      {action.badge && (
+                        <Chip
+                          label={action.badge}
+                          color="error"
+                          size="small"
+                          sx={{ position: 'absolute', top: 8, right: 8 }}
+                          data-testid={`badge-${action.id}`}
+                        />
+                      )}
+                      <Box sx={{ color: `${action.color}.main`, mb: 1 }}>
+                        {action.icon}
+                      </Box>
+                      <Typography variant="h6" gutterBottom>
+                        {action.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {action.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
           </Grid>
         </Box>
 
         {/* Recent Activity - Placeholder */}
-        <Box>
-          <Typography variant="h5" gutterBottom sx={{ mb: 2 }} data-testid='dashboard-recent-activities'>
-            {t('dashboardPage.recentActivity.title')}
-          </Typography>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Assessment sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="body1" color="text.secondary">
-                {t('dashboardPage.recentActivity.noActivity')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t('dashboardPage.recentActivity.description')}
-              </Typography>
-            </Box>
-          </Paper>
-        </Box>
+        {isFeatureEnabled('RECENT_ACTIVITY') && (
+          <Box>
+            <Typography variant="h5" gutterBottom sx={{ mb: 2 }} data-testid='dashboard-recent-activities'>
+              {t('dashboardPage.recentActivity.title')}
+            </Typography>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Assessment sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  {t('dashboardPage.recentActivity.noActivity')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('dashboardPage.recentActivity.description')}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        )}
     </Container>
   );
 };
