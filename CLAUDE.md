@@ -8,7 +8,7 @@ This is an **academic project** for an advanced architecture course (EAFIT Unive
 
 **Core Concept**: "El ciudadano no debe ser el mensajero del estado" (Citizens should not be the state's messenger) - citizens store documents digitally once and share them electronically instead of carrying physical copies.
 
-**System Type**: Documentation and architectural design project (not implementation)
+**System Type**: Architectural design project with production-ready frontend implementation
 
 ## Project Structure (Monorepo)
 
@@ -16,6 +16,7 @@ This is an **academic project** for an advanced architecture course (EAFIT Unive
 carpeta_ciudadana/
 ├── docs/                         # Documentation and architectural analysis
 │   ├── ADR/                      # Architecture Decision Records
+│   │   └── 0001-frontend-monolitico-react-material-ui-vite.md
 │   └── informacion_cruda/        # Raw analysis and requirements
 │       ├── analisis.md           # Main system analysis with sequence diagrams
 │       ├── 0_inquietudes.md      # Open questions and concerns
@@ -27,6 +28,22 @@ carpeta_ciudadana/
 │           ├── 1_lenguaje_ubicuo.md  # Ubiquitous language definitions
 │           └── 2_domain-description.md  # Detailed domain descriptions
 ├── services/                     # Microservices and applications
+│   ├── carpeta-ciudadana-frontend/  # Operator frontend (React + TypeScript + Vite)
+│   │   ├── src/
+│   │   │   ├── contexts/         # DDD bounded contexts (7 domains)
+│   │   │   │   ├── authentication/  # Login, MFA, session management
+│   │   │   │   ├── identity/        # Citizen registration and validation
+│   │   │   │   ├── documents/       # Document CRUD operations
+│   │   │   │   ├── folder/          # Personal folder visualization
+│   │   │   │   ├── portability/     # Operator switching
+│   │   │   │   ├── requests/        # Document requests from entities
+│   │   │   │   ├── notifications/   # Real-time notifications
+│   │   │   │   └── audit/           # Audit domain types
+│   │   │   ├── pages/            # Application pages/routes
+│   │   │   ├── locales/          # i18n translations (Spanish)
+│   │   │   └── shared/           # Feature flags, HTTP client, utilities
+│   │   ├── k8s/                  # Kubernetes manifests (deployment, HPA, ingress)
+│   │   └── README.md             # Complete setup and development guide
 │   └── README.md                 # Service organization guide
 ├── libs/                         # Shared libraries and code
 │   └── README.md                 # Shared libraries guide
@@ -126,6 +143,47 @@ See `docs/informacion_cruda/0_inquietudes.md` for unresolved architectural quest
 5. **Interoperabilidad Sin Restricciones Tecnológicas**: Operators choose their own technology stack
 6. **Cloud Permitido**: Storage can be in cloud, even outside Colombia
 
+## Implemented Components
+
+### Frontend: Carpeta Ciudadana Operator Portal (`services/carpeta-ciudadana-frontend/`)
+
+**Technology Stack**:
+- React 19 + TypeScript + Vite
+- Material-UI (MUI) for components
+- Vitest + Testing Library (>80% coverage)
+- i18next for internationalization
+- Docker + Kubernetes ready
+
+**Architecture**:
+- DDD-aligned structure with 7 bounded contexts
+- Each context follows hexagonal architecture: `domain/` → `infrastructure/` → `components/` → `hooks/`
+- Mock services for independent development
+- Feature flags system for dynamic feature control
+- Comprehensive Spanish translations
+
+**Key Features**:
+- Authentication with MFA support
+- Citizen registration and validation
+- Document upload/download/delete (certified and temporary)
+- Personal folder visualization with statistics
+- Portability flow (operator switching)
+- Document request handling
+- Real-time notifications
+
+**Development Commands**:
+```bash
+cd services/carpeta-ciudadana-frontend
+npm install
+npm run dev      # Development server
+npm test         # Run tests
+npm run build    # Production build
+npm run lint     # ESLint check
+```
+
+**References**:
+- See `services/carpeta-ciudadana-frontend/README.md` for complete setup guide
+- See `docs/ADR/0001-frontend-monolitico-react-material-ui-vite.md` for architectural decisions
+
 ## Academic Context
 
 This is coursework for advanced architecture design. Focus on:
@@ -134,4 +192,5 @@ This is coursework for advanced architecture design. Focus on:
 - Distributed systems design (inter-operator communication)
 - Quality attribute tradeoffs and architectural decisions
 - Spanish language documentation (this is a Colombian government case study)
+- Production-ready code implementation (frontend currently implemented)
 
