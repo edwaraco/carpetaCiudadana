@@ -5,10 +5,10 @@
 import { INotificationService } from './INotificationService';
 import { NotificationApiService } from './api/NotificationApiService';
 import { NotificationMockService } from './mocks/NotificationMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 function createNotificationService(): INotificationService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Notification Service');
     return new NotificationMockService();
   }

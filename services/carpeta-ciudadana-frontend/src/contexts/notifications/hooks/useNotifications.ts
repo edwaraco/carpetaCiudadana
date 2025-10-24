@@ -2,7 +2,7 @@
  * Hook for fetching notifications
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Notification } from '../domain/types';
 import { notificationService } from '../infrastructure';
 import { PaginatedResponse } from '@/shared/utils/api.types';
@@ -13,7 +13,7 @@ export function useNotifications(page = 1, pageSize = 10, unreadOnly = false) {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginatedResponse<Notification>['pagination'] | null>(null);
 
-  const fetchNotifications = async (currentPage: number) => {
+  const fetchNotifications = useCallback(async (currentPage: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -34,11 +34,11 @@ export function useNotifications(page = 1, pageSize = 10, unreadOnly = false) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pageSize, unreadOnly]);
 
   useEffect(() => {
     fetchNotifications(page);
-  }, [page, pageSize, unreadOnly]);
+  }, [fetchNotifications, page]);
 
   const refetch = (newPage?: number) => {
     fetchNotifications(newPage || page);

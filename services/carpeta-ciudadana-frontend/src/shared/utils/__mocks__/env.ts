@@ -7,7 +7,7 @@ export function getEnvVar(key: string): string | undefined {
   return process.env[key];
 }
 
-export function useMockAPI(): boolean {
+export function isMockAPIEnabled(): boolean {
   return process.env.VITE_USE_MOCK_API === 'true';
 }
 

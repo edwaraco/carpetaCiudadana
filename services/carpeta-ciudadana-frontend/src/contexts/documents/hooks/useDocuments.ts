@@ -2,10 +2,9 @@
  * Hook for fetching documents
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { documentService } from '../infrastructure';
 import { Document } from '../domain/types';
-import { PaginatedResponse } from '../../../shared/utils/api.types';
 
 interface UseDocumentsReturn {
   documents: Document[];
@@ -28,7 +27,7 @@ export const useDocuments = (initialPage = 1, pageSize = 20): UseDocumentsReturn
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<UseDocumentsReturn['pagination']>(null);
 
-  const fetchDocuments = async (page = initialPage) => {
+  const fetchDocuments = useCallback(async (page = initialPage) => {
     setIsLoading(true);
     setError(null);
 
@@ -53,11 +52,11 @@ export const useDocuments = (initialPage = 1, pageSize = 20): UseDocumentsReturn
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [initialPage, pageSize]);
 
   useEffect(() => {
     fetchDocuments(initialPage);
-  }, [initialPage]);
+  }, [fetchDocuments, initialPage]);
 
   return {
     documents,

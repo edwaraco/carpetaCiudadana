@@ -2,8 +2,8 @@
  * RespondRequestDialog Component Tests
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RespondRequestDialog } from '../RespondRequestDialog';
 import { useRespondToRequest } from '../../hooks';
@@ -62,14 +62,14 @@ describe('RespondRequestDialog', () => {
     vi.clearAllMocks();
 
     // Default mock implementations
-    (useRespondToRequest as any).mockReturnValue({
+    (useRespondToRequest as unknown as Mock).mockReturnValue({
       respondToRequest: mockRespondToRequest,
       isLoading: false,
       error: null,
       success: false,
     });
 
-    (requestService.getRequest as any).mockResolvedValue({
+    (requestService.getRequest as unknown as Mock).mockResolvedValue({
       success: true,
       data: mockRequest,
     });
@@ -119,7 +119,7 @@ describe('RespondRequestDialog', () => {
     });
 
     it('should not render content until request is loaded', () => {
-      (requestService.getRequest as any).mockReturnValue(
+      (requestService.getRequest as unknown as Mock).mockReturnValue(
         new Promise(() => {}) // Never resolves
       );
 
@@ -347,7 +347,7 @@ describe('RespondRequestDialog', () => {
 
   describe('Error handling', () => {
     beforeEach(async () => {
-      (useRespondToRequest as any).mockReturnValue({
+      (useRespondToRequest as unknown as Mock).mockReturnValue({
         respondToRequest: mockRespondToRequest,
         isLoading: false,
         error: 'Failed to respond to request',
@@ -375,7 +375,7 @@ describe('RespondRequestDialog', () => {
 
   describe('Success handling', () => {
     it('should display success message when request is successful', async () => {
-      (useRespondToRequest as any).mockReturnValue({
+      (useRespondToRequest as unknown as Mock).mockReturnValue({
         respondToRequest: mockRespondToRequest,
         isLoading: false,
         error: null,
@@ -398,7 +398,7 @@ describe('RespondRequestDialog', () => {
     });
 
     it('should call onSuccess and close dialog after delay on success', async () => {
-      (useRespondToRequest as any).mockReturnValue({
+      (useRespondToRequest as unknown as Mock).mockReturnValue({
         respondToRequest: mockRespondToRequest,
         isLoading: false,
         error: null,
@@ -442,7 +442,7 @@ describe('RespondRequestDialog', () => {
 
   describe('Loading state', () => {
     beforeEach(async () => {
-      (useRespondToRequest as any).mockReturnValue({
+      (useRespondToRequest as unknown as Mock).mockReturnValue({
         respondToRequest: mockRespondToRequest,
         isLoading: true,
         error: null,

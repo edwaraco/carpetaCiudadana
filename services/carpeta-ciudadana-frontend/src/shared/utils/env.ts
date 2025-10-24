@@ -22,7 +22,7 @@ export function getEnvVar(key: string): string | undefined {
 /**
  * Check if we should use mock API
  */
-export function useMockAPI(): boolean {
+export function isMockAPIEnabled(): boolean {
   return getEnvVar('VITE_USE_MOCK_API') === 'true';
 }
 

@@ -48,7 +48,7 @@ export class DocumentApiService implements IDocumentService {
     const response = await httpClient.get<Blob>(`/documents/${documentId}/download`, {
       responseType: 'blob',
     });
-    return response as any;
+    return response as ApiResponse<Blob>;
   }
 
   async getPresignedUrl(documentId: string): Promise<ApiResponse<string>> {

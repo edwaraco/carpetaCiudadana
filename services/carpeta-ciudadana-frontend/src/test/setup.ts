@@ -17,7 +17,7 @@ afterEach(() => {
 
 // Suppress console logs BEFORE any imports
 const originalLog = console.log;
-console.log = (...args: any[]) => {
+console.log = (...args: unknown[]) => {
   if (
     typeof args[0] === 'string' &&
     (args[0].includes('Using MOCK') || args[0].includes('Using REAL'))
@@ -47,7 +47,7 @@ const originalError = console.error;
 const originalWarn = console.warn;
 
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     // Suppress React act() warnings from Material-UI internal updates
     if (
       typeof args[0] === 'string' &&
@@ -60,7 +60,7 @@ beforeAll(() => {
     originalError.call(console, ...args);
   };
 
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     // Suppress specific warnings if needed
     if (typeof args[0] === 'string' && args[0].includes('deprecated')) {
       return;

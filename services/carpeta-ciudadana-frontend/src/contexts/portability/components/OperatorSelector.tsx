@@ -8,10 +8,8 @@ import {
   Box,
   Card,
   CardContent,
-  CardActions,
   Typography,
   Grid,
-  Button,
   Radio,
   Alert,
   CircularProgress,
@@ -19,7 +17,6 @@ import {
 } from '@mui/material';
 import { CheckCircle as ActiveIcon } from '@mui/icons-material';
 import { useOperators } from '../hooks';
-import { Operator } from '../domain/types';
 
 interface OperatorSelectorProps {
   onSelectOperator: (operatorId: string) => void;

@@ -5,10 +5,10 @@
 import { IPortabilityService } from './IPortabilityService';
 import { PortabilityApiService } from './api/PortabilityApiService';
 import { PortabilityMockService } from './mocks/PortabilityMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 function createPortabilityService(): IPortabilityService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Portability Service');
     return new PortabilityMockService();
   }

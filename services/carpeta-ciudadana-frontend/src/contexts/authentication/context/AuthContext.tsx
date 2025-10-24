@@ -3,6 +3,7 @@
  * Provides authentication state and methods to the entire app
  */
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../infrastructure';
 import { Citizen } from '../../identity/domain/types';
@@ -103,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const verifyMFA = useCallback(async (code: string, type: string) => {
+  const verifyMFA = useCallback(async (code: string, type: MFAType) => {
     if (!sessionId) {
       setError({
         code: 'NO_SESSION',
@@ -120,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const request: MFAVerificationRequest = {
         sessionId,
         mfaCode: code,
-        mfaType: type as any,
+        mfaType: type,
       };
 
       const response = await authService.verifyMFA(request);

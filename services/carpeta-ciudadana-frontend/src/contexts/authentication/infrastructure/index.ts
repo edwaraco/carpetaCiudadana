@@ -6,11 +6,11 @@
 import { IAuthService } from './IAuthService';
 import { AuthApiService } from './api/AuthApiService';
 import { AuthMockService } from './mocks/AuthMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 // Factory function to create the appropriate service implementation
 function createAuthService(): IAuthService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Authentication Service');
     return new AuthMockService();
   }

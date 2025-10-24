@@ -5,10 +5,10 @@
 import { IDocumentService } from './IDocumentService';
 import { DocumentApiService } from './api/DocumentApiService';
 import { DocumentMockService } from './mocks/DocumentMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 function createDocumentService(): IDocumentService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Document Service');
     return new DocumentMockService();
   }

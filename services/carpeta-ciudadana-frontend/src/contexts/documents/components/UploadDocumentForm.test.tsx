@@ -31,7 +31,6 @@ describe('UploadDocumentForm', () => {
   });
 
   it('validates required title field', async () => {
-    const user = userEvent.setup();
     render(<UploadDocumentForm />);
 
     // The title field should have the required attribute

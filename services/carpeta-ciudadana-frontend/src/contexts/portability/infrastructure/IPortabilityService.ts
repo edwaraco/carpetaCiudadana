@@ -3,7 +3,7 @@
  * Contract for portability/operator transfer operations
  */
 
-import { ApiResponse, PaginatedResponse } from '../../../shared/utils/api.types';
+import { ApiResponse } from '../../../shared/utils/api.types';
 import {
   Operator,
   PortabilityProcess,

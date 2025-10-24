@@ -5,10 +5,10 @@
 import { IFolderService } from './IFolderService';
 import { FolderApiService } from './api/FolderApiService';
 import { FolderMockService } from './mocks/FolderMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 function createFolderService(): IFolderService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Folder Service');
     return new FolderMockService();
   }

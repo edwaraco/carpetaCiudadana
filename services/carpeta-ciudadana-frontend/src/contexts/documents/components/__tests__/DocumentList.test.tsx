@@ -2,12 +2,13 @@
  * DocumentList Component Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DocumentList } from '../DocumentList';
 import { useDocuments, useDeleteDocument } from '../../hooks';
 import { documentService } from '../../infrastructure';
+import { Document } from '../../domain/types';
 
 // Mock the hooks
 vi.mock('../../hooks', () => ({
@@ -22,14 +23,21 @@ vi.mock('../../infrastructure', () => ({
   },
 }));
 
+interface DocumentCardProps {
+  document: Document;
+  onView?: (documentId: string) => void;
+  onDownload?: (documentId: string) => void;
+  onDelete?: (documentId: string) => void;
+}
+
 // Mock DocumentCard component
 vi.mock('../DocumentCard', () => ({
-  DocumentCard: ({ document, onView, onDownload, onDelete }: any) => (
+  DocumentCard: ({ document, onView, onDownload, onDelete }: DocumentCardProps) => (
     <div data-testid={`document-card-${document.documentId}`}>
-      <span>{document.documentName}</span>
+      <span>{document.metadata.title}</span>
       <button onClick={() => onView?.(document.documentId)}>View</button>
-      <button onClick={() => onDownload(document.documentId)}>Download</button>
-      <button onClick={() => onDelete(document.documentId)}>Delete</button>
+      <button onClick={() => onDownload?.(document.documentId)}>Download</button>
+      <button onClick={() => onDelete?.(document.documentId)}>Delete</button>
     </div>
   ),
 }));
@@ -41,7 +49,7 @@ describe('DocumentList', () => {
   const mockDocuments = [
     {
       documentId: '1',
-      documentName: 'Cedula.pdf',
+      metadata: {title: 'Cedula.pdf'},
       documentType: 'CERTIFICADO',
       issueDate: '2024-01-15',
       issuingEntity: 'Registraduría',
@@ -49,7 +57,7 @@ describe('DocumentList', () => {
     },
     {
       documentId: '2',
-      documentName: 'Diploma.pdf',
+      metadata: {title: 'Diploma.pdf'},
       documentType: 'CERTIFICADO',
       issueDate: '2023-12-20',
       issuingEntity: 'Universidad Nacional',
@@ -61,7 +69,7 @@ describe('DocumentList', () => {
     vi.clearAllMocks();
 
     // Default mock implementations
-    (useDeleteDocument as any).mockReturnValue({
+    (useDeleteDocument as unknown as Mock).mockReturnValue({
       deleteDocument: mockDeleteDocument,
       isLoading: false,
     });
@@ -69,7 +77,7 @@ describe('DocumentList', () => {
 
   describe('Loading state', () => {
     it('should display loading spinner when data is loading', () => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: true,
         error: null,
@@ -86,7 +94,7 @@ describe('DocumentList', () => {
   describe('Error state', () => {
     it('should display error message when there is an error', () => {
       const errorMessage = 'Failed to load documents';
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: false,
         error: errorMessage,
@@ -102,7 +110,7 @@ describe('DocumentList', () => {
 
   describe('Empty state', () => {
     beforeEach(() => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: false,
         error: null,
@@ -135,7 +143,7 @@ describe('DocumentList', () => {
 
   describe('Document list display', () => {
     beforeEach(() => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -176,7 +184,7 @@ describe('DocumentList', () => {
 
   describe('Pagination', () => {
     it('should display pagination when there are multiple pages', () => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -191,7 +199,7 @@ describe('DocumentList', () => {
     });
 
     it('should not display pagination when there is only one page', () => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -207,7 +215,7 @@ describe('DocumentList', () => {
     it('should call refetch with new page when pagination is changed', async () => {
       const user = userEvent.setup();
 
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -229,7 +237,7 @@ describe('DocumentList', () => {
 
   describe('Document actions', () => {
     beforeEach(() => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -254,7 +262,7 @@ describe('DocumentList', () => {
       const user = userEvent.setup();
       const mockBlob = new Blob(['test'], { type: 'application/pdf' });
 
-      (documentService.downloadDocument as any).mockResolvedValue({
+      (documentService.downloadDocument as unknown as Mock).mockResolvedValue({
         success: true,
         data: mockBlob,
       });
@@ -278,7 +286,7 @@ describe('DocumentList', () => {
 
   describe('Delete confirmation dialog', () => {
     beforeEach(() => {
-      (useDocuments as any).mockReturnValue({
+      (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
         error: null,
@@ -343,7 +351,7 @@ describe('DocumentList', () => {
       // Mock deleteDocument to be slow
       mockDeleteDocument.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
 
-      (useDeleteDocument as any).mockReturnValue({
+      (useDeleteDocument as unknown as Mock).mockReturnValue({
         deleteDocument: mockDeleteDocument,
         isLoading: true, // Simulating loading state
       });

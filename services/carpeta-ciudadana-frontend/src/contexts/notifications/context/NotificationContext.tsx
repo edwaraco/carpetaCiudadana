@@ -3,6 +3,7 @@
  * Global state for notification badge counter
  */
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { notificationService } from '../infrastructure';
 

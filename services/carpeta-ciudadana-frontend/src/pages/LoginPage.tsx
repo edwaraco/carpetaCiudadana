@@ -17,14 +17,12 @@ import {
 import { Login as LoginIcon } from '@mui/icons-material';
 import { LoginForm } from '../contexts/authentication/components/LoginForm';
 import { MFAVerification } from '../contexts/authentication/components/MFAVerification';
-import { useAuth } from '../contexts/authentication/context/AuthContext';
 import { isMFARequired } from '@/shared/utils/env';
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation('authentication');
   const location = useLocation();
   const state = location.state as { message?: string; folderEmail?: string } | null;
-  const { requiresMFA } = useAuth();
 
   const [showMFA, setShowMFA] = useState(false);
 

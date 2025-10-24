@@ -2,7 +2,7 @@
  * InitiatePortabilityForm Component Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InitiatePortabilityForm } from '../InitiatePortabilityForm';
@@ -15,7 +15,7 @@ vi.mock('../../hooks', () => ({
 
 // Mock OperatorSelector component
 vi.mock('../OperatorSelector', () => ({
-  OperatorSelector: ({ onSelectOperator, selectedOperatorId }: any) => (
+  OperatorSelector: ({ onSelectOperator, selectedOperatorId }: { onSelectOperator: (id: string) => void; selectedOperatorId?: string }) => (
     <div data-testid="operator-selector">
       <select
         data-testid="operator-select"
@@ -39,7 +39,7 @@ describe('InitiatePortabilityForm', () => {
     vi.clearAllMocks();
 
     // Default mock implementation
-    (useInitiatePortability as any).mockReturnValue({
+    (useInitiatePortability as unknown as Mock).mockReturnValue({
       initiatePortability: mockInitiatePortability,
       isLoading: false,
       error: null,
@@ -93,7 +93,7 @@ describe('InitiatePortabilityForm', () => {
   describe('Error state', () => {
     it('should display error message when error exists', () => {
       const errorMessage = 'Failed to initiate portability';
-      (useInitiatePortability as any).mockReturnValue({
+      (useInitiatePortability as unknown as Mock).mockReturnValue({
         initiatePortability: mockInitiatePortability,
         isLoading: false,
         error: errorMessage,
@@ -305,7 +305,7 @@ describe('InitiatePortabilityForm', () => {
       await user.click(checkbox);
 
       // Now simulate loading state
-      (useInitiatePortability as any).mockReturnValue({
+      (useInitiatePortability as unknown as Mock).mockReturnValue({
         initiatePortability: mockInitiatePortability,
         isLoading: true,
         error: null,
@@ -322,7 +322,7 @@ describe('InitiatePortabilityForm', () => {
     it('should disable buttons during loading', async () => {
       const user = userEvent.setup();
 
-      (useInitiatePortability as any).mockReturnValue({
+      (useInitiatePortability as unknown as Mock).mockReturnValue({
         initiatePortability: mockInitiatePortability,
         isLoading: true,
         error: null,
@@ -350,7 +350,7 @@ describe('InitiatePortabilityForm', () => {
     };
 
     beforeEach(() => {
-      (useInitiatePortability as any).mockReturnValue({
+      (useInitiatePortability as unknown as Mock).mockReturnValue({
         initiatePortability: mockInitiatePortability,
         isLoading: false,
         error: null,

@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, Box, Typography } from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import { RequestList, RespondRequestDialog } from '../contexts/requests/components';
 
 export const RequestsPage: React.FC = () => {

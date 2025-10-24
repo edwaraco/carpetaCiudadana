@@ -5,10 +5,10 @@
 import { IIdentityService } from './IIdentityService';
 import { IdentityApiService } from './api/IdentityApiService';
 import { IdentityMockService } from './mocks/IdentityMockService';
-import { useMockAPI } from '@/shared/utils/env';
+import { isMockAPIEnabled } from '@/shared/utils/env';
 
 function createIdentityService(): IIdentityService {
-  if (useMockAPI()) {
+  if (isMockAPIEnabled()) {
     console.log('🔧 Using MOCK Identity Service');
     return new IdentityMockService();
   }

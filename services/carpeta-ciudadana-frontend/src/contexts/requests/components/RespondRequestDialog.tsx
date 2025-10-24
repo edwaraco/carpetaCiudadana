@@ -3,7 +3,7 @@
  * Dialog for responding to document requests (authorize/reject)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -19,8 +19,6 @@ import {
   MenuItem,
   Alert,
   CircularProgress,
-  Checkbox,
-  FormControlLabel,
   List,
   ListItem,
   ListItemText,
@@ -50,22 +48,7 @@ export const RespondRequestDialog: React.FC<RespondRequestDialogProps> = ({
   const [selectedDocuments, setSelectedDocuments] = useState<Record<string, string>>({});
   const [loadingRequest, setLoadingRequest] = useState(false);
 
-  useEffect(() => {
-    if (requestId && open) {
-      fetchRequest();
-    }
-  }, [requestId, open]);
-
-  useEffect(() => {
-    if (success) {
-      setTimeout(() => {
-        onSuccess?.();
-        handleClose();
-      }, 1500);
-    }
-  }, [success]);
-
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async () => {
     if (!requestId) return;
 
     setLoadingRequest(true);
@@ -79,15 +62,30 @@ export const RespondRequestDialog: React.FC<RespondRequestDialogProps> = ({
     } finally {
       setLoadingRequest(false);
     }
-  };
+  }, [requestId]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAction('AUTHORIZE');
     setRejectionReason('');
     setSelectedDocuments({});
     setRequest(null);
     onClose();
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    if (requestId && open) {
+      fetchRequest();
+    }
+  }, [requestId, open, fetchRequest]);
+
+  useEffect(() => {
+    if (success) {
+      setTimeout(() => {
+        onSuccess?.();
+        handleClose();
+      }, 1500);
+    }
+  }, [success, onSuccess, handleClose]);
 
   const handleSubmit = async () => {
     if (!requestId) return;

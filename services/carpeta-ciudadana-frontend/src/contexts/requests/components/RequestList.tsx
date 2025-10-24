@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import { useRequests } from '../hooks';
 import { RequestCard } from './RequestCard';
-import { RequestStatus } from '../domain/types';
 
 interface RequestListProps {
   onViewDetails?: (requestId: string) => void;

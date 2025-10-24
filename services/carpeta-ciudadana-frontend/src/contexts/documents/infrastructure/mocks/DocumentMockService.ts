@@ -267,7 +267,7 @@ export class DocumentMockService implements IDocumentService {
           statusCode: 404,
         },
         timestamp: new Date(),
-      } as any;
+      };
     }
 
     // Create a mock blob
@@ -277,7 +277,7 @@ export class DocumentMockService implements IDocumentService {
       success: true,
       data: blob,
       timestamp: new Date(),
-    } as any;
+    };
   }
 
   async getPresignedUrl(documentId: string): Promise<ApiResponse<string>> {

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, Grid, Box, Typography } from '@mui/material';
+import { Container, Grid, Typography } from '@mui/material';
 import { FolderInfo, StorageStatistics } from '../contexts/folder/components';
 
 export const FolderPage: React.FC = () => {

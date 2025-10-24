@@ -25,7 +25,6 @@ import {
   RadioButtonUnchecked as PendingIcon,
   Error as ErrorIcon,
   Sync as InProgressIcon,
-  AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import { PortabilityProcess, PortabilityStatus, PhaseStatus } from '../domain/types';
 import { portabilityService } from '../infrastructure';
@@ -46,8 +45,6 @@ export const PortabilityProgress: React.FC<PortabilityProgressProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
     const fetchProcess = async () => {
       try {
         const response = await portabilityService.getPortabilityProcess(portabilityId);
@@ -74,7 +71,7 @@ export const PortabilityProgress: React.FC<PortabilityProgressProps> = ({
     fetchProcess();
 
     // Poll every 5 seconds for updates
-    intervalId = setInterval(fetchProcess, 5000);
+    const intervalId = setInterval(fetchProcess, 5000);
 
     return () => clearInterval(intervalId);
   }, [portabilityId, onComplete]);
