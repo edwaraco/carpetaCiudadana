@@ -53,7 +53,8 @@
     "portability": "Portabilidad",
     "profile": "Perfil",
     "settings": "Configuración",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "notification": "Notificationes"
   },
   "validation": {
     "required": "{{field}} es obligatorio",

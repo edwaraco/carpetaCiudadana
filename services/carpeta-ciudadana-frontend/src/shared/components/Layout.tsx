@@ -22,6 +22,7 @@ import {
   Divider,
   useTheme,
   useMediaQuery,
+  Badge,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -32,10 +33,12 @@ import {
   PersonAdd,
   Login,
   Dashboard,
+  Message,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/authentication/context/AuthContext';
 import { TFunction } from 'i18next';
 import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
+import { useNotificationContext } from '@/contexts/notifications/context';
 
 const drawerWidth = 240;
 
@@ -76,6 +79,13 @@ function buildMenuItems(t: TFunction<"common", undefined>) {
       requiresAuth: true,
       feature: 'PORTABILITY'
     },
+    {
+      text: t('navigation.notification'),
+      icon: <Message />,
+      path: '/notifications',
+      requiresAuth: true,
+      feature: 'NOTIFICATIONS'
+    },
   ];
   return menuItems;
 }
@@ -88,6 +98,10 @@ export const Layout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const {isAuthenticated, logout} = useAuth();
+  // Badge en header
+  const { unreadCount } = useNotificationContext();
+  
+
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -168,6 +182,7 @@ export const Layout: React.FC = () => {
             >
               <MenuIcon />
             </IconButton>
+
           )}
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {t('homePage.hero.title')}
@@ -191,6 +206,17 @@ export const Layout: React.FC = () => {
                 </Button>
               )}
             </Box>
+          )}
+          {isAuthenticated && isFeatureEnabled('NOTIFICATIONS') && (
+            <IconButton
+              color="inherit"
+              onClick={() => navigate('/notifications')}
+              data-testid="notification-badge-button"
+            >
+              <Badge badgeContent={unreadCount} color="error">
+                <Message />
+              </Badge>
+            </IconButton>
           )}
         </Toolbar>
       </AppBar>

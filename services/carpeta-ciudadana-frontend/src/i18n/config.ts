@@ -15,6 +15,7 @@ import folderEs from '@/locales/es/folder.json';
 import portabilityEs from '@/locales/es/portability.json';
 import requestsEs from '@/locales/es/requests.json';
 import auditEs from '@/locales/es/audit.json';
+import notificationsEs from '@/locales/es/notifications.json';
 
 // Define available namespaces
 export const namespaces = [
@@ -26,6 +27,7 @@ export const namespaces = [
   'portability',
   'requests',
   'audit',
+  'notifications',
 ] as const;
 
 // Define resources type
@@ -39,6 +41,7 @@ export const resources = {
     portability: portabilityEs,
     requests: requestsEs,
     audit: auditEs,
+    notifications: notificationsEs,
   },
 } as const;
 

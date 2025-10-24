@@ -26,6 +26,7 @@ export type FeatureFlag =
   | 'UPLOAD_DOCUMENTS'         // Subir documentos (quick action, tab de upload)
   | 'DOWNLOAD_DOCUMENTS'       // Descargar documentos
   | 'DELETE_DOCUMENTS'         // Eliminar documentos
+  | 'NOTIFICATIONS'            // Sistema de notificaciones (menú, badge, página)
 
   // Features del Dashboard
   | 'STORAGE_STATS'            // Estadísticas de almacenamiento
@@ -50,6 +51,7 @@ const DEFAULT_FLAGS: Record<FeatureFlag, boolean> = {
   UPLOAD_DOCUMENTS: true,
   DOWNLOAD_DOCUMENTS: true,
   DELETE_DOCUMENTS: true,
+  NOTIFICATIONS: true,
 
   // Features del Dashboard
   STORAGE_STATS: true,
@@ -97,6 +99,7 @@ export const featureFlags: Record<FeatureFlag, boolean> = {
   UPLOAD_DOCUMENTS: getEnvFeatureFlag('UPLOAD_DOCUMENTS'),
   DOWNLOAD_DOCUMENTS: getEnvFeatureFlag('DOWNLOAD_DOCUMENTS'),
   DELETE_DOCUMENTS: getEnvFeatureFlag('DELETE_DOCUMENTS'),
+  NOTIFICATIONS: getEnvFeatureFlag('NOTIFICATIONS'),
 
   // Features del Dashboard
   STORAGE_STATS: getEnvFeatureFlag('STORAGE_STATS'),

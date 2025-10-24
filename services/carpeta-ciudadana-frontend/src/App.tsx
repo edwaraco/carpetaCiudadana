@@ -5,19 +5,21 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { AuthProvider } from './contexts/authentication/context/AuthContext';
-import { ProtectedRoute } from './contexts/authentication/components';
-import { Layout } from './shared/components/Layout';
-import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { DocumentsPage } from './pages/DocumentsPage';
-import { FolderPage } from './pages/FolderPage';
-import { PortabilityPage } from './pages/PortabilityPage';
-import { RequestsPage } from './pages/RequestsPage';
-import { UploadDocumentForm } from './contexts/documents/components';
+import { AuthProvider } from '@/contexts/authentication/context/AuthContext';
+import { ProtectedRoute } from '@/contexts/authentication/components';
+import { Layout } from '@/shared/components/Layout';
+import { HomePage } from '@/pages/HomePage';
+import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { DocumentsPage } from '@/pages/DocumentsPage';
+import { FolderPage } from '@/pages/FolderPage';
+import { PortabilityPage } from '@/pages/PortabilityPage';
+import { RequestsPage } from '@/pages/RequestsPage';
+import { UploadDocumentForm } from '@/contexts/documents/components';
 import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
+import { NotificationProvider } from '@/contexts/notifications/context';
+import { NotificationsPage } from '@/pages/NotificationsPage';
 
 // Create MUI theme
 const theme = createTheme({
@@ -55,6 +57,7 @@ const autheticatedOptions: AuthenticatedRoute[] = [
   { path: "folder", Component: FolderPage },
   { path: "requests", Component: RequestsPage, feature: 'DOCUMENT_REQUESTS' },
   { path: "portability", Component: PortabilityPage, feature: 'PORTABILITY' },
+  { path: "notifications", Component: NotificationsPage, feature: 'NOTIFICATIONS' },
 ];
 
 
@@ -79,7 +82,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Layout />}>
               {/* Public routes */}
@@ -97,6 +101,7 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );
