@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { CheckCircle, ErrorOutline, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useRegisterCitizen } from '../hooks/useRegisterCitizen';
 import { useValidateCitizen } from '../hooks/useValidateCitizen';
 import { RegisterCitizenRequest } from '../domain/types';
@@ -39,6 +40,7 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const { t } = useTranslation(['identity', 'common']);
   const {
     control,
     handleSubmit,
@@ -87,7 +89,7 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
     if (formData.personalEmail !== formData.confirmEmail) {
       setFormError('confirmEmail', {
         type: 'manual',
-        message: 'Emails do not match',
+        message: t('registration.form.confirmEmail.mismatch'),
       });
       return;
     }
@@ -96,7 +98,7 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
     if (validationData && !validationData.available) {
       setFormError('cedula', {
         type: 'manual',
-        message: 'This cedula is already registered',
+        message: t('registration.errors.cedulaAlreadyRegistered'),
       });
       return;
     }
@@ -113,16 +115,18 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
 
   const getCedulaHelperText = (): string => {
     if (!cedula || cedula.length < 6) {
-      return 'Enter your citizenship ID number';
+      return t('registration.form.cedula.helperText');
     }
     if (isValidating) {
-      return 'Validating...';
+      return t('registration.form.cedula.validating');
     }
     if (cedulaChecked && validationData) {
       if (validationData.available) {
-        return 'Cedula is available for registration';
+        return t('registration.form.cedula.available');
       } else {
-        return `This cedula is already registered with ${validationData.currentOperator}`;
+        return t('registration.form.cedula.alreadyRegistered', {
+          operator: validationData.currentOperator
+        });
       }
     }
     return '';
@@ -136,10 +140,10 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
   return (
     <Paper elevation={3} sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
       <Typography variant="h4" gutterBottom align="center">
-        Citizen Registration
+        {t('registration.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-        Register as a new citizen in the Carpeta Ciudadana system
+        {t('registration.subtitle')}
       </Typography>
 
       {error && (
@@ -151,13 +155,13 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
       {data && (
         <Alert severity="success" sx={{ mb: 2 }} icon={<CheckCircle />}>
           <Typography variant="body2" fontWeight="bold">
-            Registration successful!
+            {t('registration.success.title')}
           </Typography>
           <Typography variant="body2">
-            Your folder email: <strong>{data.folderEmail}</strong>
+            {t('registration.success.folderEmail')} <strong>{data.folderEmail}</strong>
           </Typography>
           <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-            This email is permanent and cannot be changed.
+            {t('registration.success.immutableEmail')}
           </Typography>
         </Alert>
       )}
@@ -171,17 +175,17 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
               control={control}
               defaultValue=""
               rules={{
-                required: 'Cedula is required',
+                required: t('registration.errors.cedulaRequired'),
                 pattern: {
                   value: /^[0-9]{6,10}$/,
-                  message: 'Cedula must be 6-10 digits',
+                  message: t('registration.form.cedula.invalid'),
                 },
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Cedula (Citizenship ID)"
+                  label={t('registration.form.cedula.label')}
                   type="text"
                   error={!!errors.cedula || (cedulaChecked && !validationData?.available)}
                   helperText={errors.cedula?.message || getCedulaHelperText()}
@@ -212,17 +216,17 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
               control={control}
               defaultValue=""
               rules={{
-                required: 'Full name is required',
+                required: t('common:validation.required', { field: t('registration.form.fullName.label') }),
                 minLength: {
                   value: 3,
-                  message: 'Name must be at least 3 characters',
+                  message: t('registration.form.fullName.minLength'),
                 },
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Full Name"
+                  label={t('registration.form.fullName.label')}
                   error={!!errors.fullName}
                   helperText={errors.fullName?.message}
                   disabled={isLoading}
@@ -238,17 +242,17 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
               control={control}
               defaultValue=""
               rules={{
-                required: 'Address is required',
+                required: t('common:validation.required', { field: t('registration.form.address.label') }),
                 minLength: {
                   value: 10,
-                  message: 'Address must be at least 10 characters',
+                  message: t('registration.form.address.minLength'),
                 },
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Address"
+                  label={t('registration.form.address.label')}
                   multiline
                   rows={2}
                   error={!!errors.address}
@@ -266,22 +270,22 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
               control={control}
               defaultValue=""
               rules={{
-                required: 'Personal email is required',
+                required: t('common:validation.required', { field: t('registration.form.personalEmail.label') }),
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address',
+                  message: t('common:validation.email'),
                 },
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Personal Email"
+                  label={t('registration.form.personalEmail.label')}
                   type="email"
                   error={!!errors.personalEmail}
                   helperText={
                     errors.personalEmail?.message ||
-                    'This email will be used for notifications'
+                    t('registration.form.personalEmail.helperText')
                   }
                   disabled={isLoading}
                 />
@@ -296,15 +300,15 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
               control={control}
               defaultValue=""
               rules={{
-                required: 'Please confirm your email',
+                required: t('common:validation.required', { field: t('registration.form.confirmEmail.label') }),
                 validate: (value) =>
-                  value === personalEmail || 'Emails do not match',
+                  value === personalEmail || t('registration.form.confirmEmail.mismatch'),
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Confirm Email"
+                  label={t('registration.form.confirmEmail.label')}
                   type={showPassword ? 'text' : 'email'}
                   error={!!errors.confirmEmail}
                   helperText={errors.confirmEmail?.message}
@@ -337,7 +341,7 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
                 disabled={isLoading || (cedulaChecked && !validationData?.available)}
                 startIcon={isLoading && <CircularProgress size={20} />}
               >
-                {isLoading ? 'Registering...' : 'Register'}
+                {isLoading ? t('registration.actions.registering') : t('registration.actions.register')}
               </Button>
               {onCancel && (
                 <Button
@@ -346,7 +350,7 @@ export const RegisterCitizenForm: React.FC<RegisterCitizenFormProps> = ({
                   disabled={isLoading}
                   fullWidth
                 >
-                  Cancel
+                  {t('registration.actions.cancel')}
                 </Button>
               )}
             </Box>

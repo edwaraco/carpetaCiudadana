@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -30,6 +31,7 @@ import { useRequests } from '../contexts/requests/hooks';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const { statistics, isLoading: loadingStats } = useFolderStatistics();
   const { requests, isLoading: loadingRequests } = useRequests(1, 100);
@@ -40,22 +42,26 @@ export const DashboardPage: React.FC = () => {
 
   const stats = [
     {
-      label: 'Total Documents',
+      id: 'total',
+      label: t('dashboardPage.stats.totalDocuments'),
       value: statistics?.totalDocuments.toString() || '0',
       color: 'primary',
     },
     {
-      label: 'Certified',
+      id: 'certified',
+      label: t('dashboardPage.stats.certified'),
       value: statistics?.certifiedDocuments.toString() || '0',
       color: 'success',
     },
     {
-      label: 'Temporary',
+      id: 'temp',
+      label: t('dashboardPage.stats.temporary'),
       value: statistics?.temporaryDocuments.toString() || '0',
       color: 'warning',
     },
     {
-      label: 'Pending Requests',
+      id: 'pending',
+      label: t('dashboardPage.stats.pendingRequests'),
       value: pendingRequests.toString(),
       color: 'error',
     },
@@ -64,32 +70,36 @@ export const DashboardPage: React.FC = () => {
   const quickActions = [
     {
       icon: <CloudUpload sx={{ fontSize: 40 }} />,
-      title: 'Upload Document',
-      description: 'Add a new document to your folder',
+      title: t('dashboardPage.quickActions.uploadDocument.title'),
+      description: t('dashboardPage.quickActions.uploadDocument.description'),
       action: () => navigate('/documents'),
       color: 'primary',
+      id: 'upload-document',
     },
     {
       icon: <Folder sx={{ fontSize: 40 }} />,
-      title: 'My Documents',
-      description: 'View and manage your documents',
+      title: t('dashboardPage.quickActions.myDocuments.title'),
+      description: t('dashboardPage.quickActions.myDocuments.description'),
       action: () => navigate('/documents'),
       color: 'info',
+      id: 'my-documents',
     },
     {
       icon: <Inbox sx={{ fontSize: 40 }} />,
-      title: 'Document Requests',
-      description: 'Review pending document requests',
+      title: t('dashboardPage.quickActions.documentRequests.title'),
+      description: t('dashboardPage.quickActions.documentRequests.description'),
       action: () => navigate('/requests'),
       color: 'warning',
       badge: pendingRequests > 0 ? pendingRequests : undefined,
+      id: 'requested-document',
     },
     {
       icon: <SwapHoriz sx={{ fontSize: 40 }} />,
-      title: 'Change Operator',
-      description: 'Transfer to another operator',
+      title: t('dashboardPage.quickActions.changeOperator.title'),
+      description: t('dashboardPage.quickActions.changeOperator.description'),
       action: () => navigate('/portability'),
       color: 'secondary',
+      id: 'portability',
     },
   ];
 
@@ -108,10 +118,10 @@ export const DashboardPage: React.FC = () => {
         {/* Welcome Section */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            Welcome back, {user?.fullName.split(' ')[0] || 'User'}!
+            {t('dashboardPage.welcome', { name: user?.fullName.split(' ')[0] || 'Usuario' })}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage your documents and stay up to date with your Carpeta Ciudadana
+            {t('dashboardPage.subtitle')}
           </Typography>
         </Box>
 
@@ -120,7 +130,7 @@ export const DashboardPage: React.FC = () => {
           {stats.map((stat, index) => (
             <Grid item xs={6} sm={3} key={index}>
               <Paper sx={{ p: 2, textAlign: 'center' }}>
-                <Typography variant="h4" color={`${stat.color}.main`} fontWeight="bold">
+                <Typography variant="h4" color={`${stat.color}.main`} fontWeight="bold" data-testid={`stats-${stat.id}`}>
                   {stat.value}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -139,7 +149,7 @@ export const DashboardPage: React.FC = () => {
         {/* Quick Actions */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-            Quick Actions
+            {t('dashboardPage.quickActions.title')}
           </Typography>
           <Grid container spacing={2}>
             {quickActions.map((action, index) => (
@@ -163,6 +173,7 @@ export const DashboardPage: React.FC = () => {
                         color="error"
                         size="small"
                         sx={{ position: 'absolute', top: 8, right: 8 }}
+                        data-testid={`badge-${action.id}`}
                       />
                     )}
                     <Box sx={{ color: `${action.color}.main`, mb: 1 }}>
@@ -183,17 +194,17 @@ export const DashboardPage: React.FC = () => {
 
         {/* Recent Activity - Placeholder */}
         <Box>
-          <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-            Recent Activity
+          <Typography variant="h5" gutterBottom sx={{ mb: 2 }} data-testid='dashboard-recent-activities'>
+            {t('dashboardPage.recentActivity.title')}
           </Typography>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Assessment sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
               <Typography variant="body1" color="text.secondary">
-                No recent activity
+                {t('dashboardPage.recentActivity.noActivity')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Your document activity will appear here
+                {t('dashboardPage.recentActivity.description')}
               </Typography>
             </Box>
           </Paper>

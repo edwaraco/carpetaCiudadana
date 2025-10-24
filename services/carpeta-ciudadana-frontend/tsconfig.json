@@ -30,7 +30,10 @@
       "@/services/*": ["src/services/*"],
       "@/types/*": ["src/types/*"],
       "@/hooks/*": ["src/hooks/*"],
-      "@/utils/*": ["src/utils/*"]
+      "@/utils/*": ["src/utils/*"],
+      "@/i18n/*": ["src/i18n/*"],
+      "@/locales/*": ["src/locales/*"],
+      "@/tests/*": ["src/tests/*"]
     }
   },
   "include": ["src"],

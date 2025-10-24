@@ -1,0 +1,57 @@
+{
+  "info": {
+    "title": "Mi Carpeta Ciudadana",
+    "subtitle": "Información general de su carpeta personal",
+    "fields": {
+      "folderEmail": "Correo de Carpeta",
+      "operator": "Operador Actual",
+      "createdAt": "Fecha de Creación",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activa",
+      "suspended": "Suspendida",
+      "inPortability": "En Portabilidad"
+    }
+  },
+  "storage": {
+    "title": "Estadísticas de Almacenamiento",
+    "totalDocuments": "Total de Documentos",
+    "certifiedDocuments": "Documentos Certificados",
+    "temporaryDocuments": "Documentos Temporales",
+    "storageUsed": "Almacenamiento Usado",
+    "storageLimit": "Límite de Almacenamiento",
+    "unlimited": "Ilimitado (Documentos Certificados)",
+    "details": {
+      "certified": "Los documentos certificados tienen almacenamiento a perpetuidad",
+      "temporary": "Los documentos temporales cuentan contra su límite de almacenamiento"
+    }
+  },
+  "activity": {
+    "title": "Actividad Reciente",
+    "empty": "No hay actividad reciente",
+    "types": {
+      "documentUploaded": "Documento cargado",
+      "documentShared": "Documento compartido",
+      "documentReceived": "Documento recibido",
+      "requestReceived": "Solicitud recibida",
+      "requestResponded": "Solicitud respondida",
+      "portabilityInitiated": "Portabilidad iniciada"
+    }
+  },
+  "settings": {
+    "title": "Configuración de Carpeta",
+    "notifications": {
+      "title": "Notificaciones",
+      "email": "Notificaciones por correo",
+      "sms": "Notificaciones por SMS",
+      "push": "Notificaciones push"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "twoFactor": "Autenticación de dos factores",
+      "sessionTimeout": "Tiempo de espera de sesión"
+    }
+  }
+}
+

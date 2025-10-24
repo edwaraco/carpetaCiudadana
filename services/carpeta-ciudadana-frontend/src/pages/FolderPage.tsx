@@ -4,17 +4,20 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Grid, Box, Typography } from '@mui/material';
 import { FolderInfo, StorageStatistics } from '../contexts/folder/components';
 
 export const FolderPage: React.FC = () => {
+  const { t } = useTranslation('common');
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          My Folder
+          {t('folderPage.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph>
-          View your personal folder information and storage usage
+          {t('folderPage.subtitle')}
         </Typography>
 
         <Grid container spacing={3}>

@@ -4,10 +4,12 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Box, Tabs, Tab } from '@mui/material';
 import { DocumentList, UploadDocumentForm } from '../contexts/documents/components';
 
 export const DocumentsPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [activeTab, setActiveTab] = useState(0);
 
   const handleTabChange = (_event: React.ChangeEvent<unknown>, newValue: number) => {
@@ -23,8 +25,8 @@ export const DocumentsPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label="My Documents" />
-            <Tab label="Upload Document" />
+            <Tab label={t('documentsPage.tabs.myDocuments')} />
+            <Tab label={t('documentsPage.tabs.uploadDocument')} />
           </Tabs>
         </Box>
 

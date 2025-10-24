@@ -1,0 +1,106 @@
+{
+  "list": {
+    "title": "Mis Documentos",
+    "subtitle": "Gestione sus documentos certificados y temporales",
+    "empty": "No tiene documentos almacenados",
+    "filters": {
+      "all": "Todos",
+      "certified": "Certificados",
+      "temporary": "Temporales",
+      "search": "Buscar por nombre o tipo..."
+    }
+  },
+  "upload": {
+    "title": "Cargar Documento",
+    "subtitle": "Almacene un nuevo documento en su carpeta",
+    "form": {
+      "file": {
+        "label": "Archivo",
+        "placeholder": "Seleccione un archivo",
+        "helperText": "Tamaño máximo: 10MB. Formatos permitidos: PDF, JPG, PNG"
+      },
+      "name": {
+        "label": "Nombre del Documento",
+        "placeholder": "Ej: Certificado de Estudios 2024"
+      },
+      "description": {
+        "label": "Descripción",
+        "placeholder": "Descripción opcional del documento"
+      },
+      "category": {
+        "label": "Categoría",
+        "placeholder": "Seleccione una categoría"
+      }
+    },
+    "actions": {
+      "upload": "Cargar Documento",
+      "uploading": "Cargando...",
+      "cancel": "Cancelar"
+    },
+    "success": "Documento cargado exitosamente",
+    "errors": {
+      "fileTooLarge": "El archivo es demasiado grande",
+      "invalidFormat": "Formato de archivo no permitido",
+      "uploadFailed": "Error al cargar el documento"
+    }
+  },
+  "detail": {
+    "title": "Detalle del Documento",
+    "fields": {
+      "id": "ID",
+      "name": "Nombre",
+      "type": "Tipo",
+      "size": "Tamaño",
+      "uploadedAt": "Fecha de Carga",
+      "issuedBy": "Emitido Por",
+      "category": "Categoría",
+      "status": "Estado",
+      "signature": "Firma Digital"
+    },
+    "types": {
+      "certified": "Certificado",
+      "temporary": "Temporal"
+    },
+    "actions": {
+      "download": "Descargar",
+      "share": "Compartir",
+      "delete": "Eliminar",
+      "viewSignature": "Ver Firma"
+    }
+  },
+  "categories": {
+    "identification": "Identificación",
+    "education": "Educación",
+    "health": "Salud",
+    "financial": "Financiero",
+    "legal": "Legal",
+    "property": "Propiedad",
+    "other": "Otros"
+  },
+  "sharing": {
+    "title": "Compartir Documento",
+    "subtitle": "Autorice el envío de este documento a una entidad",
+    "form": {
+      "entity": {
+        "label": "Entidad Receptora",
+        "placeholder": "Seleccione la entidad"
+      },
+      "expiresAt": {
+        "label": "Fecha de Expiración",
+        "helperText": "La autorización expirará en esta fecha"
+      }
+    },
+    "success": "Documento compartido exitosamente",
+    "errors": {
+      "noEntity": "Debe seleccionar una entidad",
+      "shareError": "Error al compartir el documento"
+    }
+  },
+  "delete": {
+    "confirm": "¿Está seguro de que desea eliminar este documento?",
+    "warning": "Esta acción no se puede deshacer",
+    "success": "Documento eliminado exitosamente",
+    "error": "Error al eliminar el documento"
+  }
+}
+

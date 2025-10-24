@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -13,7 +14,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions,
 } from '@mui/material';
 import {
   PersonAdd,
@@ -26,27 +26,28 @@ import {
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
 
   const features = [
     {
       icon: <Folder sx={{ fontSize: 48 }} />,
-      title: 'Personal Folder',
-      description: 'Store all your certified documents in one secure place with unlimited storage.',
+      title: t('homePage.features.personalFolder.title'),
+      description: t('homePage.features.personalFolder.description'),
     },
     {
       icon: <Security sx={{ fontSize: 48 }} />,
-      title: 'Digital Security',
-      description: 'Your documents are protected with digital signatures and end-to-end encryption.',
+      title: t('homePage.features.digitalSecurity.title'),
+      description: t('homePage.features.digitalSecurity.description'),
     },
     {
       icon: <SwapHoriz sx={{ fontSize: 48 }} />,
-      title: 'Operator Portability',
-      description: 'Switch between operators freely while keeping all your documents safe.',
+      title: t('homePage.features.operatorPortability.title'),
+      description: t('homePage.features.operatorPortability.description'),
     },
     {
       icon: <Description sx={{ fontSize: 48 }} />,
-      title: 'Easy Sharing',
-      description: 'Share documents with institutions securely with explicit authorization.',
+      title: t('homePage.features.easySharing.title'),
+      description: t('homePage.features.easySharing.description'),
     },
   ];
 
@@ -65,14 +66,13 @@ export const HomePage: React.FC = () => {
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={8}>
               <Typography variant="h2" gutterBottom fontWeight="bold">
-                Carpeta Ciudadana
+                {t('homePage.hero.title')}
               </Typography>
               <Typography variant="h5" paragraph>
-                Your digital document folder for Colombia
+                {t('homePage.hero.subtitle')}
               </Typography>
               <Typography variant="body1" paragraph sx={{ opacity: 0.9 }}>
-                The citizen should not be the state's messenger. Store your documents once,
-                share them digitally, and access them from anywhere.
+                {t('homePage.hero.description')}
               </Typography>
               <Box sx={{ mt: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button
@@ -83,7 +83,7 @@ export const HomePage: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
                 >
-                  Register Now
+                  {t('homePage.hero.registerButton')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -92,7 +92,7 @@ export const HomePage: React.FC = () => {
                   onClick={() => navigate('/login')}
                   sx={{ borderColor: 'white', color: 'white', '&:hover': { borderColor: 'grey.300' } }}
                 >
-                  Login
+                  {t('homePage.hero.loginButton')}
                 </Button>
               </Box>
             </Grid>
@@ -103,7 +103,7 @@ export const HomePage: React.FC = () => {
       {/* Features Section */}
       <Container maxWidth="lg" sx={{ mb: 8 }}>
         <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-          Key Features
+          {t('homePage.features.title')}
         </Typography>
         <Grid container spacing={3}>
           {features.map((feature, index) => (
@@ -131,10 +131,10 @@ export const HomePage: React.FC = () => {
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4" gutterBottom>
-              Ready to get started?
+              {t('homePage.cta.title')}
             </Typography>
             <Typography variant="body1" paragraph color="text.secondary">
-              Join thousands of Colombians who already manage their documents digitally.
+              {t('homePage.cta.description')}
             </Typography>
             <Button
               variant="contained"
@@ -143,7 +143,7 @@ export const HomePage: React.FC = () => {
               onClick={() => navigate('/register')}
               sx={{ mt: 2 }}
             >
-              Create Your Account
+              {t('homePage.cta.button')}
             </Button>
           </Box>
         </Container>

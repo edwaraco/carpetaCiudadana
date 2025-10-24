@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -20,6 +21,7 @@ import { useAuth } from '../contexts/authentication/context/AuthContext';
 import { isMFARequired } from '@/shared/utils/env';
 
 export const LoginPage: React.FC = () => {
+  const { t } = useTranslation('authentication');
   const location = useLocation();
   const state = location.state as { message?: string; folderEmail?: string } | null;
   const { requiresMFA } = useAuth();
@@ -48,12 +50,12 @@ export const LoginPage: React.FC = () => {
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <LoginIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom>
-              {showMFA ? 'Verify Identity' : 'Welcome Back'}
+              {showMFA ? t('loginPage.verifyTitle') : t('loginPage.welcomeTitle')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {showMFA
-                ? 'Complete MFA verification to continue'
-                : 'Login to access your Carpeta Ciudadana'}
+                ? t('loginPage.verifySubtitle')
+                : t('loginPage.welcomeSubtitle')}
             </Typography>
           </Box>
 
@@ -65,7 +67,7 @@ export const LoginPage: React.FC = () => {
 
           {!mfaRequired && !showMFA && (
             <Alert severity="info" sx={{ mb: 3 }}>
-              MFA is optional. You can skip it or use it for additional security.
+              {t('loginPage.mfaOptional')}
             </Alert>
           )}
 
@@ -78,9 +80,9 @@ export const LoginPage: React.FC = () => {
 
               <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Typography variant="body2">
-                  Don't have an account?{' '}
+                  {t('loginPage.noAccount')}{' '}
                   <Link href="/register" sx={{ cursor: 'pointer' }}>
-                    Register here
+                    {t('loginPage.registerHere')}
                   </Link>
                 </Typography>
               </Box>

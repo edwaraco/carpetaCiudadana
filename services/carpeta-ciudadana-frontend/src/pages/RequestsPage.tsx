@@ -4,10 +4,12 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, Box, Typography } from '@mui/material';
 import { RequestList, RespondRequestDialog } from '../contexts/requests/components';
 
 export const RequestsPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -29,10 +31,10 @@ export const RequestsPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Document Requests
+          {t('requestsPage.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph>
-          Manage document requests from entities
+          {t('requestsPage.subtitle')}
         </Typography>
 
         <RequestList

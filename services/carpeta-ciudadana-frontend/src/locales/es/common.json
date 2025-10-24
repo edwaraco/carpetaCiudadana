@@ -1,0 +1,168 @@
+{
+  "app": {
+    "name": "Carpeta Ciudadana",
+    "description": "Sistema Nacional de Gestión de Documentos Digitales"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "download": "Descargar",
+    "upload": "Cargar",
+    "view": "Ver",
+    "select": "Seleccionar",
+    "continue": "Continuar",
+    "accept": "Aceptar",
+    "reject": "Rechazar"
+  },
+  "status": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "messages": {
+    "confirmDelete": "¿Está seguro de que desea eliminar este elemento?",
+    "noData": "No hay datos disponibles",
+    "requiredField": "Este campo es obligatorio",
+    "invalidEmail": "Dirección de correo electrónico inválida",
+    "operationSuccess": "Operación realizada exitosamente",
+    "operationError": "Ocurrió un error al realizar la operación",
+    "unsavedChanges": "Tiene cambios sin guardar. ¿Desea continuar?"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Panel de Control",
+    "documents": "Documentos",
+    "folder": "Mi Carpeta",
+    "requests": "Solicitudes",
+    "portability": "Portabilidad",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "validation": {
+    "required": "{{field}} es obligatorio",
+    "minLength": "{{field}} debe tener al menos {{min}} caracteres",
+    "maxLength": "{{field}} no puede tener más de {{max}} caracteres",
+    "email": "Ingrese una dirección de correo electrónico válida",
+    "numeric": "{{field}} debe ser numérico",
+    "alphanumeric": "{{field}} debe ser alfanumérico",
+    "match": "Los campos no coinciden"
+  },
+  "errors": {
+    "generic": "Ha ocurrido un error inesperado",
+    "network": "Error de conexión. Verifique su conexión a internet",
+    "unauthorized": "No tiene permisos para realizar esta acción",
+    "notFound": "El recurso solicitado no fue encontrado",
+    "serverError": "Error del servidor. Intente nuevamente más tarde"
+  },
+  "homePage": {
+    "hero": {
+      "title": "Carpeta Ciudadana",
+      "subtitle": "Su carpeta digital de documentos para Colombia",
+      "description": "El ciudadano no debe ser el mensajero del estado. Almacene sus documentos una vez, compártalos digitalmente y acceda a ellos desde cualquier lugar.",
+      "registerButton": "Registrarse Ahora",
+      "loginButton": "Iniciar Sesión",
+      "header": {
+        "register": "Registrarse",
+        "login": "Iniciar sesión"
+      }
+    },
+    "features": {
+      "title": "Características Principales",
+      "personalFolder": {
+        "title": "Carpeta Personal",
+        "description": "Almacene todos sus documentos certificados en un solo lugar seguro con almacenamiento ilimitado."
+      },
+      "digitalSecurity": {
+        "title": "Seguridad Digital",
+        "description": "Sus documentos están protegidos con firmas digitales y cifrado de extremo a extremo."
+      },
+      "operatorPortability": {
+        "title": "Portabilidad de Operador",
+        "description": "Cambie libremente entre operadores mientras mantiene todos sus documentos seguros."
+      },
+      "easySharing": {
+        "title": "Compartir Fácilmente",
+        "description": "Comparta documentos con instituciones de manera segura con autorización explícita."
+      }
+    },
+    "cta": {
+      "title": "¿Listo para comenzar?",
+      "description": "Únase a miles de colombianos que ya gestionan sus documentos digitalmente.",
+      "button": "Cree Su Cuenta"
+    }
+  },
+  "dashboardPage": {
+    "welcome": "¡Bienvenido de nuevo, {{name}}!",
+    "subtitle": "Gestione sus documentos y manténgase actualizado con su Carpeta Ciudadana",
+    "stats": {
+      "totalDocuments": "Total de Documentos",
+      "certified": "Certificados",
+      "temporary": "Temporales",
+      "pendingRequests": "Solicitudes Pendientes"
+    },
+    "quickActions": {
+      "title": "Acciones Rápidas",
+      "uploadDocument": {
+        "title": "Cargar Documento",
+        "description": "Agregue un nuevo documento a su carpeta"
+      },
+      "myDocuments": {
+        "title": "Mis Documentos",
+        "description": "Vea y gestione sus documentos"
+      },
+      "documentRequests": {
+        "title": "Solicitudes de Documentos",
+        "description": "Revise solicitudes pendientes de documentos"
+      },
+      "changeOperator": {
+        "title": "Cambiar Operador",
+        "description": "Transfiera a otro operador"
+      }
+    },
+    "recentActivity": {
+      "title": "Actividad Reciente",
+      "noActivity": "Sin actividad reciente",
+      "description": "Su actividad de documentos aparecerá aquí"
+    }
+  },
+  "documentsPage": {
+    "tabs": {
+      "myDocuments": "Mis Documentos",
+      "uploadDocument": "Cargar Documento"
+    }
+  },
+  "folderPage": {
+    "title": "Mi Carpeta",
+    "subtitle": "Vea la información de su carpeta personal y uso de almacenamiento"
+  },
+  "portabilityPage": {
+    "title": "Portabilidad de Operador",
+    "subtitle": "Transfiera su carpeta ciudadana a un operador diferente",
+    "tabs": {
+      "initiate": "Iniciar Portabilidad",
+      "track": "Seguir Progreso"
+    }
+  },
+  "requestsPage": {
+    "title": "Solicitudes de Documentos",
+    "subtitle": "Gestione solicitudes de documentos de entidades"
+  }
+}
+

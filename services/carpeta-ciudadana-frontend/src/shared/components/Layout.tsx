@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   AppBar,
   Box,
@@ -33,6 +34,7 @@ import {
   Dashboard,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/authentication/context/AuthContext';
+import { TFunction } from 'i18next';
 
 const drawerWidth = 240;
 
@@ -43,14 +45,19 @@ interface MenuItem {
   requiresAuth: boolean;
 }
 
-const menuItems: MenuItem[] = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', requiresAuth: true },
-  { text: 'My Documents', icon: <Folder />, path: '/documents', requiresAuth: true },
-  { text: 'Requests', icon: <Inbox />, path: '/requests', requiresAuth: true },
-  { text: 'Portability', icon: <SwapHoriz />, path: '/portability', requiresAuth: true },
-];
+function buildMenuItems(t: TFunction<"common", undefined>) {
+  const menuItems: MenuItem[] = [
+    { text: t('navigation.dashboard'), icon: <Dashboard />, path: '/dashboard', requiresAuth: true},
+    { text: t('navigation.documents'), icon: <Folder />, path: '/documents', requiresAuth: true },
+    { text: t('navigation.requests'), icon: <Inbox />, path: '/requests', requiresAuth: true },
+    { text: t('navigation.portability'), icon: <SwapHoriz />, path: '/portability', requiresAuth: true },
+  ];
+  return menuItems;
+}
+
 
 export const Layout: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -84,7 +91,7 @@ export const Layout: React.FC = () => {
       </Toolbar>
       <Divider />
       <List>
-        {menuItems
+        {buildMenuItems(t)
           .filter(item => !item.requiresAuth || isAuthenticated)
           .map((item) => (
             <ListItem key={item.text} disablePadding>
@@ -137,7 +144,7 @@ export const Layout: React.FC = () => {
             </IconButton>
           )}
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Carpeta Ciudadana
+            {t('homePage.hero.title')}
           </Typography>
           {!isAuthenticated && (
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -146,14 +153,14 @@ export const Layout: React.FC = () => {
                 startIcon={<Login />}
                 onClick={() => navigate('/login')}
               >
-                Login
+                {t('homePage.hero.header.login')}
               </Button>
               <Button
                 color="inherit"
                 startIcon={<PersonAdd />}
                 onClick={() => navigate('/register')}
               >
-                Register
+                {t('homePage.hero.header.register')}
               </Button>
             </Box>
           )}
