@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  api-base-url: "http://backend-api-service:8080/api"
+  use-mock-api: "false"
+  operator-id: "micarpeta"
+  operator-name: "MiCarpeta"
+
