@@ -1,6 +1,5 @@
 package co.edu.eafit.carpeta.ciudadana.registry.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -20,10 +19,6 @@ public class RegistrarCiudadanoRequest {
 
     @NotBlank(message = "La dirección es obligatoria")
     private String direccion;
-
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El formato del email no es válido")
-    private String email;
 
     @NotBlank(message = "El ID del operador es obligatorio")
     private String operadorId;

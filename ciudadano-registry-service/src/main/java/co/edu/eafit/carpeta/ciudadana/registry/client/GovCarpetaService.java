@@ -49,11 +49,13 @@ public class GovCarpetaService {
         public GovCarpetaResponse registrarCiudadano(RegistrarCiudadanoRequest request) {
         log.info("Registrando ciudadano con cédula: {}", request.getCedula());
         
+        String emailGenerado = generarEmailCarpeta(request.getNombreCompleto(), request.getCedula().toString());
+        
         GovCarpetaRegisterRequest govRequest = GovCarpetaRegisterRequest.builder()
                 .id(request.getCedula())
                 .name(request.getNombreCompleto())
                 .address(request.getDireccion())
-                .email(request.getEmail())
+                .email(emailGenerado)
                 .operatorId(request.getOperadorId())
                 .operatorName(request.getOperadorNombre())
                 .build();
@@ -133,5 +135,13 @@ public class GovCarpetaService {
                 .exitoso(false)
                 .mensaje("Servicio GovCarpeta temporalmente no disponible")
                 .build();
+    }
+
+    private String generarEmailCarpeta(String nombreCompleto, String cedula) {
+        String nombreNormalizado = nombreCompleto.toLowerCase()
+                .replaceAll("\\s+", ".")
+                .replaceAll("[^a-z0-9.]", "");
+        
+        return String.format("%s.%s@carpetacolombia.co", nombreNormalizado, cedula);
     }
 }

@@ -16,7 +16,7 @@ public interface CarpetaMapper {
     @Mapping(target = "carpetaId", expression = "java(generarCarpetaId())")
     @Mapping(target = "propietarioCedula", source = "cedula")
     @Mapping(target = "propietarioNombre", source = "nombreCompleto")
-    @Mapping(target = "emailCarpeta", expression = "java(generarEmailCarpeta(request.nombreCompleto(), request.cedula()))")
+    @Mapping(target = "emailCarpeta", source = "emailCarpeta")
     @Mapping(target = "estadoCarpeta", constant = "ACTIVA")
     @Mapping(target = "operadorActual", source = "operadorActual")
     @Mapping(target = "espacioUtilizadoBytes", constant = "0L")
@@ -45,14 +45,5 @@ public interface CarpetaMapper {
     @Named("generarCarpetaId")
     default String generarCarpetaId() {
         return UUID.randomUUID().toString();
-    }
-
-    @Named("generarEmailCarpeta")
-    default String generarEmailCarpeta(String nombreCompleto, String cedula) {
-        String nombreNormalizado = nombreCompleto.toLowerCase()
-                .replaceAll("\\s+", ".")
-                .replaceAll("[^a-z0-9.]", "");
-        
-        return String.format("%s.%s@carpetacolombia.co", nombreNormalizado, cedula);
     }
 }

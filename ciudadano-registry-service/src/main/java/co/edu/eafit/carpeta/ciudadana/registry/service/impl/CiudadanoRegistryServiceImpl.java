@@ -126,11 +126,13 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             }
 
             // Crear registro local
+            String emailGenerado = generarEmailCarpeta(request.getNombreCompleto(), request.getCedula().toString());
+            
             RegistroCiudadano registro = RegistroCiudadano.builder()
                     .cedula(request.getCedula())
                     .nombreCompleto(request.getNombreCompleto())
                     .direccion(request.getDireccion())
-                    .email(request.getEmail())
+                    .email(emailGenerado)
                     .estado(RegistroCiudadano.EstadoRegistro.REGISTRADO)
                     .fechaRegistroGovCarpeta(LocalDateTime.now())
                     .activo(true)
@@ -240,6 +242,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                     .cedula(cedula.toString())
                     .nombreCompleto(registro.getNombreCompleto())
                     .operadorActual("SISTEMA_REGISTRO") // Operador por defecto
+                    .emailCarpeta(generarEmailCarpeta(registro.getNombreCompleto(), cedula.toString()))
                     .build();
             
             // Llamar al servicio de carpeta ciudadana
@@ -327,5 +330,13 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                 .userAgent(auditoria.getUserAgent())
                 .fechaAccion(auditoria.getFechaAccion())
                 .build();
+    }
+
+    private String generarEmailCarpeta(String nombreCompleto, String cedula) {
+        String nombreNormalizado = nombreCompleto.toLowerCase()
+                .replaceAll("\\s+", ".")
+                .replaceAll("[^a-z0-9.]", "");
+        
+        return String.format("%s.%s@carpetacolombia.co", nombreNormalizado, cedula);
     }
 }
