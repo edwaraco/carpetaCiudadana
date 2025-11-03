@@ -131,8 +131,6 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                     .nombreCompleto(request.getNombreCompleto())
                     .direccion(request.getDireccion())
                     .email(request.getEmail())
-                    .operadorId(request.getOperadorId())
-                    .operadorNombre(request.getOperadorNombre())
                     .estado(RegistroCiudadano.EstadoRegistro.REGISTRADO)
                     .fechaRegistroGovCarpeta(LocalDateTime.now())
                     .activo(true)
@@ -301,13 +299,11 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
 
     private RegistroCiudadanoResponse mapToResponse(RegistroCiudadano registro) {
         return RegistroCiudadanoResponse.builder()
-                .id(registro.getPk()) // Usar PK como ID
+                .id(String.valueOf(registro.getCedula())) // Usar cédula como ID
                 .cedula(registro.getCedula())
                 .nombreCompleto(registro.getNombreCompleto())
                 .direccion(registro.getDireccion())
                 .email(registro.getEmail())
-                .operadorId(registro.getOperadorId())
-                .operadorNombre(registro.getOperadorNombre())
                 .carpetaId(registro.getCarpetaId())
                 .estado(registro.getEstado())
                 .fechaRegistroGovCarpeta(registro.getFechaRegistroGovCarpeta())

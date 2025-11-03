@@ -16,8 +16,6 @@ public class RegistroCiudadanoResponse {
     private String nombreCompleto;
     private String direccion;
     private String email;
-    private String operadorId;
-    private String operadorNombre;
     private String carpetaId;
     private RegistroCiudadano.EstadoRegistro estado;
     private LocalDateTime fechaRegistroGovCarpeta;

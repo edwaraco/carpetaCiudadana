@@ -34,18 +34,9 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
 
     @Override
     public RegistroCiudadano save(RegistroCiudadano registro) {
-        // Generar PK y SK si no existen
-        if (registro.getPk() == null) {
-            registro.setPk("CIUDADANO#" + registro.getCedula());
-        }
+        // Asegurar que SK esté configurado
         if (registro.getSk() == null) {
-            registro.setSk("METADATA");
-        }
-        
-        // Generar GSI keys para consultas por operador
-        if (registro.getOperadorId() != null) {
-            registro.setGsi1pk("OPERADOR#" + registro.getOperadorId());
-            registro.setGsi1sk("CIUDADANO#" + registro.getCedula());
+            registro.setSk("#");
         }
         
         // Timestamps
@@ -61,8 +52,8 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
     @Override
     public Optional<RegistroCiudadano> findByCedula(Long cedula) {
         Key key = Key.builder()
-                .partitionValue("CIUDADANO#" + cedula)
-                .sortValue("METADATA")
+                .partitionValue(cedula)
+                .sortValue("#")
                 .build();
         
         RegistroCiudadano registro = registroTable.getItem(key);
@@ -77,16 +68,10 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
 
     @Override
     public List<RegistroCiudadano> findByOperadorIdAndActivoTrue(String operadorId) {
-        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-                .queryConditional(QueryConditional.keyEqualTo(Key.builder()
-                        .partitionValue("OPERADOR#" + operadorId)
-                        .build()))
-                .build();
-        
-        return registroTable.index("GSI1")
-                .query(queryRequest)
+        // Como solo hay un operador, simplemente retornamos todos los activos
+        return registroTable.scan()
+                .items()
                 .stream()
-                .flatMap(page -> page.items().stream())
                 .filter(r -> Boolean.TRUE.equals(r.getActivo()))
                 .collect(Collectors.toList());
     }
@@ -109,7 +94,12 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
 
     @Override
     public Long countByOperadorId(String operadorId) {
-        return (long) findByOperadorIdAndActivoTrue(operadorId).size();
+        // Como solo hay un operador, contamos todos los activos
+        return registroTable.scan()
+                .items()
+                .stream()
+                .filter(r -> Boolean.TRUE.equals(r.getActivo()))
+                .count();
     }
 
     @Override
@@ -125,8 +115,8 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
     @Override
     public void deleteByCedula(Long cedula) {
         Key key = Key.builder()
-                .partitionValue("CIUDADANO#" + cedula)
-                .sortValue("METADATA")
+                .partitionValue(cedula)
+                .sortValue("#")
                 .build();
         
         registroTable.deleteItem(key);

@@ -66,13 +66,11 @@ public class ResponseUtil {
 
     public static RegistroCiudadanoResponse toRegistroCiudadanoResponse(RegistroCiudadano registro) {
         return RegistroCiudadanoResponse.builder()
-                .id(registro.getPk())
+                .id(String.valueOf(registro.getCedula()))
                 .cedula(registro.getCedula())
                 .nombreCompleto(registro.getNombreCompleto())
                 .direccion(registro.getDireccion())
                 .email(registro.getEmail())
-                .operadorId(registro.getOperadorId())
-                .operadorNombre(registro.getOperadorNombre())
                 .carpetaId(registro.getCarpetaId())
                 .estado(registro.getEstado())
                 .fechaRegistroGovCarpeta(registro.getFechaRegistroGovCarpeta())

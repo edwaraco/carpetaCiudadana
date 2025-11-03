@@ -20,13 +20,14 @@ public class DynamoDbInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Inicializando tablas de DynamoDB...");
         
-        createTableIfNotExists("RegistroCiudadano", "PK", "SK");
-        createTableIfNotExists("AuditoriaRegistro", "PK", "SK");
+        createRegistroCiudadanoTable();
+        createAuditoriaRegistroTable();
         
         log.info("Inicialización de DynamoDB completada");
     }
 
-    private void createTableIfNotExists(String tableName, String partitionKey, String sortKey) {
+    private void createRegistroCiudadanoTable() {
+        String tableName = "RegistroCiudadano";
         try {
             // Verificar si la tabla ya existe
             DescribeTableRequest describeRequest = DescribeTableRequest.builder()
@@ -45,67 +46,81 @@ public class DynamoDbInitializer implements CommandLineRunner {
                     .billingMode(BillingMode.PAY_PER_REQUEST)
                     .attributeDefinitions(
                             AttributeDefinition.builder()
-                                    .attributeName(partitionKey)
-                                    .attributeType(ScalarAttributeType.S)
+                                    .attributeName("cedula")
+                                    .attributeType(ScalarAttributeType.N)
                                     .build(),
                             AttributeDefinition.builder()
-                                    .attributeName(sortKey)
+                                    .attributeName("SK")
                                     .attributeType(ScalarAttributeType.S)
                                     .build()
                     )
                     .keySchema(
                             KeySchemaElement.builder()
-                                    .attributeName(partitionKey)
+                                    .attributeName("cedula")
                                     .keyType(KeyType.HASH)
                                     .build(),
                             KeySchemaElement.builder()
-                                    .attributeName(sortKey)
+                                    .attributeName("SK")
                                     .keyType(KeyType.RANGE)
                                     .build()
                     )
                     .build();
 
-            // Crear GSI para RegistroCiudadano
-            if ("RegistroCiudadano".equals(tableName)) {
-                createRequest = createRequest.toBuilder()
-                        .globalSecondaryIndexes(
-                                GlobalSecondaryIndex.builder()
-                                        .indexName("GSI1")
-                                        .keySchema(
-                                                KeySchemaElement.builder()
-                                                        .attributeName("GSI1PK")
-                                                        .keyType(KeyType.HASH)
-                                                        .build(),
-                                                KeySchemaElement.builder()
-                                                        .attributeName("GSI1SK")
-                                                        .keyType(KeyType.RANGE)
-                                                        .build()
-                                        )
-                                        .projection(Projection.builder()
-                                                .projectionType(ProjectionType.ALL)
-                                                .build())
-                                        .build()
-                        )
-                        .attributeDefinitions(
-                                AttributeDefinition.builder()
-                                        .attributeName(partitionKey)
-                                        .attributeType(ScalarAttributeType.S)
-                                        .build(),
-                                AttributeDefinition.builder()
-                                        .attributeName(sortKey)
-                                        .attributeType(ScalarAttributeType.S)
-                                        .build(),
-                                AttributeDefinition.builder()
-                                        .attributeName("GSI1PK")
-                                        .attributeType(ScalarAttributeType.S)
-                                        .build(),
-                                AttributeDefinition.builder()
-                                        .attributeName("GSI1SK")
-                                        .attributeType(ScalarAttributeType.S)
-                                        .build()
-                        )
-                        .build();
+            try {
+                dynamoDbClient.createTable(createRequest);
+                log.info("Tabla {} creada exitosamente", tableName);
+                
+                // Esperar a que la tabla esté activa
+                waitForTableToBeActive(tableName);
+                
+            } catch (ResourceInUseException ex) {
+                log.info("Tabla {} ya existe (creada por otro proceso)", tableName);
             }
+        } catch (Exception e) {
+            log.error("Error creando tabla {}: {}", tableName, e.getMessage());
+            throw new RuntimeException("Error inicializando DynamoDB", e);
+        }
+    }
+
+    private void createAuditoriaRegistroTable() {
+        String tableName = "AuditoriaRegistro";
+        try {
+            // Verificar si la tabla ya existe
+            DescribeTableRequest describeRequest = DescribeTableRequest.builder()
+                    .tableName(tableName)
+                    .build();
+            
+            dynamoDbClient.describeTable(describeRequest);
+            log.info("Tabla {} ya existe", tableName);
+            
+        } catch (ResourceNotFoundException e) {
+            // La tabla no existe, crearla
+            log.info("Creando tabla {}...", tableName);
+            
+            CreateTableRequest createRequest = CreateTableRequest.builder()
+                    .tableName(tableName)
+                    .billingMode(BillingMode.PAY_PER_REQUEST)
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("PK")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("SK")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("PK")
+                                    .keyType(KeyType.HASH)
+                                    .build(),
+                            KeySchemaElement.builder()
+                                    .attributeName("SK")
+                                    .keyType(KeyType.RANGE)
+                                    .build()
+                    )
+                    .build();
 
             try {
                 dynamoDbClient.createTable(createRequest);
