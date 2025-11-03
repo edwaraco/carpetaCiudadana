@@ -15,6 +15,9 @@ public class RabbitMQConfig {
   public static final String QUEUE_NAME = "documento.subido.queue";
   public static final String ROUTING_KEY = "documento.subido";
 
+  public static final String QUEUE_AUTENTICADO = "documento.autenticado.queue";
+  public static final String ROUTING_KEY_AUTENTICADO = "documento.autenticado";
+
   @Bean
   public Exchange documentoExchange() {
     return ExchangeBuilder.topicExchange(EXCHANGE_NAME).durable(true).build();
@@ -30,6 +33,20 @@ public class RabbitMQConfig {
     return BindingBuilder.bind(documentoSubidoQueue)
         .to(documentoExchange)
         .with(ROUTING_KEY)
+        .noargs();
+  }
+
+  @Bean
+  public Queue documentoAutenticadoQueue() {
+    return QueueBuilder.durable(QUEUE_AUTENTICADO).build();
+  }
+
+  @Bean
+  public Binding documentoAutenticadoBinding(
+      Queue documentoAutenticadoQueue, Exchange documentoExchange) {
+    return BindingBuilder.bind(documentoAutenticadoQueue)
+        .to(documentoExchange)
+        .with(ROUTING_KEY_AUTENTICADO)
         .noargs();
   }
 

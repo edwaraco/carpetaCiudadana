@@ -26,4 +26,7 @@ public interface CarpetaCiudadanoService {
   List<Documento> obtenerDocumentosCarpeta(ObtenerDocumentosCarpetaRequest request);
 
   String generarUrlDescarga(String carpetaId, String documentoId);
+
+  void actualizarEstadoDocumento(
+      String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo);
 }
