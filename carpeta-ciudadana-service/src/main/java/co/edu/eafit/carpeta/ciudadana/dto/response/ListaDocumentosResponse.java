@@ -6,5 +6,4 @@ public record ListaDocumentosResponse(
     String carpetaId,
     List<DocumentoResponse> documentos,
     Integer totalDocumentos,
-    String mensaje
-) {}
+    String mensaje) {}

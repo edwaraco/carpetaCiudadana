@@ -288,3 +288,41 @@ mvn test
 mvn clean package
 java -jar target/carpeta-ciudadana-service-1.0.0.jar
 ```
+
+## Linter y Formateo de Código
+
+Este proyecto utiliza **Spotless** para formateo automático y **Checkstyle** para linting.
+
+### Comandos Disponibles
+
+#### Verificar formato del código
+```bash
+mvn spotless:check
+```
+
+#### Formatear código automáticamente
+```bash
+mvn spotless:apply
+```
+
+#### Verificar reglas de Checkstyle
+```bash
+mvn checkstyle:check
+```
+
+#### Formatear y verificar todo
+```bash
+mvn spotless:apply && mvn checkstyle:check
+```
+
+### Configuración
+
+- **Spotless**: Usa Google Java Format con estilo GOOGLE
+- **Checkstyle**: Configuración personalizada en `checkstyle.xml`
+- **EditorConfig**: Configuración de IDE en `.editorconfig`
+
+### Integración en el Build
+
+- Spotless se ejecuta automáticamente en la fase `compile`
+- Checkstyle se ejecuta automáticamente en la fase `validate`
+- El build fallará si hay problemas de formato o linting

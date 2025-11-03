@@ -1,13 +1,12 @@
 package co.edu.eafit.carpeta.ciudadana.entity;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -16,22 +15,22 @@ import java.time.LocalDateTime;
 @DynamoDbBean
 public class CarpetaCiudadano {
 
-    private String carpetaId;
+  private String carpetaId;
 
-    private String propietarioCedula;
-    private String propietarioNombre;
-    private String emailCarpeta;
+  private String propietarioCedula;
+  private String propietarioNombre;
+  private String emailCarpeta;
 
-    private String estadoCarpeta; // ACTIVA, SUSPENDIDA, EN_TRANSFERENCIA
-    private String operadorActual; // ID del operador actual (para portabilidad)
+  private String estadoCarpeta; // ACTIVA, SUSPENDIDA, EN_TRANSFERENCIA
+  private String operadorActual; // ID del operador actual (para portabilidad)
 
-    private Long espacioUtilizadoBytes;
+  private Long espacioUtilizadoBytes;
 
-    private LocalDateTime fechaCreacion;
-    private LocalDateTime fechaUltimaModificacion;
+  private LocalDateTime fechaCreacion;
+  private LocalDateTime fechaUltimaModificacion;
 
-    @DynamoDbPartitionKey
-    public String getCarpetaId() {
-        return carpetaId;
-    }
+  @DynamoDbPartitionKey
+  public String getCarpetaId() {
+    return carpetaId;
+  }
 }

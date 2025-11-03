@@ -7,5 +7,4 @@ public record CrearCarpetaResponse(
     String emailCarpeta,
     String estadoCarpeta,
     LocalDateTime fechaCreacion,
-    String mensaje
-) {}
+    String mensaje) {}

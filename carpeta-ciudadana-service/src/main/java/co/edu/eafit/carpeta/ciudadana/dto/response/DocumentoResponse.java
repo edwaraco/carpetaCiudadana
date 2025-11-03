@@ -13,5 +13,4 @@ public record DocumentoResponse(
     Boolean esDescargable,
     String formatoArchivo,
     Long tamanoBytes,
-    String hashDocumento
-) {}
+    String hashDocumento) {}

@@ -11,23 +11,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DocumentoEventPublisher {
 
-    private final RabbitTemplate rabbitTemplate;
+  private final RabbitTemplate rabbitTemplate;
 
-    public void publicarDocumentoSubido(DocumentoSubidoEvent event) {
-        try {
-            log.info("Publicando evento de documento subido: documentoId={}, carpetaId={}", 
-                    event.getDocumentoId(), event.getCarpetaId());
-            
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE_NAME,
-                    RabbitMQConfig.ROUTING_KEY,
-                    event
-            );
-            
-            log.info("Evento publicado exitosamente para documento: {}", event.getDocumentoId());
-        } catch (Exception e) {
-            log.error("Error publicando evento de documento subido: {}", e.getMessage(), e);
-            // No lanzamos la excepción para no afectar el flujo principal
-        }
+  public void publicarDocumentoSubido(DocumentoSubidoEvent event) {
+    try {
+      log.info(
+          "Publicando evento de documento subido: documentoId={}, carpetaId={}",
+          event.getDocumentoId(),
+          event.getCarpetaId());
+
+      rabbitTemplate.convertAndSend(
+          RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, event);
+
+      log.info("Evento publicado exitosamente para documento: {}", event.getDocumentoId());
+    } catch (Exception e) {
+      log.error("Error publicando evento de documento subido: {}", e.getMessage(), e);
+      // No lanzamos la excepción para no afectar el flujo principal
     }
+  }
 }
