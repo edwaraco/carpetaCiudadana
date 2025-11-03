@@ -7,8 +7,8 @@ import lombok.Data;
 @Builder
 public class ValidacionCiudadanoResponse {
 
-    private Long cedula;
-    private Boolean disponible;
-    private String mensaje;
-    private Integer codigoRespuesta;
+  private Long cedula;
+  private Boolean disponible;
+  private String mensaje;
+  private Integer codigoRespuesta;
 }

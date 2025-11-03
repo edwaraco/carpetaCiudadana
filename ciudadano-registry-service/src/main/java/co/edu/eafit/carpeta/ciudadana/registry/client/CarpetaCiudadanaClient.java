@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "carpeta-ciudadana-api", url = "${carpeta-ciudadana.api.base-url}")
 public interface CarpetaCiudadanaClient {
 
-    @PostMapping("/api/v1/carpetas")
-    ResponseEntity<CarpetaCiudadanaApiResponse> crearCarpeta(@RequestBody CrearCarpetaRequest request);
+  @PostMapping("/api/v1/carpetas")
+  ResponseEntity<CarpetaCiudadanaApiResponse> crearCarpeta(
+      @RequestBody CrearCarpetaRequest request);
 
-    @GetMapping("/api/v1/carpetas/cedula/{cedula}")
-    ResponseEntity<CarpetaCiudadanaApiResponse> buscarCarpetaPorCedula(@PathVariable("cedula") String cedula);
+  @GetMapping("/api/v1/carpetas/cedula/{cedula}")
+  ResponseEntity<CarpetaCiudadanaApiResponse> buscarCarpetaPorCedula(
+      @PathVariable("cedula") String cedula);
 }

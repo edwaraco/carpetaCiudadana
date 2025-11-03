@@ -10,13 +10,11 @@ import lombok.Data;
 @Builder
 public class RegistrarCiudadanoRequest {
 
-    @NotNull(message = "La cédula es obligatoria")
-    @Positive(message = "La cédula debe ser un número positivo")
-    private Long cedula;
+  @NotNull(message = "La cédula es obligatoria") @Positive(message = "La cédula debe ser un número positivo") private Long cedula;
 
-    @NotBlank(message = "El nombre completo es obligatorio")
-    private String nombreCompleto;
+  @NotBlank(message = "El nombre completo es obligatorio")
+  private String nombreCompleto;
 
-    @NotBlank(message = "La dirección es obligatoria")
-    private String direccion;
+  @NotBlank(message = "La dirección es obligatoria")
+  private String direccion;
 }

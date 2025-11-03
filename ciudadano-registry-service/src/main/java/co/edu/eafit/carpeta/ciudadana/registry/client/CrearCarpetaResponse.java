@@ -12,10 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CrearCarpetaResponse {
-    private String carpetaId;
-    private String emailCarpeta;
-    private String estadoCarpeta;
-    private String fechaCreacion;
-    private String mensaje;
+  private String carpetaId;
+  private String emailCarpeta;
+  private String estadoCarpeta;
+  private String fechaCreacion;
+  private String mensaje;
 }
-

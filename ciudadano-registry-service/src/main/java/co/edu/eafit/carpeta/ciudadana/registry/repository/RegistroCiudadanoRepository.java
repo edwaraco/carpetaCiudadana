@@ -1,26 +1,25 @@
 package co.edu.eafit.carpeta.ciudadana.registry.repository;
 
 import co.edu.eafit.carpeta.ciudadana.registry.entity.RegistroCiudadano;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface RegistroCiudadanoRepository {
 
-    RegistroCiudadano save(RegistroCiudadano registro);
+  RegistroCiudadano save(RegistroCiudadano registro);
 
-    Optional<RegistroCiudadano> findByCedula(Long cedula);
+  Optional<RegistroCiudadano> findByCedula(Long cedula);
 
-    Optional<RegistroCiudadano> findByCedulaAndActivoTrue(Long cedula);
+  Optional<RegistroCiudadano> findByCedulaAndActivoTrue(Long cedula);
 
-    List<RegistroCiudadano> findByEstado(RegistroCiudadano.EstadoRegistro estado);
+  List<RegistroCiudadano> findByEstado(RegistroCiudadano.EstadoRegistro estado);
 
-    Optional<RegistroCiudadano> findActiveByCedula(Long cedula);
+  Optional<RegistroCiudadano> findActiveByCedula(Long cedula);
 
-    List<RegistroCiudadano> findAllActive();
+  List<RegistroCiudadano> findAllActive();
 
-    List<RegistroCiudadano> findDesregistradosAntesDe(LocalDateTime fechaLimite);
+  List<RegistroCiudadano> findDesregistradosAntesDe(LocalDateTime fechaLimite);
 
-    void deleteByCedula(Long cedula);
+  void deleteByCedula(Long cedula);
 }

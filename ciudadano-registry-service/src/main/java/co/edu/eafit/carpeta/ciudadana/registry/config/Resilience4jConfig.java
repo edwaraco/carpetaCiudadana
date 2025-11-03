@@ -9,18 +9,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class Resilience4jConfig {
 
-    @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry() {
-        return CircuitBreakerRegistry.ofDefaults();
-    }
+  @Bean
+  public CircuitBreakerRegistry circuitBreakerRegistry() {
+    return CircuitBreakerRegistry.ofDefaults();
+  }
 
-    @Bean
-    public RetryRegistry retryRegistry() {
-        return RetryRegistry.ofDefaults();
-    }
+  @Bean
+  public RetryRegistry retryRegistry() {
+    return RetryRegistry.ofDefaults();
+  }
 
-    @Bean
-    public TimeLimiterRegistry timeLimiterRegistry() {
-        return TimeLimiterRegistry.ofDefaults();
-    }
+  @Bean
+  public TimeLimiterRegistry timeLimiterRegistry() {
+    return TimeLimiterRegistry.ofDefaults();
+  }
 }

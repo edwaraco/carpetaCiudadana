@@ -1,18 +1,14 @@
 package co.edu.eafit.carpeta.ciudadana.registry.entity;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @DynamoDbBean
 @Data
@@ -21,146 +17,145 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RegistroCiudadano {
 
-    private Long cedula; // PK: cédula del ciudadano
-    private String sk; // SK: Constante "#" para compatibilidad con tabla existente
-    private String nombreCompleto;
-    private String direccion;
-    private String email;
-    private String carpetaId;
-    private EstadoRegistro estado;
-    private LocalDateTime fechaRegistroGovCarpeta;
-    private LocalDateTime fechaDesregistro;
-    private String motivoDesregistro;
-    private LocalDateTime fechaCreacion;
-    private LocalDateTime fechaActualizacion;
-    
-    @Builder.Default
-    private Boolean activo = true;
+  private Long cedula; // PK: cédula del ciudadano
+  private String sk; // SK: Constante "#" para compatibilidad con tabla existente
+  private String nombreCompleto;
+  private String direccion;
+  private String email;
+  private String carpetaId;
+  private EstadoRegistro estado;
+  private LocalDateTime fechaRegistroGovCarpeta;
+  private LocalDateTime fechaDesregistro;
+  private String motivoDesregistro;
+  private LocalDateTime fechaCreacion;
+  private LocalDateTime fechaActualizacion;
 
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("cedula")
-    public Long getCedula() {
-        return cedula;
-    }
+  @Builder.Default private Boolean activo = true;
 
-    public void setCedula(Long cedula) {
-        this.cedula = cedula;
-    }
+  @DynamoDbPartitionKey
+  @DynamoDbAttribute("cedula")
+  public Long getCedula() {
+    return cedula;
+  }
 
-    @DynamoDbSortKey
-    @DynamoDbAttribute("SK")
-    public String getSk() {
-        return sk;
-    }
+  public void setCedula(Long cedula) {
+    this.cedula = cedula;
+  }
 
-    public void setSk(String sk) {
-        this.sk = sk;
-    }
+  @DynamoDbSortKey
+  @DynamoDbAttribute("SK")
+  public String getSk() {
+    return sk;
+  }
 
-    @DynamoDbAttribute("nombreCompleto")
-    public String getNombreCompleto() {
-        return nombreCompleto;
-    }
+  public void setSk(String sk) {
+    this.sk = sk;
+  }
 
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
-    }
+  @DynamoDbAttribute("nombreCompleto")
+  public String getNombreCompleto() {
+    return nombreCompleto;
+  }
 
-    @DynamoDbAttribute("direccion")
-    public String getDireccion() {
-        return direccion;
-    }
+  public void setNombreCompleto(String nombreCompleto) {
+    this.nombreCompleto = nombreCompleto;
+  }
 
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
+  @DynamoDbAttribute("direccion")
+  public String getDireccion() {
+    return direccion;
+  }
 
-    @DynamoDbAttribute("email")
-    public String getEmail() {
-        return email;
-    }
+  public void setDireccion(String direccion) {
+    this.direccion = direccion;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  @DynamoDbAttribute("email")
+  public String getEmail() {
+    return email;
+  }
 
-    @DynamoDbAttribute("carpetaId")
-    public String getCarpetaId() {
-        return carpetaId;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public void setCarpetaId(String carpetaId) {
-        this.carpetaId = carpetaId;
-    }
+  @DynamoDbAttribute("carpetaId")
+  public String getCarpetaId() {
+    return carpetaId;
+  }
 
-    @DynamoDbAttribute("estado")
-    public EstadoRegistro getEstado() {
-        return estado;
-    }
+  public void setCarpetaId(String carpetaId) {
+    this.carpetaId = carpetaId;
+  }
 
-    public void setEstado(EstadoRegistro estado) {
-        this.estado = estado;
-    }
+  @DynamoDbAttribute("estado")
+  public EstadoRegistro getEstado() {
+    return estado;
+  }
 
-    @DynamoDbAttribute("fechaRegistroGovCarpeta")
-    public LocalDateTime getFechaRegistroGovCarpeta() {
-        return fechaRegistroGovCarpeta;
-    }
+  public void setEstado(EstadoRegistro estado) {
+    this.estado = estado;
+  }
 
-    public void setFechaRegistroGovCarpeta(LocalDateTime fechaRegistroGovCarpeta) {
-        this.fechaRegistroGovCarpeta = fechaRegistroGovCarpeta;
-    }
+  @DynamoDbAttribute("fechaRegistroGovCarpeta")
+  public LocalDateTime getFechaRegistroGovCarpeta() {
+    return fechaRegistroGovCarpeta;
+  }
 
-    @DynamoDbAttribute("fechaDesregistro")
-    public LocalDateTime getFechaDesregistro() {
-        return fechaDesregistro;
-    }
+  public void setFechaRegistroGovCarpeta(LocalDateTime fechaRegistroGovCarpeta) {
+    this.fechaRegistroGovCarpeta = fechaRegistroGovCarpeta;
+  }
 
-    public void setFechaDesregistro(LocalDateTime fechaDesregistro) {
-        this.fechaDesregistro = fechaDesregistro;
-    }
+  @DynamoDbAttribute("fechaDesregistro")
+  public LocalDateTime getFechaDesregistro() {
+    return fechaDesregistro;
+  }
 
-    @DynamoDbAttribute("motivoDesregistro")
-    public String getMotivoDesregistro() {
-        return motivoDesregistro;
-    }
+  public void setFechaDesregistro(LocalDateTime fechaDesregistro) {
+    this.fechaDesregistro = fechaDesregistro;
+  }
 
-    public void setMotivoDesregistro(String motivoDesregistro) {
-        this.motivoDesregistro = motivoDesregistro;
-    }
+  @DynamoDbAttribute("motivoDesregistro")
+  public String getMotivoDesregistro() {
+    return motivoDesregistro;
+  }
 
-    @DynamoDbAttribute("fechaCreacion")
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
+  public void setMotivoDesregistro(String motivoDesregistro) {
+    this.motivoDesregistro = motivoDesregistro;
+  }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
+  @DynamoDbAttribute("fechaCreacion")
+  public LocalDateTime getFechaCreacion() {
+    return fechaCreacion;
+  }
 
-    @DynamoDbAttribute("fechaActualizacion")
-    public LocalDateTime getFechaActualizacion() {
-        return fechaActualizacion;
-    }
+  public void setFechaCreacion(LocalDateTime fechaCreacion) {
+    this.fechaCreacion = fechaCreacion;
+  }
 
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
-        this.fechaActualizacion = fechaActualizacion;
-    }
+  @DynamoDbAttribute("fechaActualizacion")
+  public LocalDateTime getFechaActualizacion() {
+    return fechaActualizacion;
+  }
 
-    @DynamoDbAttribute("activo")
-    public Boolean getActivo() {
-        return activo;
-    }
+  public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+    this.fechaActualizacion = fechaActualizacion;
+  }
 
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
-    }
+  @DynamoDbAttribute("activo")
+  public Boolean getActivo() {
+    return activo;
+  }
 
-    public enum EstadoRegistro {
-        PENDIENTE_VALIDACION,
-        REGISTRADO,
-        DESREGISTRADO,
-        ERROR_VALIDACION,
-        ERROR_REGISTRO
-    }
+  public void setActivo(Boolean activo) {
+    this.activo = activo;
+  }
+
+  public enum EstadoRegistro {
+    PENDIENTE_VALIDACION,
+    REGISTRADO,
+    DESREGISTRADO,
+    ERROR_VALIDACION,
+    ERROR_REGISTRO
+  }
 }

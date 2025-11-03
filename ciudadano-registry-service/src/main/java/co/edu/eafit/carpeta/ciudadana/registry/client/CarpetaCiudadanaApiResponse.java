@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CarpetaCiudadanaApiResponse {
-    private Boolean success;
-    private String message;
-    private CrearCarpetaResponse data;
-    private String timestamp;
+  private Boolean success;
+  private String message;
+  private CrearCarpetaResponse data;
+  private String timestamp;
 }

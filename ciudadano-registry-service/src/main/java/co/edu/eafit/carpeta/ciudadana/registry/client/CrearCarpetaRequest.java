@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CrearCarpetaRequest {
-    private String cedula;
-    private String nombreCompleto;
-    private String operadorActual;
-    private String emailCarpeta;
+  private String cedula;
+  private String nombreCompleto;
+  private String operadorActual;
+  private String emailCarpeta;
 }
