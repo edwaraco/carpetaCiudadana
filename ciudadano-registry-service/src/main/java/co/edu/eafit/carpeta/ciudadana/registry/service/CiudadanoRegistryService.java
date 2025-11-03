@@ -44,5 +44,5 @@ public interface CiudadanoRegistryService {
     /**
      * Crea una carpeta ciudadana para un ciudadano registrado
      */
-    UUID crearCarpetaCiudadana(Long cedula);
+    String crearCarpetaCiudadana(Long cedula);
 }

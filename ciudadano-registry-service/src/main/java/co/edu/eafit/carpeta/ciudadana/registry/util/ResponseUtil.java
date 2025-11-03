@@ -65,22 +65,15 @@ public class ResponseUtil {
     }
 
     public static RegistroCiudadanoResponse toRegistroCiudadanoResponse(RegistroCiudadano registro) {
-        String operadorId = null;
-        String operadorNombre = null;
-        if (registro.getOperador() != null) {
-            operadorId = (String) registro.getOperador().get("id");
-            operadorNombre = (String) registro.getOperador().get("nombre");
-        }
-        
         return RegistroCiudadanoResponse.builder()
                 .id(registro.getPk())
                 .cedula(registro.getCedula())
                 .nombreCompleto(registro.getNombreCompleto())
                 .direccion(registro.getDireccion())
                 .email(registro.getEmail())
-                .operadorId(operadorId)
-                .operadorNombre(operadorNombre)
-                .carpetaId(registro.getCarpetaId() != null ? UUID.fromString(registro.getCarpetaId()) : null)
+                .operadorId(registro.getOperadorId())
+                .operadorNombre(registro.getOperadorNombre())
+                .carpetaId(registro.getCarpetaId())
                 .estado(registro.getEstado())
                 .fechaRegistroGovCarpeta(registro.getFechaRegistroGovCarpeta())
                 .fechaCreacion(registro.getFechaCreacion())
@@ -89,19 +82,12 @@ public class ResponseUtil {
     }
 
     public static AuditoriaRegistroResponse toAuditoriaRegistroResponse(AuditoriaRegistro auditoria) {
-        String operadorId = null;
-        String operadorNombre = null;
-        if (auditoria.getOperador() != null) {
-            operadorId = (String) auditoria.getOperador().get("id");
-            operadorNombre = (String) auditoria.getOperador().get("nombre");
-        }
-        
         return AuditoriaRegistroResponse.builder()
                 .id(auditoria.getPk())
                 .cedulaCiudadano(auditoria.getCedulaCiudadano())
                 .accion(auditoria.getAccion())
-                .operadorId(operadorId)
-                .operadorNombre(operadorNombre)
+                .operadorId(auditoria.getOperadorId())
+                .operadorNombre(auditoria.getOperadorNombre())
                 .resultado(auditoria.getResultado())
                 .codigoRespuesta(auditoria.getCodigoRespuesta())
                 .mensajeRespuesta(auditoria.getMensajeRespuesta())

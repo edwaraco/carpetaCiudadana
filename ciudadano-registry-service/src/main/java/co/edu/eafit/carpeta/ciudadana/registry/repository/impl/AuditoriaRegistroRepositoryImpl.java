@@ -69,8 +69,7 @@ public class AuditoriaRegistroRepositoryImpl implements AuditoriaRegistroReposit
         return auditoriaTable.scan()
                 .items()
                 .stream()
-                .filter(a -> a.getOperador() != null && 
-                           operadorId.equals(a.getOperador().get("id")))
+                .filter(a -> operadorId.equals(a.getOperadorId()))
                 .sorted((a1, a2) -> a2.getFechaAccion().compareTo(a1.getFechaAccion()))
                 .collect(Collectors.toList());
     }

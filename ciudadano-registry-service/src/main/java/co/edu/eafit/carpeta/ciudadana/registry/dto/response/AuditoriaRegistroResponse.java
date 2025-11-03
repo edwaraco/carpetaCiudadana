@@ -11,7 +11,7 @@ import java.util.UUID;
 @Builder
 public class AuditoriaRegistroResponse {
 
-    private UUID id;
+    private String id;
     private Long cedulaCiudadano;
     private AuditoriaRegistro.AccionAuditoria accion;
     private String operadorId;

@@ -43,8 +43,8 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
         }
         
         // Generar GSI keys para consultas por operador
-        if (registro.getOperador() != null && registro.getOperador().get("id") != null) {
-            registro.setGsi1pk("OPERADOR#" + registro.getOperador().get("id"));
+        if (registro.getOperadorId() != null) {
+            registro.setGsi1pk("OPERADOR#" + registro.getOperadorId());
             registro.setGsi1sk("CIUDADANO#" + registro.getCedula());
         }
         
@@ -83,9 +83,10 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
                         .build()))
                 .build();
         
-        return registroTable.query(queryRequest)
-                .items()
+        return registroTable.index("GSI1")
+                .query(queryRequest)
                 .stream()
+                .flatMap(page -> page.items().stream())
                 .filter(r -> Boolean.TRUE.equals(r.getActivo()))
                 .collect(Collectors.toList());
     }

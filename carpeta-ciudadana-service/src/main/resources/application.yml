@@ -35,11 +35,26 @@ minio:
 # Configuración de logging
 logging:
   level:
+    root: INFO
     co.edu.eafit.carpeta: DEBUG
-    software.amazon.awssdk: INFO
-    io.minio: INFO
+    org.springframework: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.boot: INFO
+    org.hibernate: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    software.amazon.awssdk: DEBUG
+    io.minio: DEBUG
+    org.apache.http: DEBUG
+    org.springframework.cloud: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    max-size: 10MB
+    max-history: 30
 
 # Configuración de actuator
 management:

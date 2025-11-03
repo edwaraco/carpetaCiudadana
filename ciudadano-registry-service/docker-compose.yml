@@ -7,10 +7,10 @@ services:
     container_name: dynamodb-local-registry
     ports:
       - "8002:8000"
-    command: "-jar DynamoDBLocal.jar -sharedDb"
+    command: "-jar DynamoDBLocal.jar"
     working_dir: /home/dynamodblocal
     networks:
-      - carpeta-ciudadana-network
+      - registry-network
     restart: unless-stopped
 
   # DynamoDB Admin (Interfaz Web para DynamoDB)
@@ -25,7 +25,7 @@ services:
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
     networks:
-      - carpeta-ciudadana-network
+      - registry-network
     depends_on:
       - dynamodb-local
     restart: unless-stopped
@@ -50,5 +50,5 @@ services:
   #  restart: unless-stopped
 
 networks:
-  carpeta-ciudadana-network:
-    external: true
+  registry-network:
+    driver: bridge

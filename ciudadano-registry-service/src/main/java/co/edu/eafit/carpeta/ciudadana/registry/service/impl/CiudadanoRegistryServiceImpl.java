@@ -1,7 +1,10 @@
 package co.edu.eafit.carpeta.ciudadana.registry.service.impl;
 
-import co.edu.eafit.carpeta.ciudadana.registry.client.GovCarpetaClient;
-import co.edu.eafit.carpeta.ciudadana.registry.client.CarpetaCiudadanaClient;
+import co.edu.eafit.carpeta.ciudadana.registry.client.GovCarpetaService;
+import co.edu.eafit.carpeta.ciudadana.registry.client.CarpetaCiudadanaService;
+import co.edu.eafit.carpeta.ciudadana.registry.client.CrearCarpetaRequest;
+import co.edu.eafit.carpeta.ciudadana.registry.client.CarpetaCiudadanaResponse;
+import co.edu.eafit.carpeta.ciudadana.registry.client.GovCarpetaResponse;
 import co.edu.eafit.carpeta.ciudadana.registry.dto.request.RegistrarCiudadanoRequest;
 import co.edu.eafit.carpeta.ciudadana.registry.dto.request.DesregistrarCiudadanoRequest;
 import co.edu.eafit.carpeta.ciudadana.registry.dto.response.RegistroCiudadanoResponse;
@@ -17,32 +20,28 @@ import co.edu.eafit.carpeta.ciudadana.registry.repository.AuditoriaRegistroRepos
 import co.edu.eafit.carpeta.ciudadana.registry.service.CiudadanoRegistryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Transactional
 public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
 
     private final RegistroCiudadanoRepository registroRepository;
     private final AuditoriaRegistroRepository auditoriaRepository;
-    private final GovCarpetaClient govCarpetaClient;
-    private final CarpetaCiudadanaClient carpetaCiudadanaClient;
+    private final GovCarpetaService govCarpetaService;
+    private final CarpetaCiudadanaService carpetaCiudadanaService;
 
     public CiudadanoRegistryServiceImpl(RegistroCiudadanoRepository registroRepository,
                                      AuditoriaRegistroRepository auditoriaRepository,
-                                     GovCarpetaClient govCarpetaClient,
-                                     CarpetaCiudadanaClient carpetaCiudadanaClient) {
+                                     GovCarpetaService govCarpetaService,
+                                     CarpetaCiudadanaService carpetaCiudadanaService) {
         this.registroRepository = registroRepository;
         this.auditoriaRepository = auditoriaRepository;
-        this.govCarpetaClient = govCarpetaClient;
-        this.carpetaCiudadanaClient = carpetaCiudadanaClient;
+        this.govCarpetaService = govCarpetaService;
+        this.carpetaCiudadanaService = carpetaCiudadanaService;
     }
 
     @Override
@@ -65,7 +64,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             }
 
             // Consultar API externa de GovCarpeta
-            GovCarpetaClient.GovCarpetaResponse response = govCarpetaClient.validarCiudadano(cedula).block();
+            GovCarpetaResponse response = govCarpetaService.validarCiudadano(cedula);
             
             boolean disponible = response.getCodigoRespuesta() == 200;
             String mensaje = disponible ? "Ciudadano disponible para registro" : "Ciudadano no disponible";
@@ -105,7 +104,17 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             }
 
             // Registrar en GovCarpeta
-            GovCarpetaClient.GovCarpetaResponse govResponse = govCarpetaClient.registrarCiudadano(request).block();
+            GovCarpetaResponse govResponse = govCarpetaService.registrarCiudadano(request);
+            
+            // Manejar respuesta 501 (ciudadano ya registrado) como caso válido
+            if (govResponse.getCodigoRespuesta() == 501) {
+                log.warn("Ciudadano {} ya está registrado en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
+                registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.REGISTRO_CIUDADANO,
+                        request.getOperadorId(), request.getOperadorNombre(),
+                        "Ciudadano ya registrado en GovCarpeta", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
+                
+                throw new CiudadanoAlreadyExistsException(request.getCedula());
+            }
             
             if (!govResponse.getExitoso()) {
                 log.error("Error registrando ciudadano {} en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
@@ -117,17 +126,13 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             }
 
             // Crear registro local
-            Map<String, Object> operador = Map.of(
-                "id", request.getOperadorId(),
-                "nombre", request.getOperadorNombre()
-            );
-            
             RegistroCiudadano registro = RegistroCiudadano.builder()
                     .cedula(request.getCedula())
                     .nombreCompleto(request.getNombreCompleto())
                     .direccion(request.getDireccion())
                     .email(request.getEmail())
-                    .operador(operador)
+                    .operadorId(request.getOperadorId())
+                    .operadorNombre(request.getOperadorNombre())
                     .estado(RegistroCiudadano.EstadoRegistro.REGISTRADO)
                     .fechaRegistroGovCarpeta(LocalDateTime.now())
                     .activo(true)
@@ -136,7 +141,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             registro = registroRepository.save(registro);
 
             // Crear carpeta ciudadana
-            UUID carpetaId = crearCarpetaCiudadana(request.getCedula());
+            String carpetaId = crearCarpetaCiudadana(request.getCedula());
             registro.setCarpetaId(carpetaId);
             registro = registroRepository.save(registro);
 
@@ -165,7 +170,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                     .orElseThrow(() -> new ResourceNotFoundException("Ciudadano", "cedula", request.getCedula()));
 
             // Desregistrar en GovCarpeta
-            GovCarpetaClient.GovCarpetaResponse govResponse = govCarpetaClient.desregistrarCiudadano(request).block();
+            GovCarpetaResponse govResponse = govCarpetaService.desregistrarCiudadano(request);
             
             if (!govResponse.getExitoso()) {
                 log.error("Error desregistrando ciudadano {} en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
@@ -224,7 +229,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
     }
 
     @Override
-    public UUID crearCarpetaCiudadana(Long cedula) {
+    public String crearCarpetaCiudadana(Long cedula) {
         log.info("Creando carpeta ciudadana para cédula: {}", cedula);
         
         try {
@@ -233,14 +238,14 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                     .orElseThrow(() -> new ResourceNotFoundException("Ciudadano", "cedula", cedula));
             
             // Crear request para el servicio de carpeta ciudadana
-            CarpetaCiudadanaClient.CrearCarpetaRequest request = CarpetaCiudadanaClient.CrearCarpetaRequest.builder()
+            CrearCarpetaRequest request = CrearCarpetaRequest.builder()
                     .cedula(cedula.toString())
                     .nombreCompleto(registro.getNombreCompleto())
                     .operadorActual("SISTEMA_REGISTRO") // Operador por defecto
                     .build();
             
             // Llamar al servicio de carpeta ciudadana
-            CarpetaCiudadanaClient.CarpetaCiudadanaResponse response = carpetaCiudadanaClient.crearCarpeta(request).block();
+            CarpetaCiudadanaResponse response = carpetaCiudadanaService.crearCarpeta(request);
             
             if (response == null || !response.getExitoso()) {
                 log.error("Error creando carpeta ciudadana para cédula {}: {}", cedula, 
@@ -261,14 +266,12 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
                 throw new RuntimeException("No se recibió carpetaId en la respuesta");
             }
             
-            UUID carpetaId = UUID.fromString(carpetaIdStr);
-            
             registrarAuditoria(cedula, AuditoriaRegistro.AccionAuditoria.CREACION_CARPETA,
                     null, null, "Carpeta creada exitosamente", 
                     response.getCodigoRespuesta(), response.getMensaje());
             
-            log.info("Carpeta ciudadana creada exitosamente para cédula {}: {}", cedula, carpetaId);
-            return carpetaId;
+            log.info("Carpeta ciudadana creada exitosamente para cédula {}: {}", cedula, carpetaIdStr);
+            return carpetaIdStr;
             
         } catch (Exception e) {
             log.error("Error creando carpeta ciudadana para cédula {}: {}", cedula, e.getMessage(), e);
@@ -281,18 +284,12 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
     private void registrarAuditoria(Long cedula, AuditoriaRegistro.AccionAuditoria accion,
                                    String operadorId, String operadorNombre,
                                    String resultado, Integer codigoRespuesta, String mensajeRespuesta) {
-        Map<String, Object> operador = null;
-        if (operadorId != null && operadorNombre != null) {
-            operador = Map.of(
-                "id", operadorId,
-                "nombre", operadorNombre
-            );
-        }
         
         AuditoriaRegistro auditoria = AuditoriaRegistro.builder()
                 .cedulaCiudadano(cedula)
                 .accion(accion)
-                .operador(operador)
+                .operadorId(operadorId)
+                .operadorNombre(operadorNombre)
                 .resultado(resultado)
                 .codigoRespuesta(codigoRespuesta)
                 .mensajeRespuesta(mensajeRespuesta)
@@ -303,22 +300,15 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
     }
 
     private RegistroCiudadanoResponse mapToResponse(RegistroCiudadano registro) {
-        String operadorId = null;
-        String operadorNombre = null;
-        if (registro.getOperador() != null) {
-            operadorId = (String) registro.getOperador().get("id");
-            operadorNombre = (String) registro.getOperador().get("nombre");
-        }
-        
         return RegistroCiudadanoResponse.builder()
                 .id(registro.getPk()) // Usar PK como ID
                 .cedula(registro.getCedula())
                 .nombreCompleto(registro.getNombreCompleto())
                 .direccion(registro.getDireccion())
                 .email(registro.getEmail())
-                .operadorId(operadorId)
-                .operadorNombre(operadorNombre)
-                .carpetaId(registro.getCarpetaId() != null ? UUID.fromString(registro.getCarpetaId()) : null)
+                .operadorId(registro.getOperadorId())
+                .operadorNombre(registro.getOperadorNombre())
+                .carpetaId(registro.getCarpetaId())
                 .estado(registro.getEstado())
                 .fechaRegistroGovCarpeta(registro.getFechaRegistroGovCarpeta())
                 .fechaCreacion(registro.getFechaCreacion())
@@ -327,19 +317,12 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
     }
 
     private AuditoriaRegistroResponse mapAuditoriaToResponse(AuditoriaRegistro auditoria) {
-        String operadorId = null;
-        String operadorNombre = null;
-        if (auditoria.getOperador() != null) {
-            operadorId = (String) auditoria.getOperador().get("id");
-            operadorNombre = (String) auditoria.getOperador().get("nombre");
-        }
-        
         return AuditoriaRegistroResponse.builder()
                 .id(auditoria.getPk()) // Usar PK como ID
                 .cedulaCiudadano(auditoria.getCedulaCiudadano())
                 .accion(auditoria.getAccion())
-                .operadorId(operadorId)
-                .operadorNombre(operadorNombre)
+                .operadorId(auditoria.getOperadorId())
+                .operadorNombre(auditoria.getOperadorNombre())
                 .resultado(auditoria.getResultado())
                 .codigoRespuesta(auditoria.getCodigoRespuesta())
                 .mensajeRespuesta(auditoria.getMensajeRespuesta())

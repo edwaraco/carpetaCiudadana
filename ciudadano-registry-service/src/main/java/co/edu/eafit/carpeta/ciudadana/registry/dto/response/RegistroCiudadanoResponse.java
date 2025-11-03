@@ -11,14 +11,14 @@ import java.util.UUID;
 @Builder
 public class RegistroCiudadanoResponse {
 
-    private UUID id;
+    private String id;
     private Long cedula;
     private String nombreCompleto;
     private String direccion;
     private String email;
     private String operadorId;
     private String operadorNombre;
-    private UUID carpetaId;
+    private String carpetaId;
     private RegistroCiudadano.EstadoRegistro estado;
     private LocalDateTime fechaRegistroGovCarpeta;
     private LocalDateTime fechaCreacion;

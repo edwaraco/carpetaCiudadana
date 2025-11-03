@@ -28,10 +28,10 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8081/ciudadano-registry")
+                                .url("http://localhost:8081")
                                 .description("Servidor de desarrollo"),
                         new Server()
-                                .url("https://api.carpeta-ciudadana.com/ciudadano-registry")
+                                .url("https://api.carpeta-ciudadana.com")
                                 .description("Servidor de producción")
                 ));
     }
