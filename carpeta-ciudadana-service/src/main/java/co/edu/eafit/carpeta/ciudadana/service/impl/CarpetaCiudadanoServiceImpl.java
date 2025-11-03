@@ -20,6 +20,8 @@ import co.edu.eafit.carpeta.ciudadana.mapper.document.CrearDocumentoMapper;
 import co.edu.eafit.carpeta.ciudadana.service.CarpetaCiudadanoService;
 import co.edu.eafit.carpeta.ciudadana.service.MinioStorageService;
 import co.edu.eafit.carpeta.ciudadana.mapper.historial.HistorialAccesoMapper;
+import co.edu.eafit.carpeta.ciudadana.event.DocumentoEventPublisher;
+import co.edu.eafit.carpeta.ciudadana.event.DocumentoSubidoEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +42,7 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
     private final CrearDocumentoMapper crearDocumentoMapper;
     private final HistorialAccesoMapper historialAccesoMapper;
     private final MinioStorageService minioStorageService;
+    private final DocumentoEventPublisher eventoPublisher;
 
     public CarpetaCiudadanoServiceImpl(
             CarpetaCiudadanoRepository carpetaRepository,
@@ -48,7 +51,8 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
             CarpetaMapper carpetaMapper,
             CrearDocumentoMapper crearDocumentoMapper,
             HistorialAccesoMapper historialAccesoMapper,
-            MinioStorageService minioStorageService) {
+            MinioStorageService minioStorageService,
+            DocumentoEventPublisher eventoPublisher) {
         this.carpetaRepository = carpetaRepository;
         this.documentoRepository = documentoRepository;
         this.historialRepository = historialRepository;
@@ -56,6 +60,7 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
         this.crearDocumentoMapper = crearDocumentoMapper;
         this.historialAccesoMapper = historialAccesoMapper;
         this.minioStorageService = minioStorageService;
+        this.eventoPublisher = eventoPublisher;
     }
 
     @Override
@@ -115,6 +120,20 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
                     request.carpetaId(), documento.getDocumentoId(), "SUBIDA", "SISTEMA",
                     "Documento subido exitosamente");
             historialRepository.save(acceso);
+
+            // Publicar evento de documento subido
+            DocumentoSubidoEvent evento = DocumentoSubidoEvent.builder()
+                    .documentoId(documento.getDocumentoId())
+                    .carpetaId(request.carpetaId())
+                    .propietarioCedula(userId)
+                    .tipoDocumento(documento.getTipoDocumento())
+                    .nombreArchivo(fileName)
+                    .tamanioBytes(archivo.getSize())
+                    .hashDocumento(hashDocumento)
+                    .fechaSubida(documento.getFechaRecepcion())
+                    .build();
+            
+            eventoPublisher.publicarDocumentoSubido(evento);
 
             log.info("Documento subido exitosamente: {}", documento.getDocumentoId());
             return documento;

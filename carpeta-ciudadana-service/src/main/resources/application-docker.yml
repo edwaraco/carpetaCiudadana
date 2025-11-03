@@ -8,3 +8,9 @@ digital-signature:
     retry:
       max-attempts: 3
       backoff-delay: 1000
+
+# Configuración de RabbitMQ para Docker
+spring:
+  rabbitmq:
+    host: rabbitmq
+    port: 5672

@@ -67,6 +67,12 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- RabbitMQ para mensajería -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <!-- Resilience4j para Circuit Breaker y Retry -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>

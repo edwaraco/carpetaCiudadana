@@ -24,6 +24,21 @@ spring:
           access-key: ${AWS_ACCESS_KEY_ID:dummy}
           secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
 
+  # Configuración de RabbitMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin123}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 3
+          multiplier: 2
+
 # Configuración de MinIO
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
