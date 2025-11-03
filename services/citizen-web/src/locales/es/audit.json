@@ -1,0 +1,66 @@
+{
+  "title": "Auditoría y Trazabilidad",
+  "subtitle": "Consulte el historial de acciones en su carpeta",
+  "list": {
+    "empty": "No hay registros de auditoría",
+    "filters": {
+      "all": "Todas las Acciones",
+      "documents": "Documentos",
+      "requests": "Solicitudes",
+      "portability": "Portabilidad",
+      "authentication": "Autenticación",
+      "dateRange": "Rango de Fechas"
+    }
+  },
+  "detail": {
+    "fields": {
+      "timestamp": "Fecha y Hora",
+      "action": "Acción",
+      "actor": "Actor",
+      "target": "Objetivo",
+      "ipAddress": "Dirección IP",
+      "userAgent": "Navegador",
+      "result": "Resultado",
+      "details": "Detalles"
+    }
+  },
+  "actions": {
+    "documentUploaded": "Documento Cargado",
+    "documentDeleted": "Documento Eliminado",
+    "documentShared": "Documento Compartido",
+    "documentDownloaded": "Documento Descargado",
+    "requestReceived": "Solicitud Recibida",
+    "requestApproved": "Solicitud Aprobada",
+    "requestRejected": "Solicitud Rechazada",
+    "portabilityInitiated": "Portabilidad Iniciada",
+    "portabilityCompleted": "Portabilidad Completada",
+    "loginSuccess": "Inicio de Sesión Exitoso",
+    "loginFailed": "Inicio de Sesión Fallido",
+    "logoutSuccess": "Cierre de Sesión",
+    "passwordChanged": "Contraseña Cambiada",
+    "mfaEnabled": "MFA Habilitado",
+    "mfaDisabled": "MFA Deshabilitado"
+  },
+  "results": {
+    "success": "Exitoso",
+    "failed": "Fallido",
+    "pending": "Pendiente",
+    "cancelled": "Cancelado"
+  },
+  "export": {
+    "title": "Exportar Registro de Auditoría",
+    "format": {
+      "label": "Formato",
+      "pdf": "PDF",
+      "csv": "CSV",
+      "json": "JSON"
+    },
+    "actions": {
+      "export": "Exportar",
+      "exporting": "Exportando..."
+    },
+    "success": "Registro exportado exitosamente",
+    "error": "Error al exportar el registro"
+  }
+}
+

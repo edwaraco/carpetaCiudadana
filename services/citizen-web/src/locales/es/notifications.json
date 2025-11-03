@@ -1,0 +1,74 @@
+{
+  "list": {
+    "title": "Notificaciones",
+    "filters": {
+      "unreadOnly": "Solo no leídas"
+    },
+    "actions": {
+      "markAllAsRead": "Marcar todas como leídas",
+      "markAsRead": "Marcar como leída",
+      "delete": "Eliminar"
+    },
+    "empty": {
+      "noNotifications": "No tienes notificaciones",
+      "noUnread": "No tienes notificaciones sin leer",
+      "description": "Las notificaciones aparecerán aquí cuando las recibas",
+      "allCaughtUp": "Todas tus notificaciones están al día"
+    },
+    "loading": "Cargando notificaciones...",
+    "error": "Error al cargar notificaciones"
+  },
+  "item": {
+    "timeAgo": "hace {{time}}",
+    "unread": "No leída",
+    "read": "Leída"
+  },
+  "types": {
+    "DOCUMENT_RECEIVED": "Documento Recibido",
+    "DOCUMENT_REQUESTED": "Documento Solicitado",
+    "PORTABILITY_INITIATED": "Portabilidad Iniciada",
+    "PORTABILITY_COMPLETED": "Portabilidad Completada",
+    "REQUEST_ACCEPTED": "Solicitud Aceptada",
+    "REQUEST_REJECTED": "Solicitud Rechazada",
+    "SYSTEM_ANNOUNCEMENT": "Anuncio del Sistema",
+    "SECURITY_ALERT": "Alerta de Seguridad",
+    "OTHER": "Otro"
+  },
+  "categories": {
+    "DOCUMENT": "Documentos",
+    "REQUEST": "Solicitudes",
+    "PORTABILITY": "Portabilidad",
+    "SECURITY": "Seguridad",
+    "SYSTEM": "Sistema"
+  },
+  "priorities": {
+    "LOW": "Baja",
+    "MEDIUM": "Media",
+    "HIGH": "Alta",
+    "URGENT": "Urgente"
+  },
+  "stats": {
+    "title": "Estadísticas de Notificaciones",
+    "total": "Total",
+    "unread": "Sin leer",
+    "read": "Leídas",
+    "byCategory": "Por categoría",
+    "byType": "Por tipo"
+  },
+  "actions": {
+    "markAllAsRead": {
+      "success": "{{count}} notificaciones marcadas como leídas",
+      "error": "Error al marcar notificaciones como leídas"
+    },
+    "markAsRead": {
+      "success": "Notificación marcada como leída",
+      "error": "Error al marcar notificación como leída"
+    },
+    "delete": {
+      "success": "Notificación eliminada",
+      "error": "Error al eliminar notificación",
+      "confirm": "¿Estás seguro de que deseas eliminar esta notificación?"
+    }
+  }
+}
+

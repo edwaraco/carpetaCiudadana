@@ -1,0 +1,66 @@
+{
+  "registration": {
+    "title": "Registro de Ciudadano",
+    "subtitle": "Regístrese como nuevo ciudadano en el sistema Carpeta Ciudadana",
+    "form": {
+      "cedula": {
+        "label": "Cédula de Ciudadanía",
+        "placeholder": "Ingrese su número de cédula",
+        "helperText": "Ingrese su número de identificación",
+        "validating": "Validando...",
+        "available": "Cédula disponible para registro",
+        "alreadyRegistered": "Esta cédula ya está registrada con {{operator}}",
+        "invalid": "La cédula debe tener entre 6 y 10 dígitos"
+      },
+      "fullName": {
+        "label": "Nombre Completo",
+        "placeholder": "Ingrese su nombre completo",
+        "minLength": "El nombre debe tener al menos 3 caracteres"
+      },
+      "address": {
+        "label": "Dirección",
+        "placeholder": "Ingrese su dirección de residencia",
+        "minLength": "La dirección debe tener al menos 10 caracteres"
+      },
+      "personalEmail": {
+        "label": "Correo Electrónico Personal",
+        "placeholder": "ejemplo@correo.com",
+        "helperText": "Este correo será usado para notificaciones"
+      },
+      "confirmEmail": {
+        "label": "Confirmar Correo Electrónico",
+        "placeholder": "Confirme su correo electrónico",
+        "mismatch": "Los correos electrónicos no coinciden"
+      }
+    },
+    "actions": {
+      "register": "Registrar",
+      "registering": "Registrando...",
+      "cancel": "Cancelar"
+    },
+    "success": {
+      "title": "¡Registro exitoso!",
+      "folderEmail": "Su correo de carpeta:",
+      "immutableEmail": "Este correo es permanente y no puede ser cambiado."
+    },
+    "errors": {
+      "cedulaRequired": "La cédula es obligatoria",
+      "cedulaAlreadyRegistered": "Esta cédula ya está registrada",
+      "emailMismatch": "Los correos electrónicos no coinciden",
+      "registrationFailed": "Error al registrar el ciudadano"
+    }
+  },
+  "citizenInfo": {
+    "title": "Información del Ciudadano",
+    "cedula": "Cédula",
+    "fullName": "Nombre Completo",
+    "folderEmail": "Correo de Carpeta",
+    "personalEmail": "Correo Personal",
+    "registeredAt": "Fecha de Registro",
+    "operator": "Operador Actual"
+  },
+  "registerPage": {
+    "successMessage": "¡Registro exitoso! Por favor inicie sesión con sus credenciales."
+  }
+}
+

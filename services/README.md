@@ -24,7 +24,7 @@ Basado en el análisis DDD, estos son algunos de los servicios que podrían impl
 - **premium-service**: Gestión de servicios premium (PQRS, etc.)
 
 ### User-Facing Applications
-- **web-ciudadano**: Aplicación web para ciudadanos
+- **citizen-web**: Aplicación web para ciudadanos
 - **web-entidad**: Aplicación web para entidades
 - **mobile-app**: Aplicación móvil (futuro)
 

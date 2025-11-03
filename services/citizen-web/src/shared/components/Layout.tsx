@@ -1,0 +1,261 @@
+/**
+ * Layout Component
+ * Main layout wrapper with navigation
+ */
+
+import React, { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import {
+  AppBar,
+  Box,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
+  Divider,
+  useTheme,
+  useMediaQuery,
+  Badge,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Folder,
+  Inbox,
+  SwapHoriz,
+  ExitToApp,
+  PersonAdd,
+  Login,
+  Dashboard,
+  Message,
+} from '@mui/icons-material';
+import { useAuth } from '../../contexts/authentication/context/AuthContext';
+import { TFunction } from 'i18next';
+import { isFeatureEnabled, type FeatureFlag } from '@/shared/config/featureFlags';
+import { useNotificationContext } from '@/contexts/notifications/context';
+
+const drawerWidth = 240;
+
+interface MenuItem {
+  text: string;
+  icon: React.ReactNode;
+  path: string;
+  requiresAuth: boolean;
+  feature?: FeatureFlag;
+}
+
+function buildMenuItems(t: TFunction<"common", undefined>) {
+  const menuItems: MenuItem[] = [
+    {
+      text: t('navigation.dashboard'),
+      icon: <Dashboard />,
+      path: '/dashboard',
+      requiresAuth: true
+    },
+    {
+      text: t('navigation.documents'),
+      icon: <Folder />,
+      path: '/documents',
+      requiresAuth: true,
+      feature: 'DOCUMENTS'
+    },
+    {
+      text: t('navigation.requests'),
+      icon: <Inbox />,
+      path: '/requests',
+      requiresAuth: true,
+      feature: 'DOCUMENT_REQUESTS'
+    },
+    {
+      text: t('navigation.portability'),
+      icon: <SwapHoriz />,
+      path: '/portability',
+      requiresAuth: true,
+      feature: 'PORTABILITY'
+    },
+    {
+      text: t('navigation.notification'),
+      icon: <Message />,
+      path: '/notifications',
+      requiresAuth: true,
+      feature: 'NOTIFICATIONS'
+    },
+  ];
+  return menuItems;
+}
+
+
+export const Layout: React.FC = () => {
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const {isAuthenticated, logout} = useAuth();
+  // Badge en header
+  const { unreadCount } = useNotificationContext();
+  
+
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  const drawer = (
+    <Box>
+      <Toolbar>
+        <Typography variant="h6" noWrap component="div">
+          Carpeta Ciudadana
+        </Typography>
+      </Toolbar>
+      <Divider />
+      <List>
+        {buildMenuItems(t)
+          .filter(item => !item.requiresAuth || isAuthenticated)
+          .filter(item => !item.feature || isFeatureEnabled(item.feature))
+          .map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                selected={location.pathname === item.path}
+                onClick={() => handleNavigation(item.path)}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+      </List>
+      {isAuthenticated && (
+        <>
+          <Divider />
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout}>
+                <ListItemIcon>
+                  <ExitToApp />
+                </ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </>
+      )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { md: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : '100%' },
+          ml: { md: isAuthenticated ? `${drawerWidth}px` : 0 },
+        }}
+      >
+        <Toolbar>
+          {isAuthenticated && isMobile && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+
+          )}
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            {t('homePage.hero.title')}
+          </Typography>
+          {!isAuthenticated && (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                color="inherit"
+                startIcon={<Login />}
+                onClick={() => navigate('/login')}
+              >
+                {t('homePage.hero.header.login')}
+              </Button>
+              {isFeatureEnabled('REGISTRATION') && (
+                <Button
+                  color="inherit"
+                  startIcon={<PersonAdd />}
+                  onClick={() => navigate('/register')}
+                >
+                  {t('homePage.hero.header.register')}
+                </Button>
+              )}
+            </Box>
+          )}
+          {isAuthenticated && isFeatureEnabled('NOTIFICATIONS') && (
+            <IconButton
+              color="inherit"
+              onClick={() => navigate('/notifications')}
+              data-testid="notification-badge-button"
+            >
+              <Badge badgeContent={unreadCount} color="error">
+                <Message />
+              </Badge>
+            </IconButton>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      {isAuthenticated && (
+        <Box
+          component="nav"
+          sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        >
+          <Drawer
+            variant={isMobile ? 'temporary' : 'permanent'}
+            open={isMobile ? mobileOpen : true}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better mobile performance
+            }}
+            sx={{
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
+                width: drawerWidth,
+              },
+            }}
+          >
+            {drawer}
+          </Drawer>
+        </Box>
+      )}
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          width: { md: isAuthenticated ? `calc(100% - ${drawerWidth}px)` : '100%' },
+        }}
+      >
+        <Toolbar /> {/* Spacer for fixed AppBar */}
+        <Outlet />
+      </Box>
+    </Box>
+  );
+};
+

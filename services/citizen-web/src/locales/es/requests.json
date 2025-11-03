@@ -1,0 +1,93 @@
+{
+  "list": {
+    "title": "Solicitudes de Documentos",
+    "subtitle": "Gestione las solicitudes de entidades receptoras",
+    "empty": "No tiene solicitudes pendientes",
+    "filters": {
+      "all": "Todas",
+      "pending": "Pendientes",
+      "approved": "Aprobadas",
+      "rejected": "Rechazadas",
+      "expired": "Expiradas"
+    }
+  },
+  "card": {
+    "from": "De",
+    "requestedAt": "Solicitado el",
+    "expiresAt": "Expira el",
+    "documentsRequested": "Documentos Solicitados",
+    "purpose": "Propósito",
+    "status": "Estado",
+    "actions": {
+      "respond": "Responder",
+      "view": "Ver Detalles"
+    }
+  },
+  "detail": {
+    "title": "Detalle de Solicitud",
+    "fields": {
+      "requestId": "ID de Solicitud",
+      "requestingEntity": "Entidad Solicitante",
+      "requestedAt": "Fecha de Solicitud",
+      "expiresAt": "Fecha de Expiración",
+      "purpose": "Propósito",
+      "status": "Estado",
+      "documentsRequested": "Documentos Solicitados",
+      "respondedAt": "Fecha de Respuesta",
+      "response": "Respuesta"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "approved": "Aprobada",
+      "rejected": "Rechazada",
+      "expired": "Expirada",
+      "cancelled": "Cancelada"
+    }
+  },
+  "respond": {
+    "title": "Responder Solicitud",
+    "subtitle": "Autorice o rechace el envío de documentos",
+    "requestFrom": "Solicitud de {{entity}}",
+    "documentsRequested": "Documentos solicitados:",
+    "form": {
+      "action": {
+        "label": "Acción",
+        "approve": "Aprobar y Enviar Documentos",
+        "reject": "Rechazar Solicitud"
+      },
+      "reason": {
+        "label": "Motivo del Rechazo",
+        "placeholder": "Indique el motivo del rechazo (opcional)"
+      },
+      "documents": {
+        "label": "Seleccione los documentos a enviar",
+        "selectAll": "Seleccionar todos",
+        "deselectAll": "Deseleccionar todos"
+      }
+    },
+    "actions": {
+      "approve": "Aprobar y Enviar",
+      "reject": "Rechazar",
+      "cancel": "Cancelar",
+      "processing": "Procesando..."
+    },
+    "success": {
+      "approved": "Solicitud aprobada. Documentos enviados exitosamente",
+      "rejected": "Solicitud rechazada exitosamente"
+    },
+    "errors": {
+      "noDocuments": "Debe seleccionar al menos un documento",
+      "respondFailed": "Error al responder la solicitud"
+    },
+    "warnings": {
+      "irreversible": "Esta acción no se puede deshacer",
+      "documentsWillBeSent": "Los documentos seleccionados serán enviados a {{entity}}"
+    }
+  },
+  "notifications": {
+    "newRequest": "Nueva solicitud de documentos de {{entity}}",
+    "requestExpiring": "La solicitud de {{entity}} expira en {{hours}} horas",
+    "requestExpired": "La solicitud de {{entity}} ha expirado"
+  }
+}
+

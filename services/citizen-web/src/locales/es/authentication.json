@@ -1,0 +1,69 @@
+{
+  "loginPage": {
+    "welcomeTitle": "Bienvenido de Nuevo",
+    "welcomeSubtitle": "Inicie sesión para acceder a su Carpeta Ciudadana",
+    "verifyTitle": "Verificar Identidad",
+    "verifySubtitle": "Complete la verificación MFA para continuar",
+    "mfaOptional": "MFA es opcional. Puede omitirlo o usarlo para seguridad adicional.",
+    "noAccount": "¿No tiene una cuenta?",
+    "registerHere": "Regístrese aquí"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "subtitle": "Acceda a su Carpeta Ciudadana",
+    "form": {
+      "email": {
+        "label": "Correo Electrónico",
+        "placeholder": "correo@carpetacolombia.co"
+      },
+      "password": {
+        "label": "Contraseña",
+        "placeholder": "Ingrese su contraseña"
+      },
+      "rememberMe": "Recordarme"
+    },
+    "actions": {
+      "login": "Iniciar Sesión",
+      "loggingIn": "Iniciando sesión...",
+      "forgotPassword": "¿Olvidó su contraseña?",
+      "register": "Registrarse como nuevo ciudadano"
+    },
+    "errors": {
+      "invalidCredentials": "Credenciales inválidas",
+      "accountLocked": "Su cuenta ha sido bloqueada. Contacte al soporte",
+      "mfaRequired": "Se requiere autenticación de múltiples factores"
+    }
+  },
+  "mfa": {
+    "title": "Verificación de Múltiples Factores",
+    "subtitle": "Ingrese el código de verificación",
+    "form": {
+      "code": {
+        "label": "Código de Verificación",
+        "placeholder": "000000",
+        "helperText": "Ingrese el código de 6 dígitos enviado a su dispositivo"
+      }
+    },
+    "actions": {
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "resendCode": "Reenviar código",
+      "cancel": "Cancelar"
+    },
+    "messages": {
+      "codeSent": "Código enviado exitosamente",
+      "invalidCode": "Código inválido. Intente nuevamente",
+      "codeExpired": "El código ha expirado. Solicite uno nuevo"
+    }
+  },
+  "logout": {
+    "title": "Cerrar Sesión",
+    "message": "¿Está seguro de que desea cerrar sesión?",
+    "success": "Sesión cerrada exitosamente"
+  },
+  "session": {
+    "expired": "Su sesión ha expirado. Por favor, inicie sesión nuevamente",
+    "concurrent": "Se ha detectado una sesión activa en otro dispositivo"
+  }
+}
+
