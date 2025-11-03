@@ -14,13 +14,11 @@ public interface RegistroCiudadanoRepository {
 
     Optional<RegistroCiudadano> findByCedulaAndActivoTrue(Long cedula);
 
-    List<RegistroCiudadano> findByOperadorIdAndActivoTrue(String operadorId);
-
     List<RegistroCiudadano> findByEstado(RegistroCiudadano.EstadoRegistro estado);
 
     Optional<RegistroCiudadano> findActiveByCedula(Long cedula);
 
-    Long countByOperadorId(String operadorId);
+    List<RegistroCiudadano> findAllActive();
 
     List<RegistroCiudadano> findDesregistradosAntesDe(LocalDateTime fechaLimite);
 

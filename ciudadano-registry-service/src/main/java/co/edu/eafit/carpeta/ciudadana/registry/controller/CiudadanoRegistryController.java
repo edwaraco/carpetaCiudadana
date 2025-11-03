@@ -153,13 +153,11 @@ public class CiudadanoRegistryController {
                           "success": true,
                           "message": "Ciudadano registrado exitosamente",
                           "data": {
-                            "id": "CIUDADANO#1234567890",
+                            "id": "1234567890",
                             "cedula": 1234567890,
                             "nombreCompleto": "Juan Pérez García",
                             "direccion": "Calle 123 #45-67",
-                            "email": "juan.perez@email.com",
-                            "operadorId": "65ca0a00d833e984e2608756",
-                            "operadorNombre": "Operador Ciudadano",
+                            "email": "juan.perez.garcia.1234567890@carpetacolombia.co",
                             "carpetaId": "550e8400-e29b-41d4-a716-446655440000",
                             "estado": "REGISTRADO",
                             "fechaRegistroGovCarpeta": "2025-10-21T10:30:00",
@@ -183,10 +181,10 @@ public class CiudadanoRegistryController {
                     value = """
                         {
                           "success": false,
-                          "message": "Campo 'cedula' inválido: La cédula debe contener entre 6 y 12 dígitos",
+                          "message": "La cédula es obligatoria",
                           "error": {
                             "code": "VALIDATION_ERROR",
-                            "message": "Campo 'cedula' inválido: La cédula debe contener entre 6 y 12 dígitos",
+                            "message": "La cédula es obligatoria",
                             "field": "cedula"
                           },
                           "timestamp": "2025-10-21T10:30:00"
@@ -254,10 +252,7 @@ public class CiudadanoRegistryController {
                             {
                               "cedula": 1234567890,
                               "nombreCompleto": "Juan Pérez García",
-                              "direccion": "Calle 123 #45-67",
-                              "email": "juan.perez@email.com",
-                              "operadorId": "65ca0a00d833e984e2608756",
-                              "operadorNombre": "Operador Ciudadano"
+                              "direccion": "Calle 123 #45-67"
                             }
                             """
                     )
@@ -274,7 +269,7 @@ public class CiudadanoRegistryController {
     @DeleteMapping("/desregistrar")
     @Operation(
         summary = "Desregistrar ciudadano", 
-        description = "Desregistra un ciudadano del operador actual. " +
+        description = "Desregistra un ciudadano del sistema. " +
                       "Notifica a GovCarpeta, actualiza el estado local y mantiene auditoría.",
         tags = {"Ciudadano Registry"}
     )
@@ -292,13 +287,11 @@ public class CiudadanoRegistryController {
                           "success": true,
                           "message": "Ciudadano desregistrado exitosamente",
                           "data": {
-                            "id": "CIUDADANO#1234567890",
+                            "id": "1234567890",
                             "cedula": 1234567890,
                             "nombreCompleto": "Juan Pérez García",
                             "direccion": "Calle 123 #45-67",
-                            "email": "juan.perez@email.com",
-                            "operadorId": "65ca0a00d833e984e2608756",
-                            "operadorNombre": "Operador Ciudadano",
+                            "email": "juan.perez.garcia.1234567890@carpetacolombia.co",
                             "carpetaId": "550e8400-e29b-41d4-a716-446655440000",
                             "estado": "DESREGISTRADO",
                             "fechaRegistroGovCarpeta": "2025-10-21T10:30:00",
@@ -313,7 +306,26 @@ public class CiudadanoRegistryController {
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "400", 
-            description = "Datos de entrada inválidos"
+            description = "Datos de entrada inválidos",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "Error de validación",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "La cédula es obligatoria",
+                          "error": {
+                            "code": "VALIDATION_ERROR",
+                            "message": "La cédula es obligatoria",
+                            "field": "cedula"
+                          },
+                          "timestamp": "2025-10-21T10:30:00"
+                        }
+                        """
+                )
+            )
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "404", 
@@ -341,7 +353,25 @@ public class CiudadanoRegistryController {
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "503", 
-            description = "Servicio externo no disponible"
+            description = "Servicio externo no disponible",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "Servicio no disponible",
+                    value = """
+                        {
+                          "success": false,
+                          "message": "Error en servicio GovCarpeta: Servicio temporalmente no disponible",
+                          "error": {
+                            "code": "EXTERNAL_SERVICE_ERROR",
+                            "message": "Error en servicio GovCarpeta: Servicio temporalmente no disponible"
+                          },
+                          "timestamp": "2025-10-21T10:30:00"
+                        }
+                        """
+                )
+            )
         )
     })
     public ResponseEntity<ApiResponse<RegistroCiudadanoResponse>> desregistrarCiudadano(
@@ -355,9 +385,7 @@ public class CiudadanoRegistryController {
                         value = """
                             {
                               "cedula": 1234567890,
-                              "operadorId": "65ca0a00d833e984e2608756",
-                              "operadorNombre": "Operador Ciudadano",
-                              "motivoDesregistro": "Transferencia a otro operador"
+                              "motivoDesregistro": "Solicitud del ciudadano"
                             }
                             """
                     )
@@ -402,10 +430,10 @@ public class CiudadanoRegistryController {
         return ResponseUtil.ok(response, "Ciudadano encontrado exitosamente");
     }
 
-    @GetMapping("/operador/{operadorId}")
+    @GetMapping
     @Operation(
-        summary = "Obtener ciudadanos por operador", 
-        description = "Obtiene todos los ciudadanos registrados por un operador específico.",
+        summary = "Obtener todos los ciudadanos", 
+        description = "Obtiene todos los ciudadanos activos registrados en el sistema.",
         tags = {"Ciudadano Registry"}
     )
     @ApiResponses(value = {
@@ -414,13 +442,11 @@ public class CiudadanoRegistryController {
             description = "Lista de ciudadanos obtenida exitosamente"
         )
     })
-    public ResponseEntity<ApiResponse<List<RegistroCiudadanoResponse>>> obtenerCiudadanosPorOperador(
-            @Parameter(description = "ID del operador", required = true, example = "65ca0a00d833e984e2608756")
-            @PathVariable String operadorId) {
+    public ResponseEntity<ApiResponse<List<RegistroCiudadanoResponse>>> obtenerTodosCiudadanos() {
         
-        log.info("Obteniendo ciudadanos del operador: {}", operadorId);
+        log.info("Obteniendo todos los ciudadanos activos");
         
-        List<RegistroCiudadanoResponse> response = ciudadanoRegistryService.obtenerCiudadanosPorOperador(operadorId);
+        List<RegistroCiudadanoResponse> response = ciudadanoRegistryService.obtenerTodosCiudadanos();
         
         return ResponseUtil.ok(response, "Ciudadanos obtenidos exitosamente");
     }

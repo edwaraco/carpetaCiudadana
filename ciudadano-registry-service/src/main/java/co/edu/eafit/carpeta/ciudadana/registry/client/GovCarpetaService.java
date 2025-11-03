@@ -56,8 +56,8 @@ public class GovCarpetaService {
                 .name(request.getNombreCompleto())
                 .address(request.getDireccion())
                 .email(emailGenerado)
-                .operatorId(request.getOperadorId())
-                .operatorName(request.getOperadorNombre())
+                .operatorId("SISTEMA_REGISTRO")
+                .operatorName("Sistema de Registro")
                 .build();
 
         try {
@@ -86,8 +86,8 @@ public class GovCarpetaService {
         
         GovCarpetaUnregisterRequest govRequest = GovCarpetaUnregisterRequest.builder()
                 .id(request.getCedula())
-                .operatorId(request.getOperadorId())
-                .operatorName(request.getOperadorNombre())
+                .operatorId("SISTEMA_REGISTRO")
+                .operatorName("Sistema de Registro")
                 .build();
 
         try {

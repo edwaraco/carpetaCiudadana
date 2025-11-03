@@ -110,7 +110,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             if (govResponse.getCodigoRespuesta() == 501) {
                 log.warn("Ciudadano {} ya está registrado en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
                 registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.REGISTRO_CIUDADANO,
-                        request.getOperadorId(), request.getOperadorNombre(),
+                        null, null,
                         "Ciudadano ya registrado en GovCarpeta", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
                 
                 throw new CiudadanoAlreadyExistsException(request.getCedula());
@@ -119,7 +119,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             if (!govResponse.getExitoso()) {
                 log.error("Error registrando ciudadano {} en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
                 registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.ERROR_REGISTRO,
-                        request.getOperadorId(), request.getOperadorNombre(),
+                        null, null,
                         "Error en GovCarpeta", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
                 
                 throw new ExternalServiceException("GovCarpeta", govResponse.getMensaje(), govResponse.getCodigoRespuesta());
@@ -146,7 +146,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             registro = registroRepository.save(registro);
 
             registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.REGISTRO_CIUDADANO,
-                    request.getOperadorId(), request.getOperadorNombre(),
+                    null, null,
                     "Registro exitoso", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
 
             log.info("Ciudadano {} registrado exitosamente", request.getCedula());
@@ -155,7 +155,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
         } catch (Exception e) {
             log.error("Error registrando ciudadano {}: {}", request.getCedula(), e.getMessage(), e);
             registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.ERROR_REGISTRO,
-                    request.getOperadorId(), request.getOperadorNombre(),
+                    null, null,
                     "Error interno", 500, e.getMessage());
             throw e;
         }
@@ -175,7 +175,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             if (!govResponse.getExitoso()) {
                 log.error("Error desregistrando ciudadano {} en GovCarpeta: {}", request.getCedula(), govResponse.getMensaje());
                 registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.ERROR_DESREGISTRO,
-                        request.getOperadorId(), request.getOperadorNombre(),
+                        null, null,
                         "Error en GovCarpeta", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
                 
                 throw new ExternalServiceException("GovCarpeta", govResponse.getMensaje(), govResponse.getCodigoRespuesta());
@@ -190,7 +190,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
             registro = registroRepository.save(registro);
 
             registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.DESREGISTRO_CIUDADANO,
-                    request.getOperadorId(), request.getOperadorNombre(),
+                    null, null,
                     "Desregistro exitoso", govResponse.getCodigoRespuesta(), govResponse.getMensaje());
 
             log.info("Ciudadano {} desregistrado exitosamente", request.getCedula());
@@ -199,7 +199,7 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
         } catch (Exception e) {
             log.error("Error desregistrando ciudadano {}: {}", request.getCedula(), e.getMessage(), e);
             registrarAuditoria(request.getCedula(), AuditoriaRegistro.AccionAuditoria.ERROR_DESREGISTRO,
-                    request.getOperadorId(), request.getOperadorNombre(),
+                    null, null,
                     "Error interno", 500, e.getMessage());
             throw e;
         }
@@ -213,8 +213,8 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
     }
 
     @Override
-    public List<RegistroCiudadanoResponse> obtenerCiudadanosPorOperador(String operadorId) {
-        return registroRepository.findByOperadorIdAndActivoTrue(operadorId)
+    public List<RegistroCiudadanoResponse> obtenerTodosCiudadanos() {
+        return registroRepository.findAllActive()
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

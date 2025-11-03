@@ -32,9 +32,9 @@ public interface CiudadanoRegistryService {
     RegistroCiudadanoResponse obtenerCiudadanoPorCedula(Long cedula);
 
     /**
-     * Obtiene todos los ciudadanos de un operador
+     * Obtiene todos los ciudadanos activos registrados
      */
-    List<RegistroCiudadanoResponse> obtenerCiudadanosPorOperador(String operadorId);
+    List<RegistroCiudadanoResponse> obtenerTodosCiudadanos();
 
     /**
      * Obtiene el historial de auditoría de un ciudadano

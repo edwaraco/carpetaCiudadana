@@ -14,11 +14,5 @@ public class DesregistrarCiudadanoRequest {
     @Positive(message = "La cédula debe ser un número positivo")
     private Long cedula;
 
-    @NotBlank(message = "El ID del operador es obligatorio")
-    private String operadorId;
-
-    @NotBlank(message = "El nombre del operador es obligatorio")
-    private String operadorNombre;
-
     private String motivoDesregistro;
 }

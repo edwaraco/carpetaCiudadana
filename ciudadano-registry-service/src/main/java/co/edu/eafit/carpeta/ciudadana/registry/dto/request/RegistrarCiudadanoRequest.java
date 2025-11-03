@@ -19,10 +19,4 @@ public class RegistrarCiudadanoRequest {
 
     @NotBlank(message = "La dirección es obligatoria")
     private String direccion;
-
-    @NotBlank(message = "El ID del operador es obligatorio")
-    private String operadorId;
-
-    @NotBlank(message = "El nombre del operador es obligatorio")
-    private String operadorNombre;
 }

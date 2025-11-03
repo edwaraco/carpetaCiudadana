@@ -67,16 +67,6 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
     }
 
     @Override
-    public List<RegistroCiudadano> findByOperadorIdAndActivoTrue(String operadorId) {
-        // Como solo hay un operador, simplemente retornamos todos los activos
-        return registroTable.scan()
-                .items()
-                .stream()
-                .filter(r -> Boolean.TRUE.equals(r.getActivo()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<RegistroCiudadano> findByEstado(RegistroCiudadano.EstadoRegistro estado) {
         // Para consultas por estado necesitaríamos un GSI adicional
         // Por ahora hacemos scan (no recomendado para producción)
@@ -93,13 +83,12 @@ public class RegistroCiudadanoRepositoryImpl implements RegistroCiudadanoReposit
     }
 
     @Override
-    public Long countByOperadorId(String operadorId) {
-        // Como solo hay un operador, contamos todos los activos
+    public List<RegistroCiudadano> findAllActive() {
         return registroTable.scan()
                 .items()
                 .stream()
                 .filter(r -> Boolean.TRUE.equals(r.getActivo()))
-                .count();
+                .collect(Collectors.toList());
     }
 
     @Override
