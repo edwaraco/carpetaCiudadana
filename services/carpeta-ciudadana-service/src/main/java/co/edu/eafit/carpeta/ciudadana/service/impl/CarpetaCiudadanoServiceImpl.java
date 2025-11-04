@@ -5,7 +5,11 @@ import co.edu.eafit.carpeta.ciudadana.dto.request.SubirDocumentoConArchivoReques
 import co.edu.eafit.carpeta.ciudadana.dto.request.ObtenerDocumentoRequest;
 import co.edu.eafit.carpeta.ciudadana.dto.request.ObtenerDocumentosCarpetaRequest;
 import co.edu.eafit.carpeta.ciudadana.dto.request.BuscarCarpetaRequest;
+import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoResponse;
+import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentosPaginadosResponse;
 import co.edu.eafit.carpeta.ciudadana.entity.CarpetaCiudadano;
+import co.edu.eafit.carpeta.ciudadana.util.CursorUtil;
+import co.edu.eafit.carpeta.ciudadana.util.ResponseUtil;
 import co.edu.eafit.carpeta.ciudadana.entity.Documento;
 import co.edu.eafit.carpeta.ciudadana.entity.HistorialAcceso;
 import co.edu.eafit.carpeta.ciudadana.exception.CarpetaAlreadyExistsException;
@@ -135,6 +139,52 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
     @Override
     public List<Documento> obtenerDocumentosCarpeta(ObtenerDocumentosCarpetaRequest request) {
         return documentoRepository.findByCarpetaId(request.carpetaId());
+    }
+
+    /**
+     * Obtiene documentos de una carpeta con paginación cursor-based
+     *
+     * @param carpetaId ID de la carpeta
+     * @param cursor Cursor de paginación (Base64 encoded), null para primera página
+     * @param pageSize Número de documentos por página (default: 20)
+     * @return Respuesta paginada con items, nextCursor y hasMore
+     */
+    @Override
+    public DocumentosPaginadosResponse obtenerDocumentosPaginados(String carpetaId, String cursor, Integer pageSize) {
+        log.info("Obteniendo documentos paginados para carpeta: {}, cursor: {}, pageSize: {}",
+                 carpetaId, cursor, pageSize);
+
+        int efectivePageSize = Optional.ofNullable(pageSize)
+                .filter(size -> size > 0)
+                .orElse(20);
+
+        String lastDocumentoId = Optional.ofNullable(cursor)
+                .map(CursorUtil::decodeCursor)
+                .orElse(null);
+
+        List<Documento> documentos = documentoRepository.findByCarpetaIdPaginated(
+                carpetaId, lastDocumentoId, efectivePageSize);
+
+        boolean hasMore = documentos.size() > efectivePageSize;
+
+        List<DocumentoResponse> items = documentos.stream()
+                .limit(efectivePageSize)
+                .map(ResponseUtil::toDocumentoResponse)
+                .toList();
+
+        String nextCursor = Optional.of(documentos)
+                .filter(docs -> hasMore)
+                .map(docs -> docs.get(efectivePageSize - 1))
+                .map(Documento::getDocumentoId)
+                .map(CursorUtil::encodeCursor)
+                .orElse(null);
+
+        log.info("Documentos paginados obtenidos: {} items, hasMore: {}, nextCursor present: {}",
+                 items.size(), hasMore, nextCursor != null);
+
+        return hasMore
+                ? DocumentosPaginadosResponse.withMore(items, nextCursor)
+                : DocumentosPaginadosResponse.lastPage(items);
     }
 
     @Override

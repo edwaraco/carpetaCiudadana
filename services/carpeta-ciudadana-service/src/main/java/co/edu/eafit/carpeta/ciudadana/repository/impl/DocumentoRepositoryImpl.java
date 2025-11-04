@@ -50,11 +50,51 @@ public class DocumentoRepositoryImpl implements DocumentoRepository {
                         .partitionValue(carpetaId)
                         .build()))
                 .build();
-        
+
         return documentoTable.query(queryRequest)
                 .items()
                 .stream()
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Documento> findByCarpetaIdPaginated(String carpetaId, String lastDocumentoId, int pageSize) {
+        QueryEnhancedRequest.Builder queryBuilder = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(Key.builder()
+                        .partitionValue(carpetaId)
+                        .build()))
+                .limit(pageSize + 1); // Fetch pageSize + 1 to detect if there are more pages
+
+        // Apply exclusive start key if provided (continuation cursor)
+        QueryEnhancedRequest queryRequest = applyExclusiveStartKey(queryBuilder, carpetaId, lastDocumentoId)
+                .build();
+
+        return documentoTable.query(queryRequest)
+                .items()
+                .stream()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Aplica el exclusiveStartKey al query builder si lastDocumentoId está presente
+     * Esto permite continuar la paginación desde donde quedó la página anterior
+     */
+    private QueryEnhancedRequest.Builder applyExclusiveStartKey(
+            QueryEnhancedRequest.Builder queryBuilder,
+            String carpetaId,
+            String lastDocumentoId) {
+
+        if (lastDocumentoId != null && !lastDocumentoId.trim().isEmpty()) {
+            Documento lastDocument = new Documento();
+            lastDocument.setCarpetaId(carpetaId);
+            lastDocument.setDocumentoId(lastDocumentoId);
+
+            return queryBuilder.exclusiveStartKey(
+                documentoTable.tableSchema().itemToMap(lastDocument, true)
+            );
+        }
+
+        return queryBuilder;
     }
 
     public List<Documento> findByTipoDocumento(String carpetaId, String tipoDocumento) {
