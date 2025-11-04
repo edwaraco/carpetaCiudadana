@@ -9,7 +9,8 @@ services:
     environment:
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=admin123
-    command: server /data --console-address ":9001"
+      - MINIO_SERVER_URL=http://192.168.20.83:9000
+    command: server /data --address ":9000" --console-address ":9001"
     volumes:
       - minio-data:/data
     networks:
@@ -62,7 +63,7 @@ services:
   # Microservicio de Carpeta Ciudadana
   carpeta-ciudadana-service:
     build:
-      context: ../../carpeta-ciudadana-service
+      context: ../../services/carpeta-ciudadana-service
       dockerfile: Dockerfile
     container_name: carpeta-ciudadana-service
     ports:
@@ -73,7 +74,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
-      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ENDPOINT=http://192.168.20.83:9000
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
