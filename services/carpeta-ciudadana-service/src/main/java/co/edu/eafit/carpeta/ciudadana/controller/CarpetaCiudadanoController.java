@@ -8,6 +8,7 @@ import co.edu.eafit.carpeta.ciudadana.dto.request.BuscarCarpetaRequest;
 import co.edu.eafit.carpeta.ciudadana.dto.response.ApiResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.CrearCarpetaResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoResponse;
+import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentosPaginadosResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoUrlResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.SubirDocumentoResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.CarpetaResponse;
@@ -475,56 +476,98 @@ public class CarpetaCiudadanoController {
     }
 
     /**
-     * 3. Ver mis documentos - Obtener todos los documentos de una carpeta
+     * 3. Ver mis documentos - Obtener documentos de una carpeta con paginación
      */
     @Operation(
-        summary = "Obtener todos los documentos de una carpeta",
-        description = "Lista todos los documentos almacenados en la carpeta ciudadana. " +
-                      "Retorna una lista con los metadatos de cada documento (no descarga los archivos). " +
-                      "Útil para visualizar 'Mis Documentos'.",
+        summary = "Obtener documentos de una carpeta con paginación cursor-based",
+        description = "Lista documentos almacenados en la carpeta ciudadana con paginación cursor-based. " +
+                      "Retorna máximo 20 documentos por página. " +
+                      "Usa el campo 'nextCursor' de la respuesta para obtener la siguiente página. " +
+                      "El campo 'hasMore' indica si existen más páginas disponibles.",
         tags = {"Carpeta Ciudadana"}
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            description = "Lista de documentos obtenida exitosamente",
+            description = "Primera página de documentos obtenida exitosamente (con más páginas disponibles)",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = ApiResponse.class),
                 examples = @ExampleObject(
-                    name = "Lista de documentos",
+                    name = "Primera página con más resultados",
                     value = """
                         {
                           "success": true,
                           "message": "Documentos obtenidos exitosamente",
-                          "data": [
-                            {
-                              "documentoId": "660e8400-e29b-41d4-a716-446655440001",
-                              "titulo": "Diploma Universitario",
-                              "tipoDocumento": "DIPLOMA",
-                              "contextoDocumento": "EDUCACION",
-                              "estadoDocumento": "PROCESADO",
-                              "fechaRecepcion": "2025-10-21T16:00:00",
-                              "fechaUltimaModificacion": "2025-10-21T17:30:00",
-                              "esDescargable": true,
-                              "formatoArchivo": "application/pdf",
-                              "tamanoBytes": 2048000,
-                              "hashDocumento": "a3b2c1d4e5f6..."
-                            },
-                            {
-                              "documentoId": "770e8400-e29b-41d4-a716-446655440002",
-                              "titulo": "Cédula de Ciudadanía",
-                              "tipoDocumento": "CEDULA",
-                              "contextoDocumento": "REGISTRADURIA",
-                              "estadoDocumento": "PROCESADO",
-                              "fechaRecepcion": "2025-10-20T10:00:00",
-                              "fechaUltimaModificacion": "2025-10-20T10:00:00",
-                              "esDescargable": true,
-                              "formatoArchivo": "image/jpeg",
-                              "tamanoBytes": 512000,
-                              "hashDocumento": "b4c3d2e1f0g9..."
-                            }
-                          ],
+                          "data": {
+                            "items": [
+                              {
+                                "documentoId": "660e8400-e29b-41d4-a716-446655440001",
+                                "titulo": "Diploma Universitario",
+                                "tipoDocumento": "DIPLOMA",
+                                "contextoDocumento": "EDUCACION",
+                                "estadoDocumento": "PROCESADO",
+                                "fechaRecepcion": "2025-10-21T16:00:00",
+                                "fechaUltimaModificacion": "2025-10-21T17:30:00",
+                                "esDescargable": true,
+                                "formatoArchivo": "application/pdf",
+                                "tamanoBytes": 2048000,
+                                "hashDocumento": "a3b2c1d4e5f6..."
+                              },
+                              {
+                                "documentoId": "770e8400-e29b-41d4-a716-446655440002",
+                                "titulo": "Cédula de Ciudadanía",
+                                "tipoDocumento": "CEDULA",
+                                "contextoDocumento": "REGISTRADURIA",
+                                "estadoDocumento": "PROCESADO",
+                                "fechaRecepcion": "2025-10-20T10:00:00",
+                                "fechaUltimaModificacion": "2025-10-20T10:00:00",
+                                "esDescargable": true,
+                                "formatoArchivo": "image/jpeg",
+                                "tamanoBytes": 512000,
+                                "hashDocumento": "b4c3d2e1f0g9..."
+                              }
+                            ],
+                            "nextCursor": "NzcwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAy",
+                            "hasMore": true
+                          },
+                          "timestamp": "2025-10-21T18:00:00"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Última página de documentos (sin más resultados disponibles)",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "Última página",
+                    value = """
+                        {
+                          "success": true,
+                          "message": "Documentos obtenidos exitosamente",
+                          "data": {
+                            "items": [
+                              {
+                                "documentoId": "880e8400-e29b-41d4-a716-446655440003",
+                                "titulo": "Acta de Grado",
+                                "tipoDocumento": "ACTA_GRADO",
+                                "contextoDocumento": "EDUCACION",
+                                "estadoDocumento": "PROCESADO",
+                                "fechaRecepcion": "2025-10-19T14:00:00",
+                                "fechaUltimaModificacion": "2025-10-19T14:00:00",
+                                "esDescargable": true,
+                                "formatoArchivo": "application/pdf",
+                                "tamanoBytes": 1024000,
+                                "hashDocumento": "c5d4e3f2g1h0..."
+                              }
+                            ],
+                            "nextCursor": null,
+                            "hasMore": false
+                          },
                           "timestamp": "2025-10-21T18:00:00"
                         }
                         """
@@ -536,13 +579,18 @@ public class CarpetaCiudadanoController {
             description = "Carpeta sin documentos (lista vacía)",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ApiResponse.class),
                 examples = @ExampleObject(
                     name = "Sin documentos",
                     value = """
                         {
                           "success": true,
                           "message": "Documentos obtenidos exitosamente",
-                          "data": [],
+                          "data": {
+                            "items": [],
+                            "nextCursor": null,
+                            "hasMore": false
+                          },
                           "timestamp": "2025-10-21T18:00:00"
                         }
                         """
@@ -551,24 +599,27 @@ public class CarpetaCiudadanoController {
         )
     })
     @GetMapping("/{carpetaId}/documentos")
-    public ResponseEntity<ApiResponse<List<DocumentoResponse>>> obtenerDocumentosCarpeta(
+    public ResponseEntity<ApiResponse<DocumentosPaginadosResponse>> obtenerDocumentosCarpeta(
             @Parameter(
                 description = "ID de la carpeta de la cual se obtendrán los documentos",
                 required = true,
                 example = "550e8400-e29b-41d4-a716-446655440000"
             )
-            @PathVariable String carpetaId) {
-        
-        log.info("Obteniendo documentos de carpeta: {}", carpetaId);
+            @PathVariable String carpetaId,
 
-            ObtenerDocumentosCarpetaRequest request = new ObtenerDocumentosCarpetaRequest(carpetaId);
-        
-        List<DocumentoResponse> documentos = carpetaService.obtenerDocumentosCarpeta(request)
-                .stream()
-                .map(ResponseUtil::toDocumentoResponse)
-                .toList();
-        
-        return ResponseUtil.ok(documentos, "Documentos obtenidos exitosamente");
+            @Parameter(
+                description = "Cursor de paginación (Base64 encoded). Null o ausente para primera página",
+                required = false,
+                example = "ZG9jLTAwMw=="
+            )
+            @RequestParam(required = false) String cursor) {
+
+        log.info("Obteniendo documentos de carpeta: {}, cursor: {}", carpetaId, cursor);
+
+        DocumentosPaginadosResponse response = carpetaService.obtenerDocumentosPaginados(
+                carpetaId, cursor, null);
+
+        return ResponseUtil.ok(response, "Documentos obtenidos exitosamente");
     }
 
     @Operation(

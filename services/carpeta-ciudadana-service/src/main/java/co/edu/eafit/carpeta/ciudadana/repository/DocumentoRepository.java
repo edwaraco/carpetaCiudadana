@@ -13,6 +13,16 @@ public interface DocumentoRepository {
 
     List<Documento> findByCarpetaId(String carpetaId);
 
+    /**
+     * Obtiene documentos de una carpeta con paginación cursor-based
+     *
+     * @param carpetaId ID de la carpeta
+     * @param lastDocumentoId ID del último documento de la página anterior (exclusivo), null para primera página
+     * @param pageSize Número máximo de documentos a retornar
+     * @return Lista de documentos (máximo pageSize + 1 para detectar si hay más páginas)
+     */
+    List<Documento> findByCarpetaIdPaginated(String carpetaId, String lastDocumentoId, int pageSize);
+
     List<Documento> findByTipoDocumento(String carpetaId, String tipoDocumento);
 
     List<Documento> findByEstadoDocumento(String carpetaId, String estadoDocumento);
