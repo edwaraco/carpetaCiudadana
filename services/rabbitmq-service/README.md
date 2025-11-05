@@ -94,6 +94,47 @@ kubectl rabbitmq version
 kubectl rabbitmq help
 ```
 
+## 🛠️ Makefile - Simplified Commands
+
+A comprehensive Makefile is provided to simplify all kubectl operations:
+
+```bash
+# Show all available commands
+make help
+
+# Quick start (install everything)
+make quick-start
+
+# Installation
+make install-operator    # Install RabbitMQ Cluster Operator
+make install-cluster     # Install 3-node cluster
+make create-queues       # Create required queues
+
+# Status & Monitoring
+make status              # Show overall cluster status
+make cluster-status      # RabbitMQ internal status
+make list-queues         # List all queues
+make logs                # View logs from all pods
+
+# Access
+make credentials         # Get admin credentials
+make port-forward        # Port-forward services
+make management-ui       # Open Management UI
+
+# Scaling
+make scale REPLICAS=5    # Scale cluster to 5 nodes
+
+# Testing
+make test-connection     # Test cluster connectivity
+make test-queues         # Test with producer/consumer
+
+# Cleanup
+make uninstall           # Remove cluster (keep operator)
+make uninstall-all       # Remove everything
+```
+
+See `Makefile` for all 30+ available commands.
+
 ## 📦 Instalación
 
 ### 1. Instalar el RabbitMQ Cluster Operator
