@@ -46,6 +46,41 @@ install-cluster: ## Install RabbitMQ cluster (3 nodes)
 	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/name=$(CLUSTER_NAME) -n $(NAMESPACE) --timeout=300s
 	@echo "$(GREEN)✓ Cluster is ready$(NC)"
 
+.PHONY: deploy
+deploy: ## Deploy complete cluster (operator + cluster + ConfigMap)
+	@echo "$(BLUE)Deploying RabbitMQ cluster...$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Step 1/4: Creating namespaces$(NC)"
+	$(KUBECTL) apply -f k8s/00-namespace.yaml
+	@echo ""
+	@echo "$(YELLOW)Step 2/4: Installing RabbitMQ Cluster Operator$(NC)"
+	$(KUBECTL) apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+	@echo "$(GREEN)Waiting for operator to be ready...$(NC)"
+	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/name=rabbitmq-cluster-operator -n $(OPERATOR_NAMESPACE) --timeout=120s
+	@echo "$(GREEN)✓ Operator is ready$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Step 3/4: Deploying cluster resources$(NC)"
+	$(KUBECTL) apply -f k8s/02-storage.yaml
+	$(KUBECTL) apply -f k8s/05-queue-definitions.yaml
+	$(KUBECTL) apply -f k8s/03-rabbitmq-cluster.yaml
+	$(KUBECTL) apply -f k8s/04-ingress.yaml
+	@echo "$(GREEN)Cluster resources created. Waiting for pods...$(NC)"
+	@echo "$(YELLOW)This may take 2-3 minutes...$(NC)"
+	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/name=$(CLUSTER_NAME) -n $(NAMESPACE) --timeout=300s
+	@echo ""
+	@echo "$(YELLOW)Step 4/4: Verifying deployment$(NC)"
+	@$(KUBECTL) get rabbitmqclusters -n $(NAMESPACE)
+	@$(KUBECTL) get pods -n $(NAMESPACE) -l app.kubernetes.io/name=$(CLUSTER_NAME)
+	@echo ""
+	@echo "$(GREEN)✓ RabbitMQ cluster deployed successfully!$(NC)"
+	@echo ""
+	@echo "$(BLUE)Next steps:$(NC)"
+	@echo "  - Get credentials: make credentials"
+	@echo "  - Check status: make status"
+	@echo "  - List queues: make list-queues"
+	@echo "  - Port-forward: make port-forward"
+	@echo ""
+
 .PHONY: create-queues
 create-queues: ## Create required quorum queues (document_verification_request, document_verified_response, test_queue)
 	@echo "$(BLUE)Creating quorum queues...$(NC)"
@@ -215,6 +250,39 @@ import-definitions: ## Import queue/exchange definitions (requires definitions.j
 		rabbitmqadmin import /tmp/definitions.json
 	@echo "$(GREEN)✓ Definitions imported$(NC)"
 
+##@ Queue Management
+
+.PHONY: rebalance-queues
+rebalance-queues: ## Rebalance all quorum queues across cluster nodes
+	@echo "$(BLUE)Rebalancing quorum queues...$(NC)"
+	$(KUBECTL) exec -n $(NAMESPACE) $(CLUSTER_NAME)-server-0 -- \
+		rabbitmq-queues rebalance quorum
+	@echo "$(GREEN)✓ Quorum queues rebalanced$(NC)"
+
+.PHONY: rebalance-queues-pattern
+rebalance-queues-pattern: ## Rebalance quorum queues matching pattern (use PATTERN=<pattern>)
+	@if [ -z "$(PATTERN)" ]; then \
+		echo "$(RED)Error: PATTERN not specified$(NC)"; \
+		echo "Usage: make rebalance-queues-pattern PATTERN='orders.*'"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)Rebalancing quorum queues matching pattern: $(PATTERN)$(NC)"
+	$(KUBECTL) exec -n $(NAMESPACE) $(CLUSTER_NAME)-server-0 -- \
+		rabbitmq-queues rebalance quorum --queue-pattern "$(PATTERN)"
+	@echo "$(GREEN)✓ Quorum queues rebalanced$(NC)"
+
+.PHONY: rebalance-queues-vhost
+rebalance-queues-vhost: ## Rebalance quorum queues in vhost pattern (use VHOST_PATTERN=<pattern>)
+	@if [ -z "$(VHOST_PATTERN)" ]; then \
+		echo "$(RED)Error: VHOST_PATTERN not specified$(NC)"; \
+		echo "Usage: make rebalance-queues-vhost VHOST_PATTERN='production.*'"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)Rebalancing quorum queues in vhost pattern: $(VHOST_PATTERN)$(NC)"
+	$(KUBECTL) exec -n $(NAMESPACE) $(CLUSTER_NAME)-server-0 -- \
+		rabbitmq-queues rebalance quorum --vhost-pattern "$(VHOST_PATTERN)"
+	@echo "$(GREEN)✓ Quorum queues rebalanced$(NC)"
+
 ##@ Cleanup
 
 .PHONY: delete-queue
@@ -227,6 +295,19 @@ delete-queue: ## Delete a queue (use QUEUE_NAME=<name>)
 	@echo "$(YELLOW)Deleting queue: $(QUEUE_NAME)$(NC)"
 	$(KUBECTL) exec -n $(NAMESPACE) $(CLUSTER_NAME)-server-0 -- \
 		rabbitmqctl delete_queue $(QUEUE_NAME)
+
+.PHONY: clean-queues
+clean-queues: ## Delete all non-system queues
+	@echo "$(RED)WARNING: This will delete all non-system queues!$(NC)"
+	@echo "$(YELLOW)Press Ctrl+C to cancel, or wait 5 seconds...$(NC)"
+	@sleep 5
+	@echo "$(BLUE)Deleting all queues...$(NC)"
+	$(KUBECTL) exec -n $(NAMESPACE) $(CLUSTER_NAME)-server-0 -- bash -c \
+		'for queue in $$(rabbitmqctl list_queues -q name | grep -v "^aliveness-test"); do \
+			echo "Deleting queue: $$queue"; \
+			rabbitmqctl delete_queue $$queue; \
+		done'
+	@echo "$(GREEN)✓ All queues deleted$(NC)"
 
 .PHONY: uninstall
 uninstall: ## Remove RabbitMQ cluster (keeps operator)
