@@ -1,0 +1,78 @@
+# 🔐 Auth Service - Database + Service Only
+# Auth service connects to external RabbitMQ (from notificaciones service or teammates)
+# Use this for development - RabbitMQ should be provided externally
+
+version: '3.8'
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  auth_postgres_data:
+
+services:
+  # 🗄️ PostgreSQL Database for Auth Service
+  auth-database:
+    image: postgres:15-alpine
+    container_name: auth-database
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth_service_db
+      POSTGRES_USER: auth_service_user
+      POSTGRES_PASSWORD: auth_service_password123
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_service_user -d auth_service_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # 🔐 Auth Service
+  auth-service:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8080"
+    environment:
+      - DATABASE_URL=postgres://auth_service_user:auth_service_password123@auth-database:5432/auth_service_db?sslmode=disable
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://admin:microservices2024@localhost:5673/}  # Connect to external RabbitMQ
+      - JWT_SECRET=${JWT_SECRET:-super-secret-jwt-key-for-microservices-2024}
+      - LISTEN_PORT=8080
+      - EXCHANGE_NAME=microservices.topic
+      - IDENTITY_SERVICE_URL=${IDENTITY_SERVICE_URL:-http://localhost:8082}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:3000}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    depends_on:
+      auth-database:
+        condition: service_healthy
+    networks:
+      - auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 📖 Auth Service API Documentation (Swagger UI)
+  auth-swagger:
+    image: swaggerapi/swagger-ui
+    container_name: auth-swagger
+    ports:
+      - "8083:8080"
+    environment:
+      - SWAGGER_JSON=/app/openapi.yaml
+    volumes:
+      - ./api/openapi.yaml:/app/openapi.yaml:ro
+    networks:
+      - auth-network
+    restart: unless-stopped

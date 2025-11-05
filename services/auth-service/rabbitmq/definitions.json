@@ -1,0 +1,90 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "users": [
+    {
+      "name": "admin",
+      "password": "microservices2024",
+      "tags": "administrator"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "microservices.topic",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "notifications.email.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-max-length": 10000
+      }
+    },
+    {
+      "name": "identity.registration.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-max-length": 10000
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "microservices.topic",
+      "vhost": "/",
+      "destination": "notifications.email.queue",
+      "destination_type": "queue",
+      "routing_key": "user.registration.email",
+      "arguments": {}
+    },
+    {
+      "source": "microservices.topic",
+      "vhost": "/",
+      "destination": "notifications.email.queue",
+      "destination_type": "queue",
+      "routing_key": "user.password_reset",
+      "arguments": {}
+    },
+    {
+      "source": "microservices.topic",
+      "vhost": "/",
+      "destination": "notifications.email.queue",
+      "destination_type": "queue",
+      "routing_key": "notifications.email.send",
+      "arguments": {}
+    },
+    {
+      "source": "microservices.topic",
+      "vhost": "/",
+      "destination": "identity.registration.queue",
+      "destination_type": "queue",
+      "routing_key": "user.registration.complete",
+      "arguments": {}
+    }
+  ]
+}

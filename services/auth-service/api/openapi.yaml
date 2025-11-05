@@ -1,0 +1,256 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  description: Authentication and user registration service for microservices architecture
+  version: 1.0.0
+  contact:
+    name: Auth Service Team
+    email: auth@example.com
+
+servers:
+  - url: http://localhost:8081
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Initiates user registration process and sends verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/set-password:
+    post:
+      summary: Set password after email verification
+      description: Completes user registration by setting password using verification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRequest'
+      responses:
+        '200':
+          description: Password set successfully, user created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPasswordResponse'
+        '400':
+          description: Invalid token or request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and return session JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - document_id
+        - email
+        - full_name
+      properties:
+        document_id:
+          type: string
+          description: Unique document ID (primary identifier)
+          example: "1234567890"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        full_name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        phone:
+          type: string
+          description: User's phone number
+          example: "+1234567890"
+        address:
+          type: string
+          description: User's address
+          example: "123 Main Street"
+
+    RegisterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Registration initiated. Please check your email for verification link."
+        document_id:
+          type: string
+          example: "1234567890"
+
+    SetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          description: Email verification JWT token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        password:
+          type: string
+          format: password
+          description: User's chosen password (min 8 characters)
+          example: "SecurePassword123!"
+
+    SetPasswordResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Registration completed successfully! Welcome to the system."
+        token:
+          type: string
+          description: Session JWT token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expires_at:
+          type: string
+          format: date-time
+          example: "2025-11-05T04:00:00Z"
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    LoginRequest:
+      type: object
+      required:
+        - document_id
+        - password
+      properties:
+        document_id:
+          type: string
+          description: User's document ID
+          example: "1234567890"
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: "SecurePassword123!"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Login successful"
+        token:
+          type: string
+          description: Session JWT token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expires_at:
+          type: string
+          format: date-time
+          example: "2025-11-05T04:00:00Z"
+        document_id:
+          type: string
+          example: "1234567890"
+
+    UserProfile:
+      type: object
+      properties:
+        document_id:
+          type: string
+          example: "1234567890"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        full_name:
+          type: string
+          example: "John Doe"
+        phone:
+          type: string
+          example: "+1234567890"
+        address:
+          type: string
+          example: "123 Main Street"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Invalid request"
+        message:
+          type: string
+          example: "Detailed error message"
