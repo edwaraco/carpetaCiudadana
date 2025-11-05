@@ -34,10 +34,9 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/carpetas")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(
-    name = "Carpeta Ciudadana", 
+    name = "Carpeta Ciudadana",
     description = "API para gestión de carpetas ciudadanas y documentos. " +
                   "Permite crear carpetas únicas, almacenar documentos (firmados o no), " +
                   "visualizar documentos y gestionar el ciclo de vida de la carpeta ciudadana."

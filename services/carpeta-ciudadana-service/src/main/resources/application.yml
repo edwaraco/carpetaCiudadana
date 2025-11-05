@@ -32,6 +32,14 @@ minio:
   bucket-name: ${MINIO_BUCKET_NAME:carpeta-ciudadana-docs}
   presigned-url-expiry-minutes: ${MINIO_PRESIGNED_URL_EXPIRY:15}
 
+# Configuración de CORS (Cross-Origin Resource Sharing)
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+  max-age: ${CORS_MAX_AGE:3600}
+
 # Configuración de logging
 logging:
   level:

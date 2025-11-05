@@ -78,6 +78,7 @@ services:
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
+      - CORS_ALLOWED_ORIGINS=http://localhost:*,http://citizen-web
     depends_on:
       minio:
         condition: service_healthy
@@ -86,6 +87,26 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
+  # Frontend Web de Carpeta Ciudadana (Citizen Web)
+  citizen-web:
+    build:
+      context: ../../services/citizen-web
+      dockerfile: Dockerfile
+    container_name: citizen-web
+    ports:
+      - "3000:8080"
+    depends_on:
+      - carpeta-ciudadana-service
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
 
 volumes:
   minio-data:
