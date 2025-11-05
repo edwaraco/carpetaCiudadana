@@ -47,7 +47,6 @@ export class DocumentApiService implements IDocumentService {
         }
       );
 
-      // Map backend response to frontend model
       if (response.success && response.data) {
         return {
           ...response,
@@ -55,7 +54,7 @@ export class DocumentApiService implements IDocumentService {
         };
       }
 
-      return response as ApiResponse<Document>;
+      throw new Error('Failed to upload document: No data received from backend');
     } catch (error) {
       console.error('Error uploading document:', error);
       throw error;
@@ -66,45 +65,35 @@ export class DocumentApiService implements IDocumentService {
    * Get documents with cursor-based pagination
    * GET /carpetas/{carpetaId}/documentos?cursor={cursor}
    *
-   * Backend returns: ApiResponse<List<DocumentoResponse>>
-   * This means response.data is the array directly, not wrapped in {items: []}
+   * Backend returns: ApiResponse<DocumentosPaginadosResponse>
+   * Where DocumentosPaginadosResponse = { items: DocumentoResponse[], nextCursor: string | null, hasMore: boolean }
    */
   async getDocuments(
     carpetaId: string,
     cursor?: PaginationCursor
   ): Promise<ApiResponse<CursorPaginatedResponse<Document>>> {
     try {
-      // Build query params
       const params = cursor ? { cursor } : {};
 
-      // Call backend endpoint
-      // Backend returns ApiResponse where data is List<DocumentoResponse> directly
-      const response = await httpClient.get<BackendDocumentoResponse[]>(
+      const response = await httpClient.get<CursorPaginatedResponse<BackendDocumentoResponse>>(
         `/carpetas/${carpetaId}/documentos`,
         { params }
       );
 
-      // Backend returns the array directly in response.data
       if (response.success && response.data) {
-        // Extract nextCursor from response headers (if backend sends it)
-        // Note: This depends on backend implementation
-        // For now, assume backend doesn't implement pagination yet
-        const nextCursor = null; // TODO: Extract from headers when backend implements it
-        const hasMore = false; // TODO: Determine based on nextCursor
-
-        // response.data is already BackendDocumentoResponse[], so map it directly
+        const { items, nextCursor, hasMore } = response.data;
         return {
           success: response.success,
           message: response.message,
           data: {
-            items: response.data.map(backendToFrontendDocument),
+            items: items.map(backendToFrontendDocument),
             nextCursor,
             hasMore,
           },
         };
       }
 
-      return response as ApiResponse<CursorPaginatedResponse<Document>>;
+      throw new Error('Failed to fetch documents: No data received from backend');
     } catch (error) {
       console.error('Error fetching documents:', error);
       throw error;
@@ -128,7 +117,7 @@ export class DocumentApiService implements IDocumentService {
         };
       }
 
-      return response as ApiResponse<Document>;
+      throw new Error('Failed to fetch document: No data received from backend');
     } catch (error) {
       console.error('Error fetching document:', error);
       throw error;

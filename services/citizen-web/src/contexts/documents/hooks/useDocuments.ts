@@ -72,9 +72,10 @@ export const useDocuments = (): UseDocumentsReturn => {
       const response = await documentService.getDocuments(carpetaId, nextCursor);
 
       if (response.success && response.data) {
-        setDocuments((prev) => [...prev, ...response.data.items]);
-        setNextCursor(response.data.nextCursor ?? null);
-        setHasMore(response.data.hasMore);
+        const { items, nextCursor: cursor, hasMore: more } = response.data;
+        setDocuments((prev) => [...prev, ...items]);
+        setNextCursor(cursor ?? null);
+        setHasMore(more);
       } else {
         setError(response.error?.message || 'Failed to load more documents');
       }
