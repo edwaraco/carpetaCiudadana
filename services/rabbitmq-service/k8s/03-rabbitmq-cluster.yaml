@@ -1,0 +1,170 @@
+---
+# RabbitMQ Cluster Custom Resource
+# Managed by RabbitMQ Cluster Operator
+# Reference: https://www.rabbitmq.com/kubernetes/operator/using-operator
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: carpeta-rabbitmq
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: messaging
+spec:
+  # 3 nodes minimum for Quorum Queues
+  replicas: 3
+  
+  # RabbitMQ image configuration
+  image: rabbitmq:3.13-management
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+  
+  # Persistence configuration
+  # Each pod gets its own PVC (persistence/storage per-node folder)
+  persistence:
+    storageClassName: standard  # Change to rabbitmq-storage for custom StorageClass
+    storage: 10Gi
+  
+  # Resource limits and requests
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  # RabbitMQ configuration
+  rabbitmq:
+    # Additional RabbitMQ configuration
+    additionalConfig: |
+      # Cluster formation using Kubernetes peer discovery
+      cluster_formation.peer_discovery_backend = kubernetes
+      cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+      cluster_formation.k8s.address_type = hostname
+      
+      # Seed node configuration (pod with -0 suffix)
+      # cluster_formation.k8s.ordinal_start = 0  # Default value
+      
+      # Only the node with lowest ordinal (carpeta-rabbitmq-server-0) can form new cluster
+      # All other nodes must join it
+      
+      # Quorum Queue configuration
+      # Default replication factor for new quorum queues
+      # Note: x-quorum-initial-group-size must be <= replicas (3)
+      
+      # Memory and disk limits
+      vm_memory_high_watermark.relative = 0.6
+      disk_free_limit.absolute = 2GB
+      
+      # Heartbeat
+      heartbeat = 60
+      
+      # Logging
+      log.console.level = info
+      log.console = true
+    
+    # Additional plugins to enable
+    additionalPlugins:
+      - rabbitmq_management
+      - rabbitmq_prometheus
+      - rabbitmq_peer_discovery_k8s
+    
+    # Advanced configuration for production
+    advancedConfig: |
+      [
+        {rabbit, [
+          {cluster_partition_handling, autoheal}
+        ]},
+        {rabbitmq_management, [
+          {load_definitions, "/etc/rabbitmq/definitions.json"}
+        ]}
+      ].
+  
+  # Override default container settings
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+              - name: rabbitmq
+                env:
+                  # Enable feature flags for Quorum Queues
+                  - name: RABBITMQ_FEATURE_FLAGS
+                    value: "quorum_queue,stream_queue"
+                ports:
+                  - name: amqp
+                    containerPort: 5672
+                    protocol: TCP
+                  - name: management
+                    containerPort: 15672
+                    protocol: TCP
+                  - name: prometheus
+                    containerPort: 15692
+                    protocol: TCP
+                  - name: epmd
+                    containerPort: 4369
+                    protocol: TCP
+
+---
+# Service for AMQP connections
+apiVersion: v1
+kind: Service
+metadata:
+  name: carpeta-rabbitmq-amqp
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq-amqp
+spec:
+  type: ClusterIP
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: carpeta-rabbitmq
+
+---
+# Service for Management UI
+apiVersion: v1
+kind: Service
+metadata:
+  name: carpeta-rabbitmq-management
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq-management
+spec:
+  type: ClusterIP
+  ports:
+    - name: management
+      port: 15672
+      targetPort: 15672
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: carpeta-rabbitmq
+
+---
+# Service for Prometheus metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: carpeta-rabbitmq-prometheus
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq-prometheus
+spec:
+  type: ClusterIP
+  ports:
+    - name: prometheus
+      port: 15692
+      targetPort: 15692
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: carpeta-rabbitmq

@@ -22,7 +22,9 @@ import sys
 # Importar excepciones específicas de pika
 from pika.exceptions import AMQPConnectionError, UnroutableError
 
-# Configuración de conexión (Leader)
+# Configuración de conexión
+# Para Kubernetes, usar port-forward: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
+# Para obtener credenciales K8s: kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d
 RABBITMQ_HOST = 'localhost'
 RABBITMQ_PORT = 5672
 RABBITMQ_USER = 'admin'
@@ -150,8 +152,39 @@ def main():
         default='documento.deletion.requested',
         help='Tipo de evento a generar'
     )
+    parser.add_argument(
+        '--host',
+        type=str,
+        default='localhost',
+        help='RabbitMQ host (default: localhost)'
+    )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=5672,
+        help='RabbitMQ port (default: 5672)'
+    )
+    parser.add_argument(
+        '--user',
+        type=str,
+        default='admin',
+        help='RabbitMQ user (default: admin)'
+    )
+    parser.add_argument(
+        '--password',
+        type=str,
+        default='admin123',
+        help='RabbitMQ password (default: admin123)'
+    )
     
     args = parser.parse_args()
+    
+    # Override global config with command-line args
+    global RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASS
+    RABBITMQ_HOST = args.host
+    RABBITMQ_PORT = args.port
+    RABBITMQ_USER = args.user
+    RABBITMQ_PASS = args.password
     
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗

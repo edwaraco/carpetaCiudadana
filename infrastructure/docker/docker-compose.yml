@@ -61,64 +61,13 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # Message Broker - RabbitMQ Cluster (Scalable)
-  # Leader + Followers pattern para escalabilidad horizontal
-  # ADR-0004: RabbitMQ Quorum Queues con arquitectura Leader-Followers
-  # ADR-0005: Ubicación en Docker Compose
+  # Message Broker - RabbitMQ
   # ==========================================
-
-  # RabbitMQ Leader - Nodo principal del cluster
-  rabbitmq-leader:
-    image: rabbitmq:3.12-management
-    container_name: rabbitmq-leader
-    hostname: rabbitmq-leader
-    ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
-    environment:
-      - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin123
-      - RABBITMQ_NODE_NAME=rabbit@rabbitmq-leader
-    volumes:
-      - rabbitmq-leader-data:/var/lib/rabbitmq
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
-  # RabbitMQ Followers - Nodos que se unen al cluster (SCALABLE)
-  # Para escalar: docker compose up -d --scale rabbitmq-follower=4
-  rabbitmq-follower:
-    image: rabbitmq:3.12-management
-    hostname: rabbitmq-follower
-    environment:
-      - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin123
-      - RABBITMQ_LEADER_HOST=rabbitmq-leader
-    volumes:
-      - ./rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh:ro
-    entrypoint: ["/usr/local/bin/cluster-entrypoint.sh"]
-    networks:
-      - app-network
-    depends_on:
-      rabbitmq-leader:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    deploy:
-      replicas: 4  # Número inicial de followers (escalable con --scale)
+  # RabbitMQ has been migrated to Kubernetes
+  # See: services/rabbitmq-service/README.md
+  # ADR-0004: RabbitMQ Quorum Queues en Kubernetes
+  # ADR-0005: Migración de Docker Compose a Kubernetes
+  # ==========================================
 
   # Microservicio de Carpeta Ciudadana
   carpeta-ciudadana-service:
@@ -140,17 +89,18 @@ services:
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
-      # RabbitMQ - Conexión al leader para balanceo automático
-      - SPRING_RABBITMQ_HOST=rabbitmq-leader
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=admin
-      - SPRING_RABBITMQ_PASSWORD=admin123
+      # RabbitMQ - Now in Kubernetes
+      # For local development, use port-forward:
+      # kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
+      # Then configure: SPRING_RABBITMQ_HOST=host.docker.internal
+      # SPRING_RABBITMQ_HOST=host.docker.internal
+      # SPRING_RABBITMQ_PORT=5672
+      # SPRING_RABBITMQ_USERNAME=<from-k8s-secret>
+      # SPRING_RABBITMQ_PASSWORD=<from-k8s-secret>
     depends_on:
       minio:
         condition: service_healthy
       dynamodb-local:
-        condition: service_healthy
-      rabbitmq-leader:
         condition: service_healthy
     networks:
       - app-network
@@ -160,7 +110,6 @@ volumes:
   minio-data:
     driver: local
   dynamodata:
-  rabbitmq-leader-data:
 
 networks:
   app-network:

@@ -479,3 +479,402 @@ public class RabbitMQScalabilityTests {
 **Fecha**: 2025-11-05  
 **Autores**: Equipo Carpeta Ciudadana  
 **Revisores**: Pendiente
+
+---
+
+## Actualización: Migración a Kubernetes (2025-11-05)
+
+### Nueva Decisión
+
+Después de validar exitosamente la arquitectura escalable en Docker Compose, el sistema **migra a Kubernetes** usando el **RabbitMQ Cluster Operator** para despliegue en producción.
+
+### Motivación para la Migración
+
+**Limitaciones de Docker Compose Identificadas**:
+
+1. **Escalabilidad Limitada**: Docker Compose es óptimo para 3-10 nodos; >10 nodos consume recursos excesivos
+2. **Sin Alta Disponibilidad Real**: Todos los nodos en el mismo host = single point of failure
+3. **Gestión Manual**: Escalar requiere comandos manuales, no automático
+4. **No Production-Ready**: Docker Compose es herramienta de desarrollo, no orquestador productivo
+5. **Sin Health Management**: No hay auto-healing si un nodo falla permanentemente
+
+**Capacidades de Kubernetes**:
+
+- ✅ **Escalabilidad Real**: Distribuir nodos en múltiples máquinas físicas
+- ✅ **Auto-healing**: Recreación automática de pods fallidos
+- ✅ **Rolling Updates**: Actualizar cluster sin downtime
+- ✅ **Resource Management**: CPU/Memory limits y requests
+- ✅ **Service Discovery**: DNS automático, balanceo de carga
+- ✅ **Declarative**: GitOps-friendly con manifiestos YAML
+- ✅ **Industry Standard**: Usado en producción por miles de empresas
+
+### Nueva Ubicación
+
+```
+carpetaCiudadana/
+├── services/
+│   ├── rabbitmq-service/              # ✅ NUEVA ubicación
+│   │   ├── k8s/                       # Manifiestos Kubernetes
+│   │   │   ├── 00-namespace.yaml
+│   │   │   ├── 01-cluster-operator.yaml
+│   │   │   ├── 02-storage.yaml
+│   │   │   ├── 03-rabbitmq-cluster.yaml
+│   │   │   └── 04-ingress.yaml
+│   │   ├── docs/
+│   │   │   ├── INSTALL_KUBECTL_PLUGIN.md
+│   │   │   └── QUORUM_QUEUES.md
+│   │   └── README.md
+│   ├── carpeta-ciudadana-service/
+│   └── citizen-web/
+└── infrastructure/
+    └── docker/
+        ├── docker-compose.yml         # ✅ ACTUALIZADO - Sin RabbitMQ
+        └── rabbitmq/                  # ❌ ELIMINADO
+
+```
+
+**Razón del Cambio**:
+
+- **services/**: Cada microservicio o servicio backend vive aquí
+- **RabbitMQ es un servicio**: No es infraestructura compartida de desarrollo, es un servicio core del sistema
+- **Separación de Concerns**: Desarrollo local (Docker Compose) vs Producción (Kubernetes)
+- **Coherencia**: Igual que `carpeta-ciudadana-service`, RabbitMQ es un servicio desplegable
+
+### Arquitectura de Despliegue
+
+#### Desarrollo Local
+
+**Docker Compose** (solo infraestructura base):
+```yaml
+# infrastructure/docker/docker-compose.yml
+services:
+  minio:
+    # Almacenamiento de documentos
+  dynamodb-local:
+    # Base de datos local
+  dynamodb-admin:
+    # UI para DynamoDB
+  
+  # RabbitMQ ELIMINADO de aquí
+  # Ver services/rabbitmq-service/README.md para Kubernetes
+```
+
+**Para testing local de RabbitMQ**:
+```bash
+# Usar Minikube o Kind
+minikube start
+cd services/rabbitmq-service
+kubectl apply -f k8s/
+```
+
+#### Staging/Producción
+
+**Kubernetes** (cluster RabbitMQ completo):
+
+```bash
+# 1. Instalar RabbitMQ Cluster Operator
+kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+
+# 2. Crear namespace y configuración
+kubectl apply -f services/rabbitmq-service/k8s/00-namespace.yaml
+kubectl apply -f services/rabbitmq-service/k8s/02-storage.yaml
+
+# 3. Desplegar cluster (3 nodos)
+kubectl apply -f services/rabbitmq-service/k8s/03-rabbitmq-cluster.yaml
+
+# 4. Verificar
+kubectl get rabbitmqclusters -n carpeta-ciudadana
+kubectl get pods -n carpeta-ciudadana
+```
+
+### Configuración del Cluster en Kubernetes
+
+**RabbitmqCluster Custom Resource**:
+
+```yaml
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: carpeta-rabbitmq
+  namespace: carpeta-ciudadana
+spec:
+  replicas: 3  # 3 nodos para Quorum Queues
+  
+  persistence:
+    storageClassName: standard
+    storage: 10Gi  # Cada nodo: 10Gi (shared volume con carpeta propia)
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  rabbitmq:
+    additionalConfig: |
+      # Peer Discovery en Kubernetes
+      cluster_formation.peer_discovery_backend = kubernetes
+      cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+      cluster_formation.k8s.address_type = hostname
+      
+      # Seed node: carpeta-rabbitmq-server-0 (ordinal 0)
+      # Solo este pod puede formar un nuevo cluster
+      
+      # Memory and disk limits
+      vm_memory_high_watermark.relative = 0.6
+      disk_free_limit.absolute = 2GB
+    
+    additionalPlugins:
+      - rabbitmq_management
+      - rabbitmq_prometheus
+      - rabbitmq_peer_discovery_k8s
+```
+
+### Peer Discovery Automático
+
+El plugin `rabbitmq_peer_discovery_k8s` (habilitado por el Cluster Operator) configura automáticamente:
+
+1. **Seed Node**: Pod con ordinal más bajo (`-0`) forma el cluster inicial
+2. **Join Automático**: Todos los demás pods se unen al seed node
+3. **DNS-Based**: Usa DNS de Kubernetes para descubrir peers
+4. **Sin Configuración Manual**: Todo automático
+
+**Configuración inyectada automáticamente**:
+```ini
+cluster_formation.peer_discovery_backend = kubernetes
+cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+cluster_formation.k8s.address_type = hostname
+cluster_formation.k8s.ordinal_start = 0  # Default
+```
+
+Si StatefulSet usa ordinal start diferente:
+```yaml
+# En StatefulSet
+spec:
+  ordinals:
+    start: 1  # Inicio en 1 en lugar de 0
+
+# Configurar RabbitMQ
+cluster_formation.k8s.ordinal_start = 1
+```
+
+### Persistencia: Shared Volume con Carpetas por Nodo
+
+Cada pod del StatefulSet recibe un **PersistentVolumeClaim** individual:
+
+```yaml
+# Generado automáticamente por StatefulSet
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: persistence-carpeta-rabbitmq-server-0  # Cada nodo tiene su PVC
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+**Efectivamente**:
+- `persistence-carpeta-rabbitmq-server-0`: 10Gi para nodo 0
+- `persistence-carpeta-rabbitmq-server-1`: 10Gi para nodo 1
+- `persistence-carpeta-rabbitmq-server-2`: 10Gi para nodo 2
+
+**Cada nodo tiene su carpeta** dentro del almacenamiento, cumpliendo el requisito de "shared volume con folder por nodo".
+
+### kubectl Plugin para RabbitMQ
+
+**Instalación**:
+
+```bash
+# 1. Instalar krew (plugin manager)
+(
+  set -x; cd "$(mktemp -d)" &&
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+  KREW="krew-${OS}_${ARCH}" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  tar zxvf "${KREW}.tar.gz" &&
+  ./"${KREW}" install krew
+)
+
+# 2. Agregar al PATH
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
+# 3. Instalar plugin RabbitMQ
+kubectl krew install rabbitmq
+
+# 4. Usar
+kubectl rabbitmq get carpeta-rabbitmq -n carpeta-ciudadana
+```
+
+**Operaciones Comunes**:
+
+```bash
+# Ver clusters
+kubectl rabbitmq list
+
+# Exportar definitions
+kubectl rabbitmq export-definitions carpeta-rabbitmq -n carpeta-ciudadana
+
+# Port-forward para Management UI
+kubectl rabbitmq manage carpeta-rabbitmq -n carpeta-ciudadana
+
+# Obtener credenciales
+kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana \
+  -o jsonpath='{.data.username}' | base64 -d
+```
+
+### Configurar Operator Defaults
+
+Si necesitas customizar el Cluster Operator:
+
+```bash
+# Editar deployment del operator
+kubectl -n rabbitmq-system edit deployment rabbitmq-cluster-operator
+
+# Agregar variables de entorno
+spec:
+  template:
+    spec:
+      containers:
+      - name: operator
+        env:
+        - name: OPERATOR_SCOPE_NAMESPACE
+          value: "carpeta-ciudadana"  # Solo gestionar este namespace
+        - name: DEFAULT_RABBITMQ_IMAGE
+          value: "rabbitmq:3.13-management"
+```
+
+**Variables Disponibles**:
+- `OPERATOR_SCOPE_NAMESPACE`: Limitar namespaces gestionados
+- `DEFAULT_RABBITMQ_IMAGE`: Imagen por defecto
+- `DEFAULT_IMAGE_PULL_SECRETS`: Secrets para registry privado
+- `CONTROL_RABBITMQ_IMAGE`: Auto-upgrade de imágenes (⚠️ experimental)
+
+Ver: https://www.rabbitmq.com/kubernetes/operator/configure-operator-defaults
+
+### Ventajas de Usar ytt Overlay
+
+Para aplicar configuraciones personalizadas automáticamente:
+
+```yaml
+# values.yaml
+#@ load("@ytt:overlay", "overlay")
+#@ deployment = overlay.subset({"kind": "Deployment"})
+#@ cluster_operator = overlay.subset({"metadata": {"name": "rabbitmq-cluster-operator"}})
+#@overlay/match by=overlay.and_op(deployment, cluster_operator),expects="1+"
+---
+spec:
+  template:
+    spec:
+      containers:
+      #@overlay/match by=overlay.subset({"name": "operator"}),expects="1+"
+      -
+        #@overlay/match missing_ok=True
+        env:
+        - name: OPERATOR_SCOPE_NAMESPACE
+          value: carpeta-ciudadana
+```
+
+Aplicar con ytt:
+```bash
+ytt -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml \
+  -f values.yaml | kubectl apply -f -
+```
+
+## Nuevas Consecuencias
+
+### Positivas Adicionales
+
+- ✅ **Production-Ready**: Kubernetes es el estándar industrial para orquestación
+- ✅ **Multi-AZ**: Distribuir nodos en múltiples zonas de disponibilidad
+- ✅ **Auto-scaling**: HPA (Horizontal Pod Autoscaler) basado en métricas
+- ✅ **Zero-Downtime Updates**: Rolling updates automáticas
+- ✅ **Integrated Monitoring**: Prometheus + Grafana nativos
+- ✅ **Operator Pattern**: Gestión inteligente del ciclo de vida
+- ✅ **GitOps**: Manifiestos versionados en Git
+- ✅ **Peer Discovery Simplificado**: Plugin kubernetes maneja todo
+
+### Negativas Adicionales
+
+- ⚠️ **Curva de Aprendizaje**: Equipo necesita conocimiento de Kubernetes
+- ⚠️ **Costo Operacional**: Cluster Kubernetes requiere gestión
+- ⚠️ **Complejidad Inicial**: Más pasos de setup que Docker Compose
+- ⚠️ **Dependencia del Operator**: Cluster depende del operator funcionando
+
+### Mitigaciones
+
+- 📚 **Documentación Completa**: `services/rabbitmq-service/README.md` con guías paso a paso
+- 🔧 **kubectl Plugin**: Simplifica operaciones comunes
+- 🎓 **Training**: Capacitación del equipo en Kubernetes básico
+- 🤖 **Automation**: CI/CD para despliegues automatizados
+- 📊 **Observability**: Monitoring y alerting desde el día 1
+
+## Path Forward: Docker Compose → Kubernetes
+
+### Fase 1: Desarrollo Local ✅ (Completado)
+
+- [x] Docker Compose con RabbitMQ escalable (3-50 nodos)
+- [x] Validar arquitectura Leader-Followers
+- [x] Testing de Quorum Queues
+- [x] ADRs documentados
+
+### Fase 2: Migración a Kubernetes ✅ (Actual)
+
+- [x] Crear `services/rabbitmq-service` con manifiestos K8s
+- [x] Instalar RabbitMQ Cluster Operator
+- [x] Desplegar cluster de 3 nodos
+- [x] Configurar Peer Discovery kubernetes
+- [x] Validar Quorum Queues con RF=2
+- [x] Actualizar ADRs
+
+### Fase 3: Producción (Futuro)
+
+- [ ] Desplegar en cluster productivo (GKE/EKS/AKS)
+- [ ] Configurar Ingress con TLS
+- [ ] Implementar HPA basado en queue depth
+- [ ] Integrar con Prometheus/Grafana
+- [ ] Configurar alerting (PagerDuty/Slack)
+- [ ] Backup automático de definitions
+- [ ] Disaster Recovery plan
+
+## Referencias Adicionales
+
+### RabbitMQ Kubernetes
+
+- [RabbitMQ Kubernetes Operator Overview](https://www.rabbitmq.com/kubernetes/operator/operator-overview)
+- [RabbitMQ Cluster Formation](https://www.rabbitmq.com/docs/cluster-formation)
+- [Peer Discovery on Kubernetes](https://www.rabbitmq.com/docs/cluster-formation#peer-discovery-k8s)
+- [Configure Operator Defaults](https://www.rabbitmq.com/kubernetes/operator/configure-operator-defaults)
+- [RabbitMQ Quorum Queues](https://www.rabbitmq.com/docs/quorum-queues)
+
+### Tooling
+
+- [kubectl rabbitmq Plugin](https://www.rabbitmq.com/kubernetes/operator/kubectl-plugin)
+- [krew - kubectl Plugin Manager](https://krew.sigs.k8s.io/)
+
+### Ejemplos y Patrones
+
+- [DIY Kubernetes Examples - Minikube](https://github.com/rabbitmq/diy-kubernetes-examples/tree/master/minikube)
+- [Kubernetes Patterns Book](https://k8spatterns.io/)
+
+### Documentación del Proyecto
+
+- `services/rabbitmq-service/README.md` - Guía completa de despliegue
+- `services/rabbitmq-service/docs/INSTALL_KUBECTL_PLUGIN.md` - Setup del plugin
+- `services/rabbitmq-service/docs/QUORUM_QUEUES.md` - Configuración de Quorum Queues
+
+### ADRs Relacionados
+
+- ADR-0003: Eliminación de Documentos Event-Driven
+- ADR-0004: RabbitMQ Quorum Queues en Kubernetes
+
+---
+
+**Última actualización**: 2025-11-05  
+**Estado**: Migración completada a Kubernetes con RabbitMQ Cluster Operator  
+**Próximo paso**: Despliegue en producción con multi-AZ y auto-scaling
