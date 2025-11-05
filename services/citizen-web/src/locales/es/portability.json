@@ -1,0 +1,89 @@
+{
+  "initiate": {
+    "title": "Iniciar Portabilidad",
+    "subtitle": "Transfiera su carpeta a otro operador",
+    "warning": "IMPORTANTE: Este proceso tomará hasta 72 horas y su carpeta quedará bloqueada durante ese período",
+    "form": {
+      "currentOperator": {
+        "label": "Operador Actual",
+        "readOnly": true
+      },
+      "targetOperator": {
+        "label": "Operador de Destino",
+        "placeholder": "Seleccione el operador al que desea transferirse",
+        "helperText": "Elija el operador que gestionará su carpeta"
+      },
+      "reason": {
+        "label": "Motivo de Portabilidad",
+        "placeholder": "Opcional: Indique el motivo de la transferencia"
+      },
+      "acceptTerms": {
+        "label": "Acepto que mi carpeta quedará bloqueada durante el proceso de portabilidad (hasta 72 horas)"
+      }
+    },
+    "actions": {
+      "initiate": "Iniciar Portabilidad",
+      "initiating": "Iniciando...",
+      "cancel": "Cancelar"
+    },
+    "success": "Portabilidad iniciada exitosamente",
+    "errors": {
+      "noOperator": "Debe seleccionar un operador",
+      "termsNotAccepted": "Debe aceptar los términos",
+      "alreadyInProgress": "Ya tiene una portabilidad en progreso",
+      "initiationFailed": "Error al iniciar la portabilidad"
+    }
+  },
+  "progress": {
+    "title": "Estado de Portabilidad",
+    "subtitle": "Siga el progreso de su transferencia",
+    "steps": {
+      "initiated": "Iniciada",
+      "validating": "Validando Documentos",
+      "transferring": "Transfiriendo Datos",
+      "verifying": "Verificando Integridad",
+      "completed": "Completada",
+      "failed": "Fallida"
+    },
+    "currentStep": "Paso Actual",
+    "estimatedCompletion": "Finalización Estimada",
+    "startedAt": "Iniciada el",
+    "actions": {
+      "cancel": "Cancelar Portabilidad",
+      "viewDetails": "Ver Detalles"
+    },
+    "messages": {
+      "folderLocked": "Su carpeta está bloqueada durante el proceso de portabilidad",
+      "cannotCancel": "La portabilidad no puede ser cancelada después de {{hours}} horas"
+    }
+  },
+  "history": {
+    "title": "Historial de Portabilidad",
+    "empty": "No hay portabilidades previas",
+    "columns": {
+      "date": "Fecha",
+      "fromOperator": "Operador Origen",
+      "toOperator": "Operador Destino",
+      "status": "Estado",
+      "duration": "Duración"
+    }
+  },
+  "operators": {
+    "title": "Operadores Disponibles",
+    "search": "Buscar operador...",
+    "details": {
+      "name": "Nombre",
+      "type": "Tipo",
+      "rating": "Calificación",
+      "features": "Características"
+    }
+  },
+  "cancel": {
+    "title": "Cancelar Portabilidad",
+    "message": "¿Está seguro de que desea cancelar la portabilidad en progreso?",
+    "warning": "Esta acción desbloqueará su carpeta con el operador actual",
+    "success": "Portabilidad cancelada exitosamente",
+    "error": "Error al cancelar la portabilidad"
+  }
+}
+
