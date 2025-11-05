@@ -1,9 +1,11 @@
 /**
  * Hook for deleting documents
+ * Uses carpetaId from localStorage for delete endpoint
  */
 
 import { useState } from 'react';
-import { documentService } from '../infrastructure';
+import { documentService } from '@/contexts/documents/infrastructure';
+import { useCarpetaId } from '@/contexts/documents/infrastructure/carpetaContext';
 
 interface UseDeleteDocumentReturn {
   deleteDocument: (documentId: string) => Promise<void>;
@@ -12,6 +14,7 @@ interface UseDeleteDocumentReturn {
 }
 
 export const useDeleteDocument = (): UseDeleteDocumentReturn => {
+  const carpetaId = useCarpetaId();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +23,7 @@ export const useDeleteDocument = (): UseDeleteDocumentReturn => {
     setError(null);
 
     try {
-      const response = await documentService.deleteDocument(documentId);
+      const response = await documentService.deleteDocument(carpetaId, documentId);
 
       if (!response.success) {
         setError(response.error?.message || 'Failed to delete document');

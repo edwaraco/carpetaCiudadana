@@ -4,13 +4,13 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Grid,
   Typography,
   CircularProgress,
   Alert,
-  Pagination,
   Button,
   Dialog,
   DialogTitle,
@@ -19,9 +19,8 @@ import {
   DialogActions,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useDocuments, useDeleteDocument } from '../hooks';
-import { DocumentCard } from './DocumentCard';
-import { documentService } from '../infrastructure';
+import { useDocuments, useDeleteDocument } from '@/contexts/documents/hooks';
+import { DocumentCard } from '@/contexts/documents/components/DocumentCard';
 import { isFeatureEnabled } from '@/shared/config/featureFlags';
 
 interface DocumentListProps {
@@ -33,20 +32,14 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onUploadClick,
   onViewDocument,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const { documents, isLoading, error, pagination, refetch } = useDocuments(currentPage);
+  const { t } = useTranslation('documents');
+  const { documents, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useDocuments();
   const { deleteDocument, isLoading: isDeleting } = useDeleteDocument();
 
-  const canDownload = isFeatureEnabled('DOWNLOAD_DOCUMENTS');
   const canDelete = isFeatureEnabled('DELETE_DOCUMENTS');
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
-
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-    refetch(page);
-  };
 
   const handleDeleteClick = (documentId: string) => {
     setDocumentToDelete(documentId);
@@ -60,7 +53,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       await deleteDocument(documentToDelete);
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
-      refetch(currentPage);
+      refetch();
     } catch (err) {
       // Error is already handled by the hook
     }
@@ -69,25 +62,6 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setDocumentToDelete(null);
-  };
-
-  const handleDownload = async (documentId: string) => {
-    try {
-      const response = await documentService.downloadDocument(documentId);
-      if (response.success && response.data) {
-        // Create a blob URL and trigger download
-        const url = window.URL.createObjectURL(response.data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `document-${documentId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }
-    } catch (err) {
-      console.error('Download failed:', err);
-    }
   };
 
   if (isLoading) {
@@ -109,25 +83,35 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5">My Documents</Typography>
+        <Typography variant="h5">{t('list.title')}</Typography>
         {onUploadClick && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={onUploadClick}>
-            Upload Document
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={onUploadClick}
+            data-testid="upload-document-button"
+          >
+            {t('upload.actions.upload')}
           </Button>
         )}
       </Box>
 
       {documents.length === 0 ? (
-        <Box textAlign="center" py={8}>
+        <Box textAlign="center" py={8} data-testid="empty-state">
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No documents yet
+            {t('list.empty')}
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={3}>
-            Upload your first document to get started
+            {t('list.emptyDescription')}
           </Typography>
           {onUploadClick && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={onUploadClick}>
-              Upload Document
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={onUploadClick}
+              data-testid="upload-document-button-empty"
+            >
+              {t('upload.actions.upload')}
             </Button>
           )}
         </Box>
@@ -139,40 +123,59 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 <DocumentCard
                   document={document}
                   onView={onViewDocument}
-                  onDownload={canDownload ? handleDownload : undefined}
                   onDelete={canDelete ? handleDeleteClick : undefined}
                 />
               </Grid>
             ))}
           </Grid>
 
-          {pagination && pagination.totalPages > 1 && (
+          {hasMore && (
             <Box display="flex" justifyContent="center" mt={4}>
-              <Pagination
-                count={pagination.totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-              />
+              <Button
+                variant="outlined"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                size="large"
+                data-testid="load-more-button"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    {t('list.loading')}
+                  </>
+                ) : (
+                  t('list.loadMore')
+                )}
+              </Button>
             </Box>
           )}
         </>
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Document</DialogTitle>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} data-testid="delete-dialog">
+        <DialogTitle>{t('detail.actions.delete')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this document? This action cannot be undone.
+            {t('delete.confirm')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
-            Cancel
+          <Button
+            onClick={handleDeleteCancel}
+            disabled={isDeleting}
+            data-testid="delete-cancel-button"
+          >
+            {t('upload.actions.cancel')}
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" disabled={isDeleting} autoFocus>
-            {isDeleting ? 'Deleting...' : 'Delete'}
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            disabled={isDeleting}
+            autoFocus
+            data-testid="delete-confirm-button"
+          >
+            {t('detail.actions.delete')}
           </Button>
         </DialogActions>
       </Dialog>

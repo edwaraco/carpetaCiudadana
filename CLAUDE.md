@@ -184,6 +184,45 @@ npm run lint     # ESLint check
 - See `services/carpeta-ciudadana-frontend/README.md` for complete setup guide
 - See `docs/ADR/0001-frontend-monolitico-react-material-ui-vite.md` for architectural decisions
 
+## Coding Standards
+
+### Import Aliases (citizen-web project)
+**CRITICAL**: When working in the `services/citizen-web/` project, ALWAYS use TypeScript path aliases for imports. NEVER use relative imports.
+
+**Configured aliases:**
+- `@/*` - Maps to `src/*`
+- `@/contexts/*` - Maps to `src/contexts/*`
+- `@/components/*` - Maps to `src/components/*`
+- `@/pages/*` - Maps to `src/pages/*`
+- `@/shared/*` - Maps to `src/shared/*`
+- `@/hooks/*` - Maps to `src/hooks/*`
+- `@/utils/*` - Maps to `src/utils/*`
+- `@/i18n/*` - Maps to `src/i18n/*`
+- `@/locales/*` - Maps to `src/locales/*`
+- `@/tests/*` - Maps to `src/tests/*`
+
+**Examples:**
+
+✅ **CORRECT:**
+```typescript
+import type { ApiResponse } from '@/shared/utils/api.types';
+import type { IDocumentService } from '@/contexts/documents/infrastructure/IDocumentService';
+import type { Document } from '@/contexts/documents/domain/types';
+```
+
+❌ **INCORRECT:**
+```typescript
+import { ApiResponse } from '../../../../shared/utils/api.types';
+import { IDocumentService } from '../IDocumentService';
+import { Document } from '../../domain/types';
+```
+
+**Rationale:**
+- Improves code readability and maintainability
+- Makes refactoring easier (no path updates needed when moving files)
+- Consistent with project configuration in `tsconfig.json` and `vite.config.ts`
+- Reduces human error in relative path calculations
+
 ## Academic Context
 
 This is coursework for advanced architecture design. Focus on:

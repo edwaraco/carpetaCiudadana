@@ -17,26 +17,24 @@ import {
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
-  Download as DownloadIcon,
   Delete as DeleteIcon,
   VerifiedUser as CertifiedIcon,
   Schedule as TemporaryIcon,
   PictureAsPdf as PdfIcon,
   Image as ImageIcon,
 } from '@mui/icons-material';
-import { Document, DocumentStatus } from '../domain/types';
+import { Document, DocumentStatus } from '@/contexts/documents/domain/types';
+import { DownloadDocumentButton } from '@/contexts/documents/components/DownloadDocumentButton';
 
 interface DocumentCardProps {
   document: Document;
   onView?: (documentId: string) => void;
-  onDownload?: (documentId: string) => void;
   onDelete?: (documentId: string) => void;
 }
 
 export const DocumentCard: React.FC<DocumentCardProps> = ({
   document,
   onView,
-  onDownload,
   onDelete,
 }) => {
   const getStatusColor = (status: DocumentStatus): 'success' | 'warning' | 'error' => {
@@ -112,16 +110,6 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
           </Typography>
         )}
 
-        {document.metadata.tags && document.metadata.tags.length > 0 && (
-          <Box mt={1}>
-            <Stack direction="row" spacing={0.5} flexWrap="wrap">
-              {document.metadata.tags.map((tag, index) => (
-                <Chip key={index} label={tag} size="small" variant="outlined" sx={{ mb: 0.5 }} />
-              ))}
-            </Stack>
-          </Box>
-        )}
-
         <Typography variant="caption" color="text.secondary" display="block" mt={2}>
           Received: {new Date(document.receptionDate).toLocaleDateString()}
         </Typography>
@@ -129,16 +117,18 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 
       <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
         <Box>
-          <Tooltip title="View Document">
-            <IconButton size="small" onClick={() => onView?.(document.documentId)}>
-              <ViewIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Download Document">
-            <IconButton size="small" onClick={() => onDownload?.(document.documentId)}>
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
+          {onView && (
+            <Tooltip title="View Document">
+              <IconButton size="small" onClick={() => onView(document.documentId)}>
+                <ViewIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          <DownloadDocumentButton
+            documentId={document.documentId}
+            documentTitle={document.metadata.title}
+            size="small"
+          />
         </Box>
 
         {canDelete && onDelete && (

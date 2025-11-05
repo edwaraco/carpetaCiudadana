@@ -4,8 +4,20 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, beforeAll } from 'vitest';
 import { DocumentList } from './DocumentList';
+
+// Mock localStorage before tests
+const mockCarpetaId = 'test-carpeta-id-123';
+
+beforeAll(() => {
+  Storage.prototype.getItem = vi.fn((key: string) => {
+    if (key === 'carpetaId') return mockCarpetaId;
+    return null;
+  });
+  Storage.prototype.setItem = vi.fn();
+  Storage.prototype.removeItem = vi.fn();
+});
 
 // Mock the hooks
 vi.mock('../hooks', () => ({
@@ -17,14 +29,17 @@ vi.mock('../hooks', () => ({
           title: 'Test Document 1',
           type: 'CEDULA',
           context: 'CIVIL_REGISTRY',
-          tags: [],
+          issueDate: undefined,
+          issuingEntity: undefined,
         },
         content: {
           format: 'PDF',
           sizeBytes: 1024000,
           hash: 'abc123',
           storageUrl: 'https://example.com/doc1.pdf',
+          presignedUrl: undefined,
         },
+        certification: undefined,
         documentStatus: 'CERTIFIED',
         receptionDate: new Date('2024-01-15'),
       },
@@ -34,14 +49,17 @@ vi.mock('../hooks', () => ({
           title: 'Test Document 2',
           type: 'DIPLOMA',
           context: 'EDUCATION',
-          tags: [],
+          issueDate: undefined,
+          issuingEntity: undefined,
         },
         content: {
           format: 'JPEG',
           sizeBytes: 2048000,
           hash: 'def456',
           storageUrl: 'https://example.com/doc2.jpg',
+          presignedUrl: undefined,
         },
+        certification: undefined,
         documentStatus: 'TEMPORARY',
         receptionDate: new Date('2024-01-16'),
       },
@@ -49,11 +67,10 @@ vi.mock('../hooks', () => ({
     isLoading: false,
     error: null,
     pagination: {
-      page: 1,
-      limit: 10,
-      total: 2,
-      totalPages: 1,
+      nextCursor: null,
+      hasMore: false,
     },
+    loadMore: vi.fn(),
     refetch: vi.fn(),
   })),
   useDeleteDocument: vi.fn(() => ({
@@ -83,7 +100,7 @@ describe('DocumentList', () => {
   it('shows upload button', () => {
     render(<DocumentList onUploadClick={() => {}} />);
 
-    expect(screen.getByRole('button', { name: /upload document/i })).toBeInTheDocument();
+    expect(screen.getByTestId('upload-document-button')).toBeInTheDocument();
   });
 
   it('calls onUploadClick when upload button is clicked', async () => {
@@ -92,7 +109,7 @@ describe('DocumentList', () => {
 
     render(<DocumentList onUploadClick={onUploadClick} />);
 
-    const uploadButton = screen.getByRole('button', { name: /upload document/i });
+    const uploadButton = screen.getByTestId('upload-document-button');
     await user.click(uploadButton);
 
     expect(onUploadClick).toHaveBeenCalled();
@@ -121,19 +138,16 @@ describe('DocumentList', () => {
     vi.mocked(useDocuments).mockReturnValue({
       documents: [],
       isLoading: false,
+      isLoadingMore: false,
       error: null,
-      pagination: {
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 0,
-      },
+      hasMore: false,
+      loadMore: vi.fn(),
       refetch: vi.fn(),
     });
 
     render(<DocumentList />);
 
-    expect(screen.getByText(/no documents yet/i)).toBeInTheDocument();
+    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
   it('displays loading state', async () => {
@@ -141,8 +155,10 @@ describe('DocumentList', () => {
     vi.mocked(useDocuments).mockReturnValue({
       documents: [],
       isLoading: true,
+      isLoadingMore: false,
       error: null,
-      pagination: null,
+      hasMore: false,
+      loadMore: vi.fn(),
       refetch: vi.fn(),
     });
 
@@ -156,14 +172,16 @@ describe('DocumentList', () => {
     vi.mocked(useDocuments).mockReturnValue({
       documents: [],
       isLoading: false,
+      isLoadingMore: false,
       error: 'Failed to load documents',
-      pagination: null,
+      hasMore: false,
+      loadMore: vi.fn(),
       refetch: vi.fn(),
     });
 
     render(<DocumentList />);
 
-    expect(screen.getByText(/failed to load documents/i)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 });
 

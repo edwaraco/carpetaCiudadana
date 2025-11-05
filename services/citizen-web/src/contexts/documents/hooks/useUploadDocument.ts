@@ -1,10 +1,12 @@
 /**
  * Hook for uploading documents
+ * Uses carpetaId from localStorage for upload endpoint
  */
 
 import { useState } from 'react';
-import { documentService } from '../infrastructure';
-import { Document, UploadDocumentRequest } from '../domain/types';
+import { documentService } from '@/contexts/documents/infrastructure';
+import { Document, UploadDocumentRequest } from '@/contexts/documents/domain/types';
+import { useCarpetaId } from '@/contexts/documents/infrastructure/carpetaContext';
 
 interface UseUploadDocumentReturn {
   uploadDocument: (request: UploadDocumentRequest) => Promise<void>;
@@ -15,6 +17,7 @@ interface UseUploadDocumentReturn {
 }
 
 export const useUploadDocument = (): UseUploadDocumentReturn => {
+  const carpetaId = useCarpetaId();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Document | null>(null);
@@ -25,7 +28,7 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
     setData(null);
 
     try {
-      const response = await documentService.uploadDocument(request);
+      const response = await documentService.uploadDocument(carpetaId, request);
 
       if (response.success && response.data) {
         setData(response.data);
