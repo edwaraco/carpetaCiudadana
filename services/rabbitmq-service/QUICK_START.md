@@ -23,6 +23,12 @@ kubectl get rabbitmqclusters -n carpeta-ciudadana
 
 # Ver pods (esperar hasta que estén 1/1 Running)
 kubectl get pods -n carpeta-ciudadana -w
+
+# Ver PVCs
+kubectl get pvc -n carpeta-ciudadana
+
+# Ver estado del cluster RabbitMQ
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
 ```
 
 ### 4. Obtener Credenciales
