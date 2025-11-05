@@ -89,12 +89,24 @@ spec:
       spec:
         template:
           spec:
+            volumes:
+              - name: definitions
+                configMap:
+                  name: rabbitmq-definitions
+                  items:
+                    - key: definitions.json
+                      path: definitions.json
             containers:
               - name: rabbitmq
                 env:
                   # Enable feature flags for Quorum Queues
                   - name: RABBITMQ_FEATURE_FLAGS
                     value: "quorum_queue,stream_queue"
+                volumeMounts:
+                  - name: definitions
+                    mountPath: /etc/rabbitmq/definitions.json
+                    subPath: definitions.json
+                    readOnly: true
                 ports:
                   - name: amqp
                     containerPort: 5672
