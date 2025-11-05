@@ -60,6 +60,98 @@ services:
       - dynamodb-local
     restart: unless-stopped
 
+  # ==========================================
+  # Message Broker - RabbitMQ Cluster (3 nodos)
+  # Quorum Queues para alta disponibilidad
+  # ADR-0004: RabbitMQ Quorum Queues (3 nodos, replication factor 2)
+  # ADR-0005: Ubicación en Docker Compose
+  # ==========================================
+
+  # Nodo 1 - RabbitMQ (Líder inicial del cluster)
+  rabbitmq-node1:
+    image: rabbitmq:3.12-management
+    container_name: carpeta-rabbitmq-node1
+    hostname: rabbitmq-node1
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+      - RABBITMQ_NODE_NAME=rabbit@rabbitmq-node1
+    volumes:
+      - rabbitmq-node1-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Nodo 2 - RabbitMQ (Follower del cluster)
+  rabbitmq-node2:
+    image: rabbitmq:3.12-management
+    container_name: carpeta-rabbitmq-node2
+    hostname: rabbitmq-node2
+    ports:
+      - "5673:5672"   # AMQP (puerto alternativo para host)
+      - "15673:15672" # Management UI (puerto alternativo)
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+      - RABBITMQ_NODE_NAME=rabbit@rabbitmq-node2
+    volumes:
+      - rabbitmq-node2-data:/var/lib/rabbitmq
+      - ./rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh:ro
+    entrypoint: ["/usr/local/bin/cluster-entrypoint.sh"]
+    networks:
+      - app-network
+    depends_on:
+      rabbitmq-node1:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Nodo 3 - RabbitMQ (Follower del cluster)
+  rabbitmq-node3:
+    image: rabbitmq:3.12-management
+    container_name: carpeta-rabbitmq-node3
+    hostname: rabbitmq-node3
+    ports:
+      - "5674:5672"   # AMQP (puerto alternativo para host)
+      - "15674:15672" # Management UI (puerto alternativo)
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+      - RABBITMQ_NODE_NAME=rabbit@rabbitmq-node3
+    volumes:
+      - rabbitmq-node3-data:/var/lib/rabbitmq
+      - ./rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh:ro
+    entrypoint: ["/usr/local/bin/cluster-entrypoint.sh"]
+    networks:
+      - app-network
+    depends_on:
+      rabbitmq-node1:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   # Microservicio de Carpeta Ciudadana
   carpeta-ciudadana-service:
     build:
@@ -70,18 +162,30 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      # DynamoDB
       - AWS_DYNAMODB_ENDPOINT=http://dynamodb-local:8000
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
+      # MinIO
       - MINIO_ENDPOINT=http://192.168.20.83:9000
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
+      # RabbitMQ (lista de nodos para failover automático)
+      - SPRING_RABBITMQ_ADDRESSES=rabbitmq-node1:5672,rabbitmq-node2:5672,rabbitmq-node3:5672
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=admin123
     depends_on:
       minio:
         condition: service_healthy
       dynamodb-local:
+        condition: service_healthy
+      rabbitmq-node1:
+        condition: service_healthy
+      rabbitmq-node2:
+        condition: service_healthy
+      rabbitmq-node3:
         condition: service_healthy
     networks:
       - app-network
@@ -91,6 +195,9 @@ volumes:
   minio-data:
     driver: local
   dynamodata:
+  rabbitmq-node1-data:
+  rabbitmq-node2-data:
+  rabbitmq-node3-data:
 
 networks:
   app-network:
