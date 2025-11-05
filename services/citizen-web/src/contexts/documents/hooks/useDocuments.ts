@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { documentService } from '@/contexts/documents/infrastructure';
 import { Document, PaginationCursor } from '@/contexts/documents/domain/types';
 import { useCarpetaId } from '@/contexts/documents/infrastructure/carpetaContext';
@@ -23,6 +24,7 @@ interface UseDocumentsReturn {
 }
 
 export const useDocuments = (): UseDocumentsReturn => {
+  const { t } = useTranslation(['documents', 'common']);
   const carpetaId = useCarpetaId();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,13 @@ export const useDocuments = (): UseDocumentsReturn => {
    * Used for initial load and refetch operations
    */
   const fetchDocuments = useCallback(async () => {
+    // If carpetaId is not available yet, set error and don't fetch
+    if (!carpetaId) {
+      setError(t('errors.carpetaIdNotFound', { ns: 'documents' }));
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -47,14 +56,14 @@ export const useDocuments = (): UseDocumentsReturn => {
         setNextCursor(response.data.nextCursor ?? null);
         setHasMore(response.data.hasMore);
       } else {
-        setError(response.error?.message || 'Failed to fetch documents');
+        setError(response.error?.message || t('errors.fetchFailed', { ns: 'documents' }));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : t('errors.generic', { ns: 'common' }));
     } finally {
       setIsLoading(false);
     }
-  }, [carpetaId]);
+  }, [carpetaId, t]);
 
   /**
    * Loads more documents using the current cursor
@@ -62,6 +71,12 @@ export const useDocuments = (): UseDocumentsReturn => {
    */
   const loadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || isLoadingMore) {
+      return;
+    }
+
+    // If carpetaId is not available, set error
+    if (!carpetaId) {
+      setError(t('errors.carpetaIdNotFound', { ns: 'documents' }));
       return;
     }
 
@@ -77,14 +92,14 @@ export const useDocuments = (): UseDocumentsReturn => {
         setNextCursor(cursor ?? null);
         setHasMore(more);
       } else {
-        setError(response.error?.message || 'Failed to load more documents');
+        setError(response.error?.message || t('errors.fetchFailed', { ns: 'documents' }));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : t('errors.generic', { ns: 'common' }));
     } finally {
       setIsLoadingMore(false);
     }
-  }, [carpetaId, nextCursor, hasMore, isLoadingMore]);
+  }, [carpetaId, nextCursor, hasMore, isLoadingMore, t]);
 
   /**
    * Refetches documents from the beginning

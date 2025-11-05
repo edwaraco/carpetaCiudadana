@@ -37,8 +37,8 @@ export const PortabilityPage: React.FC = () => {
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label={t('portabilityPage.tabs.initiate')} disabled={hasOngoingPortability} />
-            <Tab label={t('portabilityPage.tabs.track')} disabled={!hasOngoingPortability && !currentPortabilityId} />
+            <Tab label={t('portabilityPage.tabs.initiate')} disabled={!!hasOngoingPortability} />
+            <Tab label={t('portabilityPage.tabs.track')} disabled={!hasOngoingPortability && currentPortabilityId === null} />
           </Tabs>
         </Box>
 

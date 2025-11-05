@@ -146,6 +146,13 @@
     "warning": "Esta acción no se puede deshacer",
     "success": "Documento eliminado exitosamente",
     "error": "Error al eliminar el documento"
+  },
+  "errors": {
+    "carpetaIdNotFound": "No se pudo obtener la información de su carpeta. Por favor, cierre sesión e inicie sesión nuevamente.",
+    "carpetaIdLoading": "Cargando información de su carpeta...",
+    "fetchFailed": "Error al cargar los documentos",
+    "downloadFailed": "Error al descargar el documento",
+    "deleteFailed": "Error al eliminar el documento"
   }
 }
 

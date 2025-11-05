@@ -117,17 +117,18 @@ export class NotificationMockService implements INotificationService {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     const notifications = [...mockNotifications].slice(start, end);
+    const totalPages = Math.ceil(mockNotifications.length / pageSize);
 
     return {
       success: true,
       data: {
         items: notifications,
-        pagination: {
-          currentPage: page,
-          pageSize,
-          totalItems: mockNotifications.length,
-          totalPages: Math.ceil(mockNotifications.length / pageSize),
-        },
+        total: mockNotifications.length,
+        page,
+        pageSize,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrevious: page > 1,
       },
     };
   }
@@ -139,17 +140,18 @@ export class NotificationMockService implements INotificationService {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     const notifications = unread.slice(start, end);
+    const totalPages = Math.ceil(unread.length / pageSize);
 
     return {
       success: true,
       data: {
         items: notifications,
-        pagination: {
-          currentPage: page,
-          pageSize,
-          totalItems: unread.length,
-          totalPages: Math.ceil(unread.length / pageSize),
-        },
+        total: unread.length,
+        page,
+        pageSize,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrevious: page > 1,
       },
     };
   }
@@ -164,6 +166,7 @@ export class NotificationMockService implements INotificationService {
         success: false,
         error: {
           code: 'NOT_FOUND',
+          statusCode: 404,
           message: 'Notificación no encontrada',
         },
       };
@@ -185,6 +188,7 @@ export class NotificationMockService implements INotificationService {
         success: false,
         error: {
           code: 'NOT_FOUND',
+          statusCode: 404,
           message: 'Notificación no encontrada',
         },
       };
@@ -274,6 +278,7 @@ export class NotificationMockService implements INotificationService {
         success: false,
         error: {
           code: 'NOT_FOUND',
+          statusCode: 404,
           message: 'Notificación no encontrada',
         },
       };

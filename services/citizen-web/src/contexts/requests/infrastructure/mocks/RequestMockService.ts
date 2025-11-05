@@ -52,7 +52,7 @@ export class RequestMockService implements IRequestService {
       requiredDocuments: [
         {
           id: 'doc-req-003',
-          documentType: 'TAX_DOCUMENT',
+          documentType: 'TAX_RETURN',
           specifications: 'RUT - Tax Registration',
           mandatory: true,
           deliveryStatus: 'PENDING',
@@ -83,7 +83,7 @@ export class RequestMockService implements IRequestService {
       requiredDocuments: [
         {
           id: 'doc-req-005',
-          documentType: 'MEDICAL_RECORD',
+          documentType: 'MEDICAL_CERTIFICATE',
           specifications: 'Vaccination record',
           mandatory: false,
           deliveryStatus: 'DELIVERED',

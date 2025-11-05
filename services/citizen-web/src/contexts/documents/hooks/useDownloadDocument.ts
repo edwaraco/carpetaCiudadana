@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { documentService } from '@/contexts/documents/infrastructure';
 import { useCarpetaId } from '@/contexts/documents/infrastructure/carpetaContext';
 
@@ -41,6 +42,7 @@ interface UseDownloadDocumentReturn {
  * };
  */
 export const useDownloadDocument = (): UseDownloadDocumentReturn => {
+  const { t } = useTranslation(['documents', 'common']);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const carpetaId = useCarpetaId();
@@ -52,6 +54,13 @@ export const useDownloadDocument = (): UseDownloadDocumentReturn => {
    * @param titulo - Document title to use as filename
    */
   const downloadDocument = async (documentId: string, titulo: string): Promise<void> => {
+    // Check if carpetaId is available
+    if (!carpetaId) {
+      const errorMsg = t('errors.carpetaIdNotFound', { ns: 'documents' });
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     setIsDownloading(true);
     setError(null);
 
@@ -61,7 +70,7 @@ export const useDownloadDocument = (): UseDownloadDocumentReturn => {
 
       if (!urlResponse.success || !urlResponse.data) {
         throw new Error(
-          urlResponse.error?.message || 'No se pudo obtener la URL de descarga'
+          urlResponse.error?.message || t('errors.downloadFailed', { ns: 'documents' })
         );
       }
 
@@ -76,7 +85,7 @@ export const useDownloadDocument = (): UseDownloadDocumentReturn => {
 
       if (!fileResponse.ok) {
         throw new Error(
-          `Error al descargar el archivo: ${fileResponse.status} ${fileResponse.statusText}`
+          t('errors.downloadFailed', { ns: 'documents' }) + `: ${fileResponse.status} ${fileResponse.statusText}`
         );
       }
 
@@ -105,7 +114,7 @@ export const useDownloadDocument = (): UseDownloadDocumentReturn => {
 
       console.info(`Document ${documentId} downloaded successfully as "${titulo}"`);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al descargar';
+      const errorMessage = err instanceof Error ? err.message : t('errors.downloadFailed', { ns: 'documents' });
       console.error('Download error:', err);
       setError(errorMessage);
       throw err; // Re-throw to allow caller to handle if needed

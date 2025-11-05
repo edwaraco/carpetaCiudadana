@@ -13,27 +13,32 @@
  * 1. After login, call GET /carpetas/cedula/{cedula} to get carpetaId
  * 2. Store carpetaId in localStorage using storeCarpetaId()
  * 3. This hook reads carpetaId from localStorage
- * 4. If not found, throw error (user not logged in or carpeta not created)
+ * 4. If not found, return null (user not logged in or carpeta not yet fetched)
  *
- * @returns carpetaId string (UUID format)
- * @throws Error if carpetaId is not available
+ * @returns carpetaId string (UUID format) or null if not available
  *
  * @example
  * const MyComponent = () => {
  *   const carpetaId = useCarpetaId();
+ *
+ *   if (!carpetaId) {
+ *     return <div>Loading carpeta information...</div>;
+ *   }
+ *
  *   // Use carpetaId in API calls
  *   const response = await documentService.getDocuments(carpetaId);
  * }
  */
-export const useCarpetaId = (): string => {
+export const useCarpetaId = (): string | null => {
   const carpetaId = localStorage.getItem('carpetaId');
 
   if (!carpetaId) {
-    throw new Error(
+    console.warn(
       'No carpetaId found in localStorage. ' +
-      'User must be logged in and have a carpeta created. ' +
-      'Please ensure the login flow calls GET /carpetas/cedula/{cedula} and stores the carpetaId.'
+      'User must be logged in and carpeta must be fetched. ' +
+      'The login flow should call GET /carpetas/cedula/{cedula} and store the carpetaId.'
     );
+    return null;
   }
 
   return carpetaId;

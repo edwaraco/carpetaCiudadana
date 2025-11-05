@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { documentService } from '@/contexts/documents/infrastructure';
 import { Document, UploadDocumentRequest } from '@/contexts/documents/domain/types';
 import { useCarpetaId } from '@/contexts/documents/infrastructure/carpetaContext';
@@ -17,12 +18,20 @@ interface UseUploadDocumentReturn {
 }
 
 export const useUploadDocument = (): UseUploadDocumentReturn => {
+  const { t } = useTranslation(['documents', 'common']);
   const carpetaId = useCarpetaId();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Document | null>(null);
 
   const uploadDocument = async (request: UploadDocumentRequest): Promise<void> => {
+    // Check if carpetaId is available
+    if (!carpetaId) {
+      const errorMsg = t('errors.carpetaIdNotFound', { ns: 'documents' });
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     setIsLoading(true);
     setError(null);
     setData(null);
@@ -33,11 +42,12 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
       if (response.success && response.data) {
         setData(response.data);
       } else {
-        setError(response.error?.message || 'Failed to upload document');
-        throw new Error(response.error?.message || 'Upload failed');
+        const errorMsg = response.error?.message || t('upload.errors.uploadFailed', { ns: 'documents' });
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic', { ns: 'common' });
       setError(errorMessage);
       throw err;
     } finally {
