@@ -5,31 +5,36 @@ Esta carpeta contiene la configuración de Docker Compose para ejecutar toda la 
 ## Componentes Incluidos
 
 ### 1. **MinIO** - Almacenamiento de Documentos (S3-compatible)
+
 - **Puerto**: 9000 (API), 9001 (Console)
-- **Acceso Console**: http://localhost:9001
+- **Acceso Console**: <http://localhost:9001>
 - **Credenciales**: admin / admin123
 
 ### 2. **DynamoDB Local** - Base de Datos NoSQL
+
 - **Puerto**: 8000
-- **AWS Endpoint**: http://localhost:8000
+- **AWS Endpoint**: <http://localhost:8000>
 
 ### 3. **DynamoDB Admin** - Interfaz Web para DynamoDB
+
 - **Puerto**: 8001
-- **Acceso**: http://localhost:8001
+- **Acceso**: <http://localhost:8001>
 
 ### 4. **RabbitMQ Cluster Escalable** - Message Broker (Leader + Followers)
+
 - **Arquitectura**: Leader-Followers escalable (ADR-0004)
 - **Configuración Default**: 1 Leader + 4 Followers = 5 nodos
 - **Escalabilidad**: De 3 hasta 50+ nodos con un solo comando
 - **Acceso Leader**:
   - AMQP: localhost:5672
-  - Management UI: http://localhost:15672
+  - Management UI: <http://localhost:15672>
 - **Credenciales**: admin / admin123
 - **ADRs**: Ver ADR-0004 (Leader-Followers) y ADR-0005 (Ubicación)
 
 ### 5. **Carpeta Ciudadana Service** - Microservicio Spring Boot
+
 - **Puerto**: 8080
-- **API Base**: http://localhost:8080
+- **API Base**: <http://localhost:8080>
 
 ## Inicio Rápido
 
@@ -80,6 +85,7 @@ docker compose up -d --scale rabbitmq-follower=4
 ```
 
 **Ventajas del Escalado:**
+
 - ✅ Sin editar `docker-compose.yml`
 - ✅ Ajuste dinámico según necesidades de testing
 - ✅ Validación de escalabilidad horizontal (RNF-09)
@@ -102,23 +108,33 @@ docker compose ps | grep rabbitmq | wc -l
 
 ### Arquitectura Leader-Followers
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   RabbitMQ Cluster                      │
-│                                                         │
-│  ┌──────────┐         ┌──────────┐  ┌──────────┐      │
-│  │  Leader  │ ─────→  │Follower 1│  │Follower 2│      │
-│  │ (puerto  │         │          │  │          │      │
-│  │  5672)   │ ←─────  │          │  │          │      │
-│  └──────────┘         └──────────┘  └──────────┘      │
-│       │                                                 │
-│       └────────────→ ┌──────────┐  ┌──────────┐      │
-│                      │Follower 3│  │Follower N│      │
-│            Raft      │          │  │ (escala  │      │
-│          Consensus   │          │  │  hasta   │      │
-│                      └──────────┘  │  50+)    │      │
-│                                    └──────────┘      │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "RabbitMQ Cluster Escalable"
+        Leader["🔵 Leader<br/>Nodo principal<br/>Puerto 5672"]
+        Follower1["⚪ Follower 1<br/>Réplica sincronizada"]
+        Follower2["⚪ Follower 2<br/>Réplica sincronizada"]
+        Follower3["⚪ Follower 3<br/>Réplica sincronizada"]
+        FollowerN["⚪ Follower N<br/>Escalable hasta 50+"]
+        
+        Leader -->|"Raft Consensus<br/>Replicación"| Follower1
+        Leader -->|"Raft Consensus<br/>Replicación"| Follower2
+        Leader -->|"Raft Consensus<br/>Replicación"| Follower3
+        Leader -.->|"Escalable"| FollowerN
+    end
+    
+    Producer[Producer<br/>Spring Boot Service] -->|"Publish"| Leader
+    Consumer[Consumer<br/>Document Service] -->|"Consume"| Leader
+    
+    Scale["`docker compose up -d
+    --scale rabbitmq-follower=49`"] -.->|"Agregar nodos"| FollowerN
+    
+    style Leader fill:#4a90e2,stroke:#2e5c8a,color:#fff
+    style Follower1 fill:#e8f4f8,stroke:#4a90e2
+    style Follower2 fill:#e8f4f8,stroke:#4a90e2
+    style Follower3 fill:#e8f4f8,stroke:#4a90e2
+    style FollowerN fill:#e8f4f8,stroke:#4a90e2,stroke-dasharray: 5 5
+    style Scale fill:#fff3cd,stroke:#ffc107
 ```
 
 ### Verificar Estado del Cluster
@@ -148,12 +164,13 @@ docker exec -it rabbitmq-leader rabbitmqctl list_queues name type state
 
 ### Acceder a Management UI
 
-- **Leader**: http://localhost:15672
+- **Leader**: <http://localhost:15672>
 
 **Usuario**: admin  
 **Contraseña**: admin123
 
 En la interfaz, verifica:
+
 1. **Overview** → Nodes: debería mostrar N nodos (1 Leader + N-1 Followers)
 2. **Queues** → Tipo: "Quorum" para las queues críticas
 3. **Admin** → Cluster → Ver todos los nodos activos
@@ -227,6 +244,7 @@ docker compose start rabbitmq-leader rabbitmq-follower
 **Síntomas**: Followers muestran error "failed to join cluster"
 
 **Solución**:
+
 ```bash
 # 1. Verificar que el Leader esté saludable
 docker exec rabbitmq-leader rabbitmq-diagnostics ping
@@ -243,6 +261,7 @@ docker compose restart rabbitmq-follower
 **Causa**: Nodos tienen diferentes Erlang cookies
 
 **Solución**: Verificar que todos los nodos tengan el mismo `RABBITMQ_ERLANG_COOKIE`:
+
 ```bash
 docker compose config | grep ERLANG_COOKIE
 ```
@@ -254,6 +273,7 @@ Todos deben mostrar: `SWQOKODSQALRPCLNMEQG`
 **Síntomas**: RabbitMQ bloquea publishers
 
 **Solución**:
+
 ```bash
 # Ver uso de disco
 docker exec rabbitmq-leader df -h
@@ -268,6 +288,7 @@ docker compose up -d rabbitmq-leader
 **Síntomas**: Error "port is already allocated"
 
 **Solución**:
+
 ```bash
 # Ver qué proceso usa el puerto
 lsof -i :5672
@@ -282,6 +303,7 @@ sudo netstat -tulpn | grep 5672
 **Síntomas**: Sistema lento con 10+ nodos
 
 **Solución**:
+
 - Reducir número de nodos: `docker compose up -d --scale rabbitmq-follower=4`
 - Aumentar RAM de Docker Desktop: Settings → Resources → Memory
 - Usar perfil "light" con solo 2 followers para desarrollo normal
@@ -306,6 +328,7 @@ RABBITMQ_FOLLOWERS=2  # 3 nodos totales
 ```
 
 Luego:
+
 ```bash
 docker compose up -d --scale rabbitmq-follower=${RABBITMQ_FOLLOWERS}
 ```
@@ -329,6 +352,7 @@ log.console.level = info
 ```
 
 Montar en `rabbitmq-leader` en docker-compose.yml:
+
 ```yaml
 volumes:
   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
@@ -338,7 +362,8 @@ volumes:
 
 ### Métricas de Cluster Escalable
 
-Acceder a http://localhost:15672 y navegar a:
+Acceder a <http://localhost:15672> y navegar a:
+
 - **Overview**: Métricas generales + número dinámico de nodos
 - **Queues**: Estado de queues, mensajes pending, consumers
 - **Nodes**: Lista de Leader + Followers activos
