@@ -9,8 +9,6 @@ import { authService } from '../infrastructure';
 import { Citizen } from '../../identity/domain/types';
 import { LoginRequest, MFAVerificationRequest, MFAType } from '../domain/types';
 import { ApiError } from '../../../shared/utils/api.types';
-import { storeCarpetaId, clearCarpetaId } from '../../documents/infrastructure/carpetaContext';
-import { folderService } from '../../folder/infrastructure';
 
 interface AuthContextValue {
   // State
@@ -68,20 +66,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  // Helper to fetch and store carpetaId
-  const fetchAndStoreCarpetaId = async (user: Citizen) => {
-    try {
-      const folderResponse = await folderService.getFolder(user.cedula);
-      if (folderResponse.success && folderResponse.data) {
-        storeCarpetaId(folderResponse.data.folderId);
-        console.info(`CarpetaId fetched and stored successfully for cedula: ${user.cedula}`);
-      }
-    } catch (err) {
-      console.error('Failed to fetch carpetaId:', err);
-      // Don't fail login if carpetaId fetch fails
-    }
-  };
-
   const login = useCallback(async (request: LoginRequest) => {
     setIsLoading(true);
     setError(null);
@@ -105,9 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Store in localStorage
           localStorage.setItem('auth_token', response.data.token);
           localStorage.setItem('auth_user', JSON.stringify(response.data.user));
-
-          // Fetch and store carpetaId
-          await fetchAndStoreCarpetaId(response.data.user);
         }
       } else if (response.error) {
         setError(response.error);
@@ -156,8 +137,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.setItem('auth_token', response.data.token);
           if (user) {
             localStorage.setItem('auth_user', JSON.stringify(user));
-            // Fetch and store carpetaId after MFA verification
-            await fetchAndStoreCarpetaId(user);
           }
         }
       } else if (response.error) {
@@ -193,7 +172,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear localStorage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
-      clearCarpetaId();
 
       setIsLoading(false);
     }

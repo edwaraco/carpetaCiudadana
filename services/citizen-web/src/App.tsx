@@ -13,6 +13,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { DocumentsPage } from '@/pages/DocumentsPage';
+import { DocumentViewerPage } from '@/pages/DocumentViewerPage';
 import { FolderPage } from '@/pages/FolderPage';
 import { PortabilityPage } from '@/pages/PortabilityPage';
 import { RequestsPage } from '@/pages/RequestsPage';
@@ -54,6 +55,7 @@ const autheticatedOptions: AuthenticatedRoute[] = [
   { path: "dashboard", Component: DashboardPage },
   { path: "documents", Component: DocumentsPage, feature: 'DOCUMENTS' },
   { path: "documents/upload", Component: UploadDocumentForm, feature: 'UPLOAD_DOCUMENTS' },
+  { path: "documents/:documentId", Component: DocumentViewerPage, feature: 'DOCUMENTS' },
   { path: "folder", Component: FolderPage },
   { path: "requests", Component: RequestsPage, feature: 'DOCUMENT_REQUESTS' },
   { path: "portability", Component: PortabilityPage, feature: 'PORTABILITY' },

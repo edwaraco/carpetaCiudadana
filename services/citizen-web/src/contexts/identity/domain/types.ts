@@ -12,6 +12,7 @@ export interface Citizen {
   currentOperator: string;
   registrationDate: Date;
   status: CitizenStatus;
+  carpetaId: string; // UUID of the citizen's folder
 }
 
 export type CitizenStatus = 'ACTIVE' | 'SUSPENDED' | 'IN_TRANSIT';

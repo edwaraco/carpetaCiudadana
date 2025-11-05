@@ -7,6 +7,33 @@ import userEvent from '@testing-library/user-event';
 import { vi, beforeAll } from 'vitest';
 import { DocumentList } from './DocumentList';
 
+// Mock the AuthContext
+vi.mock('../../authentication/context/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    isAuthenticated: true,
+    user: {
+      cedula: '1234567890',
+      fullName: 'Test User',
+      address: 'Test Address',
+      personalEmail: 'test@example.com',
+      folderEmail: 'test.user@carpetacolombia.co',
+      currentOperator: 'MiCarpeta',
+      registrationDate: new Date('2024-01-15'),
+      status: 'ACTIVE',
+      carpetaId: 'test-carpeta-id-123',
+    },
+    isLoading: false,
+    token: 'mock-token',
+    error: null,
+    requiresMFA: false,
+    sessionId: null,
+    login: vi.fn(),
+    verifyMFA: vi.fn(),
+    logout: vi.fn(),
+    clearError: vi.fn(),
+  })),
+}));
+
 // Mock localStorage before tests
 const mockCarpetaId = 'test-carpeta-id-123';
 

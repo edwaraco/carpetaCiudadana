@@ -153,6 +153,32 @@
     "fetchFailed": "Error al cargar los documentos",
     "downloadFailed": "Error al descargar el documento",
     "deleteFailed": "Error al eliminar el documento"
-  }
+  },
+  "viewer": {
+    "certifiedTitle": "Documento Certificado",
+    "certifiedMessage": "Este documento ha sido certificado digitalmente y cuenta con validez legal.",
+    "temporaryTitle": "Documento Temporal",
+    "temporaryMessage": "Este documento no ha sido certificado aún. Para obtener validez legal, debe ser certificado por la entidad emisora.",
+    "revokedTitle": "Documento Revocado",
+    "revokedMessage": "Este documento ha sido revocado y ya no tiene validez legal.",
+    "type": "Tipo",
+    "context": "Contexto",
+    "receptionDate": "Fecha de Recepción",
+    "issueDate": "Fecha de Emisión",
+    "issuingEntity": "Entidad Emisora",
+    "format": "Formato",
+    "size": "Tamaño",
+    "certificationDetails": "Detalles de Certificación",
+    "signedBy": "Firmado Por",
+    "algorithm": "Algoritmo",
+    "hashAlgorithm": "Algoritmo de Hash",
+    "signatureDate": "Fecha de Firma",
+    "digitalSignature": "Firma Digital",
+    "preview": "Vista Previa del Documento",
+    "noPreview": "Vista previa no disponible para este documento",
+    "documentNotFound": "Documento no encontrado"
+  },
+  "download": "Descargar",
+  "downloading": "Descargando..."
 }
 

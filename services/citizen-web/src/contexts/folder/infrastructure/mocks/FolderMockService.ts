@@ -25,6 +25,7 @@ export class FolderMockService implements IFolderService {
       currentOperator: 'MiCarpeta',
       registrationDate: new Date('2024-01-15'),
       status: 'ACTIVE',
+      carpetaId: 'folder-001',
     },
     documents: [],
     usedStorage: {

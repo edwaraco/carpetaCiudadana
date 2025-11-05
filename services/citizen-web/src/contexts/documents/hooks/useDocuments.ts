@@ -38,17 +38,11 @@ export const useDocuments = (): UseDocumentsReturn => {
    * Used for initial load and refetch operations
    */
   const fetchDocuments = useCallback(async () => {
-    // If carpetaId is not available yet, set error and don't fetch
-    if (!carpetaId) {
-      setError(t('errors.carpetaIdNotFound', { ns: 'documents' }));
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // useCarpetaId() will throw if carpetaId is not available
       const response = await documentService.getDocuments(carpetaId);
 
       if (response.success && response.data) {
