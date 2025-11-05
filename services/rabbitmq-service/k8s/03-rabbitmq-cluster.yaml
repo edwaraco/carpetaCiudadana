@@ -24,7 +24,7 @@ spec:
   # Persistence configuration
   # Each pod gets its own PVC (persistence/storage per-node folder)
   persistence:
-    storageClassName: standard  # Change to rabbitmq-storage for custom StorageClass
+    storageClassName: hostpath  # Docker Desktop default StorageClass
     storage: 10Gi
   
   # Resource limits and requests
