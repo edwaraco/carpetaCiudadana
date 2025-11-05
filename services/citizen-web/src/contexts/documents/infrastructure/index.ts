@@ -1,18 +1,21 @@
 /**
  * Document Service Factory
+ *
+ * Crea el servicio de documentos apropiado basado en la configuración de mocks.
+ * Soporta configuración granular por contexto.
  */
 
-import { IDocumentService } from './IDocumentService';
+import type { IDocumentService } from './IDocumentService';
 import { DocumentApiService } from './api/DocumentApiService';
 import { DocumentMockService } from './mocks/DocumentMockService';
-import { isMockAPIEnabled } from '@/shared/utils/env';
+import { shouldUseMock } from '@/shared/config/mockConfig';
 
 function createDocumentService(): IDocumentService {
-  if (isMockAPIEnabled()) {
-    console.log('🔧 Using MOCK Document Service');
+  if (shouldUseMock('DOCUMENTS')) {
+    console.log('🔧 [Documents] Using MOCK Service');
     return new DocumentMockService();
   }
-  console.log('🚀 Using REAL Document Service');
+  console.log('🚀 [Documents] Using REAL API Service');
   return new DocumentApiService();
 }
 

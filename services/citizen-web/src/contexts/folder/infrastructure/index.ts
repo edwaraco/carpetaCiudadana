@@ -1,18 +1,21 @@
 /**
- * Folder Service Factory
+ * Folder Service Factory (Carpeta Personal)
+ *
+ * Crea el servicio de carpeta apropiado basado en la configuración de mocks.
+ * Soporta configuración granular por contexto.
  */
 
-import { IFolderService } from './IFolderService';
+import type { IFolderService } from './IFolderService';
 import { FolderApiService } from './api/FolderApiService';
 import { FolderMockService } from './mocks/FolderMockService';
-import { isMockAPIEnabled } from '@/shared/utils/env';
+import { shouldUseMock } from '@/shared/config/mockConfig';
 
 function createFolderService(): IFolderService {
-  if (isMockAPIEnabled()) {
-    console.log('🔧 Using MOCK Folder Service');
+  if (shouldUseMock('CARPETA')) {
+    console.log('🔧 [Carpeta] Using MOCK Service');
     return new FolderMockService();
   }
-  console.log('🚀 Using REAL Folder Service');
+  console.log('🚀 [Carpeta] Using REAL API Service');
   return new FolderApiService();
 }
 
