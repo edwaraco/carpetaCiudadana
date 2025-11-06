@@ -9,4 +9,5 @@ public record HistorialAccesoResponse(
     String usuarioAcceso,
     LocalDateTime fechaAcceso,
     String resultadoAcceso,
-    String motivoAcceso) {}
+    String motivoAcceso
+) {}

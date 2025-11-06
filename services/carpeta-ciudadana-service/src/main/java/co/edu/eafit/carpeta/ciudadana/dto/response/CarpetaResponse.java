@@ -11,4 +11,5 @@ public record CarpetaResponse(
     String operadorActual,
     Long espacioUtilizadoBytes,
     LocalDateTime fechaCreacion,
-    LocalDateTime fechaUltimaModificacion) {}
+    LocalDateTime fechaUltimaModificacion
+) {}

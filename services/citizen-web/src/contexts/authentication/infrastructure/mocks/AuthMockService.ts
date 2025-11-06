@@ -34,6 +34,7 @@ export class AuthMockService implements IAuthService {
           currentOperator: 'MiCarpeta',
           registrationDate: new Date('2024-01-15'),
           status: 'ACTIVE',
+          carpetaId: 'df32bb71-ffb3-4693-8680-e0d316a2acef',
         },
         requiresMFA: mfaRequired,
         sessionId: mfaRequired ? 'session-' + Date.now() : undefined,

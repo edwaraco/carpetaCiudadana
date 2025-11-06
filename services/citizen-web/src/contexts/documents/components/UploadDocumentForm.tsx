@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -12,8 +13,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
   Typography,
   Paper,
   Alert,
@@ -25,8 +24,8 @@ import {
   CheckCircle as CheckIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
-import { useUploadDocument } from '../hooks';
-import { DocumentMetadata, DocumentType, DocumentContext } from '../domain/types';
+import { useUploadDocument } from '@/contexts/documents/hooks';
+import { DocumentMetadata, DocumentType, DocumentContext } from '@/contexts/documents/domain/types';
 
 interface UploadDocumentFormProps {
   onSuccess?: (documentId: string) => void;
@@ -38,16 +37,14 @@ interface FormData {
   type: DocumentType;
   context: DocumentContext;
   issueDate?: Date;
-  expirationDate?: Date;
-  tags: string;
-  entidadEmisora?: string;
-  isCertified: boolean;
+  issuingEntity?: string;
 }
 
 export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const { t } = useTranslation('documents');
   const { uploadDocument, isLoading, error, data } = useUploadDocument();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,18 +54,13 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
     control,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<FormData>({
     defaultValues: {
       title: '',
       type: 'OTHER',
       context: 'OTHER',
-      tags: '',
-      isCertified: false,
     },
   });
-
-  const isCertified = watch('isCertified');
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -101,26 +93,18 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
       return;
     }
 
-    const tags = formData.tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-
     const metadata: DocumentMetadata = {
       title: formData.title,
       type: formData.type,
       context: formData.context,
-      tags,
       issueDate: formData.issueDate,
-      expirationDate: formData.expirationDate,
-      entidadEmisora: formData.entidadEmisora,
+      issuingEntity: formData.issuingEntity,
     };
 
     try {
       await uploadDocument({
         file: selectedFile,
         metadata,
-        isCertified: formData.isCertified,
       });
 
       if (onSuccess && data) {
@@ -140,12 +124,12 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
       <Paper sx={{ p: 3 }}>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           <CheckIcon sx={{ fontSize: 64, color: 'success.main' }} />
-          <Typography variant="h6">Document Uploaded Successfully!</Typography>
+          <Typography variant="h6">{t('upload.success')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Document ID: {data.documentId}
+            {t('detail.fields.id')}: {data.documentId}
           </Typography>
           <Button variant="contained" onClick={() => onSuccess?.(data.documentId)}>
-            View Document
+            {t('detail.actions.view')}
           </Button>
         </Box>
       </Paper>
@@ -155,7 +139,7 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Upload Document
+        {t('upload.title')}
       </Typography>
 
       {error && (
@@ -205,10 +189,10 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
             <Box>
               <UploadIcon sx={{ fontSize: 48, color: 'action.active', mb: 1 }} />
               <Typography variant="body1" gutterBottom>
-                Drag and drop your document here
+                {isDragging ? t('upload.dragDrop.active') : t('upload.dragDrop.inactive')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                or click to browse (PDF, JPEG, PNG - max 10MB)
+                {t('upload.form.file.helperText')}
               </Typography>
             </Box>
           )}
@@ -219,15 +203,17 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
           <Controller
             name="title"
             control={control}
-            rules={{ required: 'Title is required' }}
+            rules={{ required: t('upload.form.title.required') }}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Document Title"
+                label={t('upload.form.title.label')}
+                placeholder={t('upload.form.title.placeholder')}
                 fullWidth
                 required
                 error={!!errors.title}
                 helperText={errors.title?.message}
+                data-testid="document-title-input"
               />
             )}
           />
@@ -236,23 +222,25 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
             <Controller
               name="type"
               control={control}
+              rules={{ required: t('upload.form.type.required') }}
               render={({ field }) => (
-                <FormControl fullWidth>
-                  <InputLabel id="document-type-label">Document Type</InputLabel>
+                <FormControl fullWidth required error={!!errors.type}>
+                  <InputLabel id="document-type-label">{t('upload.form.type.label')}</InputLabel>
                   <Select
                     {...field}
                     labelId="document-type-label"
-                    id="document-type-select"
-                    label="Document Type"
+                    label={t('upload.form.type.label')}
+                    data-testid="document-type-select"
                   >
-                    <MenuItem value="CEDULA">Cedula</MenuItem>
-                    <MenuItem value="PASSPORT">Passport</MenuItem>
-                    <MenuItem value="DIPLOMA">Diploma</MenuItem>
-                    <MenuItem value="CERTIFICATE">Certificate</MenuItem>
-                    <MenuItem value="LICENSE">License</MenuItem>
-                    <MenuItem value="TAX_DOCUMENT">Tax Document</MenuItem>
-                    <MenuItem value="MEDICAL_RECORD">Medical Record</MenuItem>
-                    <MenuItem value="OTHER">Other</MenuItem>
+                    <MenuItem value="CEDULA">{t('documentTypes.CEDULA')}</MenuItem>
+                    <MenuItem value="DIPLOMA">{t('documentTypes.DIPLOMA')}</MenuItem>
+                    <MenuItem value="GRADUATION_CERTIFICATE">{t('documentTypes.GRADUATION_CERTIFICATE')}</MenuItem>
+                    <MenuItem value="MEDICAL_CERTIFICATE">{t('documentTypes.MEDICAL_CERTIFICATE')}</MenuItem>
+                    <MenuItem value="DEED">{t('documentTypes.DEED')}</MenuItem>
+                    <MenuItem value="TAX_RETURN">{t('documentTypes.TAX_RETURN')}</MenuItem>
+                    <MenuItem value="PASSPORT">{t('documentTypes.PASSPORT')}</MenuItem>
+                    <MenuItem value="BACKGROUND_CHECK">{t('documentTypes.BACKGROUND_CHECK')}</MenuItem>
+                    <MenuItem value="OTHER">{t('documentTypes.OTHER')}</MenuItem>
                   </Select>
                 </FormControl>
               )}
@@ -261,65 +249,62 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
             <Controller
               name="context"
               control={control}
+              rules={{ required: t('upload.form.context.required') }}
               render={({ field }) => (
-                <FormControl fullWidth>
-                  <InputLabel id="context-label">Context</InputLabel>
+                <FormControl fullWidth required error={!!errors.context}>
+                  <InputLabel id="context-label">{t('upload.form.context.label')}</InputLabel>
                   <Select
                     {...field}
                     labelId="context-label"
-                    id="context-select"
-                    label="Context"
+                    label={t('upload.form.context.label')}
+                    data-testid="document-context-select"
                   >
-                    <MenuItem value="CIVIL_REGISTRY">Civil Registry</MenuItem>
-                    <MenuItem value="EDUCATION">Education</MenuItem>
-                    <MenuItem value="HEALTH">Health</MenuItem>
-                    <MenuItem value="TAX">Tax</MenuItem>
-                    <MenuItem value="LABOR">Labor</MenuItem>
-                    <MenuItem value="OTHER">Other</MenuItem>
+                    <MenuItem value="EDUCATION">{t('documentContexts.EDUCATION')}</MenuItem>
+                    <MenuItem value="HEALTH">{t('documentContexts.HEALTH')}</MenuItem>
+                    <MenuItem value="NOTARY">{t('documentContexts.NOTARY')}</MenuItem>
+                    <MenuItem value="CIVIL_REGISTRY">{t('documentContexts.CIVIL_REGISTRY')}</MenuItem>
+                    <MenuItem value="TAXES">{t('documentContexts.TAXES')}</MenuItem>
+                    <MenuItem value="EMPLOYMENT">{t('documentContexts.EMPLOYMENT')}</MenuItem>
+                    <MenuItem value="IMMIGRATION">{t('documentContexts.IMMIGRATION')}</MenuItem>
+                    <MenuItem value="OTHER">{t('documentContexts.OTHER')}</MenuItem>
                   </Select>
                 </FormControl>
               )}
             />
           </Box>
 
-          {isCertified && (
-            <Controller
-              name="entidadEmisora"
-              control={control}
-              rules={{ required: isCertified ? 'Issuing entity is required for certified documents' : false }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Issuing Entity"
-                  fullWidth
-                  required={isCertified}
-                  error={!!errors.entidadEmisora}
-                  helperText={errors.entidadEmisora?.message}
-                />
-              )}
-            />
-          )}
-
           <Controller
-            name="tags"
+            name="issueDate"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Tags (comma-separated)"
+                label={t('upload.form.issueDate.label')}
+                type="date"
                 fullWidth
-                helperText="e.g., important, education, 2024"
+                helperText={t('upload.form.issueDate.helperText')}
+                error={!!errors.issueDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                data-testid="document-issue-date-input"
               />
             )}
           />
 
           <Controller
-            name="isCertified"
+            name="issuingEntity"
             control={control}
             render={({ field }) => (
-              <FormControlLabel
-                control={<Checkbox {...field} checked={field.value} />}
-                label="This is a certified document (digitally signed by authority)"
+              <TextField
+                {...field}
+                label={t('upload.form.issuingEntity.label')}
+                fullWidth
+                helperText={t('upload.form.issuingEntity.helperText')}
+                error={!!errors.issuingEntity}
+                data-testid="document-issuing-entity-input"
               />
             )}
           />
@@ -333,12 +318,19 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({
             fullWidth
             disabled={!selectedFile || isLoading}
             startIcon={isLoading ? <CircularProgress size={20} /> : <UploadIcon />}
+            data-testid="upload-submit-button"
           >
-            {isLoading ? 'Uploading...' : 'Upload Document'}
+            {isLoading ? t('upload.actions.uploading') : t('upload.actions.upload')}
           </Button>
           {onCancel && (
-            <Button variant="outlined" fullWidth onClick={onCancel} disabled={isLoading}>
-              Cancel
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={onCancel}
+              disabled={isLoading}
+              data-testid="upload-cancel-button"
+            >
+              {t('upload.actions.cancel')}
             </Button>
           )}
         </Box>

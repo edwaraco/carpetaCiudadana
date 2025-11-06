@@ -29,7 +29,7 @@ services:
     container_name: dynamodb-local
     ports:
       - "8000:8000"
-    command: "-jar DynamoDBLocal.jar"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
     working_dir: /home/dynamodblocal
     networks:
       - app-network
@@ -40,7 +40,7 @@ services:
     image: aaronshaf/dynamodb-admin:latest
     container_name: dynamodb-admin
     ports:
-      - "8004:8001"
+      - "8001:8001"
     environment:
       - DYNAMO_ENDPOINT=http://dynamodb-local:8000
       - AWS_REGION=us-east-1
@@ -51,25 +51,6 @@ services:
     depends_on:
       - dynamodb-local
     restart: unless-stopped
-
-  # RabbitMQ
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin123
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # Microservicio de Carpeta Ciudadana
   # carpeta-ciudadana-service:
@@ -89,16 +70,10 @@ services:
   #     - MINIO_ACCESS_KEY=admin
   #     - MINIO_SECRET_KEY=admin123
   #     - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
-  #     - RABBITMQ_HOST=rabbitmq
-  #     - RABBITMQ_PORT=5672
-  #     - RABBITMQ_USERNAME=admin
-  #     - RABBITMQ_PASSWORD=admin123
   #   depends_on:
   #     minio:
   #       condition: service_healthy
   #     dynamodb-local:
-  #       condition: service_healthy
-  #     rabbitmq:
   #       condition: service_healthy
   #   networks:
   #     - app-network

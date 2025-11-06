@@ -1,18 +1,21 @@
 /**
  * Portability Service Factory
+ *
+ * Crea el servicio de portabilidad apropiado basado en la configuración de mocks.
+ * Soporta configuración granular por contexto.
  */
 
-import { IPortabilityService } from './IPortabilityService';
+import type { IPortabilityService } from './IPortabilityService';
 import { PortabilityApiService } from './api/PortabilityApiService';
 import { PortabilityMockService } from './mocks/PortabilityMockService';
-import { isMockAPIEnabled } from '@/shared/utils/env';
+import { shouldUseMock } from '@/shared/config/mockConfig';
 
 function createPortabilityService(): IPortabilityService {
-  if (isMockAPIEnabled()) {
-    console.log('🔧 Using MOCK Portability Service');
+  if (shouldUseMock('PORTABILITY')) {
+    console.log('🔧 [Portability] Using MOCK Service');
     return new PortabilityMockService();
   }
-  console.log('🚀 Using REAL Portability Service');
+  console.log('🚀 [Portability] Using REAL API Service');
   return new PortabilityApiService();
 }
 

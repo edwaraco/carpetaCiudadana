@@ -9,4 +9,5 @@ public record SubirDocumentoResponse(
     String estadoDocumento,
     Long tamanoBytes,
     LocalDateTime fechaRecepcion,
-    String mensaje) {}
+    String mensaje
+) {}

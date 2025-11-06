@@ -24,21 +24,6 @@ spring:
           access-key: ${AWS_ACCESS_KEY_ID:dummy}
           secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
 
-  # Configuración de RabbitMQ
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:admin}
-    password: ${RABBITMQ_PASSWORD:admin123}
-    listener:
-      simple:
-        acknowledge-mode: auto
-        retry:
-          enabled: true
-          initial-interval: 3000
-          max-attempts: 3
-          multiplier: 2
-
 # Configuración de MinIO
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
@@ -47,29 +32,22 @@ minio:
   bucket-name: ${MINIO_BUCKET_NAME:carpeta-ciudadana-docs}
   presigned-url-expiry-minutes: ${MINIO_PRESIGNED_URL_EXPIRY:15}
 
+# Configuración de CORS (Cross-Origin Resource Sharing)
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+  max-age: ${CORS_MAX_AGE:3600}
+
 # Configuración de logging
 logging:
   level:
-    root: INFO
     co.edu.eafit.carpeta: DEBUG
-    org.springframework: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.boot: INFO
-    org.hibernate: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    software.amazon.awssdk: DEBUG
-    io.minio: DEBUG
-    org.apache.http: DEBUG
-    org.springframework.cloud: DEBUG
+    software.amazon.awssdk: INFO
+    io.minio: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/application.log
-    max-size: 10MB
-    max-history: 30
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Configuración de actuator
 management:
