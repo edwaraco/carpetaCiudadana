@@ -34,6 +34,9 @@ AVAILABLE_QUEUES = [
 # Control flag for graceful shutdown
 should_stop = False
 
+# Display configuration
+MAX_URL_DISPLAY_LENGTH = 80
+
 
 def signal_handler(sig, frame):
     """Handle interrupt signals for graceful shutdown"""
@@ -63,7 +66,10 @@ def format_message_output(message, delivery_tag, redelivered, queue_name):
         if queue_name == 'document_verification_request':
             output.append(f"  Citizen ID: {message.get('idCitizen', 'N/A')}")
             output.append(f"  Document Title: {message.get('documentTitle', 'N/A')}")
-            output.append(f"  Document URL: {message.get('UrlDocument', 'N/A')[:80]}...")
+            url = message.get('UrlDocument', 'N/A')
+            if len(url) > MAX_URL_DISPLAY_LENGTH:
+                url = url[:MAX_URL_DISPLAY_LENGTH] + "..."
+            output.append(f"  Document URL: {url}")
         elif queue_name == 'document_verified_response':
             output.append(f"  Status: {message.get('status', 'N/A')}")
             output.append(f"  Message: {message.get('message', 'N/A')}")
@@ -158,9 +164,12 @@ def interactive_mode(connection):
             channel.basic_qos(prefetch_count=1)
             
             # Check queue
-            method_frame = channel.queue_declare(queue=queue_name, durable=True, passive=True)
-            message_count = method_frame.method.message_count
-            print(f"[INFO] Queue has {message_count} pending message(s)\n")
+            try:
+                method_frame = channel.queue_declare(queue=queue_name, durable=True, passive=True)
+                message_count = method_frame.method.message_count
+                print(f"[INFO] Queue has {message_count} pending message(s)\n")
+            except Exception as e:
+                print(f"[WARNING] Could not check queue status: {str(e)}\n")
             
             # Setup consumer
             channel.basic_consume(

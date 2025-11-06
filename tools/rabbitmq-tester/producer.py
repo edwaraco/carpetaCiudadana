@@ -46,10 +46,14 @@ DOCUMENT_TITLES = [
 
 BUCKET_NAMES = ["carpeta-ciudadana-docs", "carpeta-ciudadana-prod", "carpeta-docs"]
 
+# Citizen ID range (10 digits for Colombian ID)
+MIN_CITIZEN_ID = 1000000000
+MAX_CITIZEN_ID = 9999999999
+
 
 def create_verification_request_message():
     """Create a document verification request message"""
-    citizen_id = random.randint(1000000000, 9999999999)
+    citizen_id = random.randint(MIN_CITIZEN_ID, MAX_CITIZEN_ID)
     bucket = random.choice(BUCKET_NAMES)
     doc_id = str(uuid.uuid4())
     title = random.choice(DOCUMENT_TITLES)
@@ -65,7 +69,7 @@ def create_verification_request_message():
 
 def create_verified_response_message():
     """Create a document verified response message"""
-    citizen_id = random.randint(1000000000, 9999999999)
+    citizen_id = random.randint(MIN_CITIZEN_ID, MAX_CITIZEN_ID)
     status = random.choice([200, 400, 500])
     title = random.choice(DOCUMENT_TITLES)
     
