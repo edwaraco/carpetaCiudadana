@@ -233,6 +233,37 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
         }
     }
 
+    @Override
+    public void actualizarEstadoDocumento(
+            String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo) {
+        log.info(
+                "Actualizando estado de documento: documentoId={}, carpetaId={}, nuevoEstado={}",
+                documentoId,
+                carpetaId,
+                nuevoEstado);
+
+        Documento documento =
+                documentoRepository
+                        .findById(carpetaId, documentoId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Documento", "documentoId", documentoId));
+
+        documento.setEstadoDocumento(nuevoEstado);
+
+        documentoRepository.save(documento);
+
+        HistorialAcceso acceso =
+                historialAccesoMapper.crearAcceso(
+                        carpetaId,
+                        documentoId,
+                        "ACTUALIZACION_ESTADO",
+                        "SISTEMA",
+                        String.format("Estado actualizado a: %s", nuevoEstado));
+        historialRepository.save(acceso);
+
+        log.info("Estado del documento actualizado exitosamente: {}", documentoId);
+    }
+
     private void actualizarEspacioUtilizado(String carpetaId, long cambioBytes) {
         CarpetaCiudadano carpeta = carpetaRepository.findById(carpetaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Carpeta", "carpetaId", carpetaId));

@@ -38,4 +38,7 @@ public interface CarpetaCiudadanoService {
     DocumentosPaginadosResponse obtenerDocumentosPaginados(String carpetaId, String cursor, Integer pageSize);
 
     String generarUrlDescarga(String carpetaId, String documentoId);
+
+    void actualizarEstadoDocumento(
+            String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo);
 }
