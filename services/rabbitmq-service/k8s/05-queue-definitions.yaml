@@ -17,16 +17,11 @@ data:
       "rabbitmq_version": "3.13.0",
       "product_name": "RabbitMQ",
       "product_version": "3.13.0",
-      "users": [],
       "vhosts": [
         {
           "name": "/"
         }
       ],
-      "permissions": [],
-      "topic_permissions": [],
-      "parameters": [],
-      "global_parameters": [],
       "policies": [],
       "queues": [
         {
