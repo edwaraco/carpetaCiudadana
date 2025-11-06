@@ -1,0 +1,38 @@
+# RabbitMQ Cluster Operator Installation
+# Source: https://github.com/rabbitmq/cluster-operator/releases/latest
+#
+# To install the latest version, run:
+# kubectl apply -f "https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml"
+#
+# For this project, we reference the upstream release directly to ensure we get the latest operator version.
+# This file serves as documentation and can be used for custom configurations.
+
+---
+# NOTE: To install the RabbitMQ Cluster Operator, run:
+#
+#   kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+#
+# The operator will be installed in the rabbitmq-system namespace.
+#
+# To verify installation:
+#   kubectl get pods -n rabbitmq-system
+#
+# Expected output:
+#   NAME                                         READY   STATUS    RESTARTS   AGE
+#   rabbitmq-cluster-operator-7d9b8b9f4d-xxxxx   1/1     Running   0          30s
+
+# Custom Operator Configuration (Optional)
+# If you need to customize the operator (e.g., scope to specific namespaces), 
+# you can patch the deployment after installation:
+#
+# kubectl -n rabbitmq-system edit deployment rabbitmq-cluster-operator
+#
+# Add environment variables as needed:
+#
+# env:
+# - name: OPERATOR_SCOPE_NAMESPACE
+#   value: "carpeta-ciudadana"
+# - name: DEFAULT_RABBITMQ_IMAGE
+#   value: "rabbitmq:3.13-management"
+#
+# See: https://www.rabbitmq.com/kubernetes/operator/configure-operator-defaults

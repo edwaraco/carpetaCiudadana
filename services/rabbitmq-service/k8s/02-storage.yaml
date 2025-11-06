@@ -1,0 +1,46 @@
+---
+# StorageClass for RabbitMQ persistent volumes
+# Uses dynamic provisioning for cloud environments
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: rabbitmq-storage
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq
+provisioner: kubernetes.io/no-provisioner  # Change based on your K8s environment
+# For cloud providers, use:
+# - kubernetes.io/aws-ebs (AWS)
+# - kubernetes.io/gce-pd (GCP)
+# - kubernetes.io/azure-disk (Azure)
+# For Minikube, use: k8s.io/minikube-hostpath
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+
+---
+# NOTE: For production, use dynamic provisioning with your cloud provider's StorageClass
+# For Minikube/local development, PVs will be created automatically by the cluster operator
+# when using the default storage class.
+#
+# Example for manual PV creation (not recommended for production):
+#
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: rabbitmq-pv-0
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: rabbitmq-storage
+#   hostPath:
+#     path: /data/rabbitmq/server-0
+#     type: DirectoryOrCreate
+#
+# Repeat for rabbitmq-pv-1 and rabbitmq-pv-2 with different paths
+#
+# Each StatefulSet pod will automatically create a PersistentVolumeClaim
+# that binds to these PVs, giving each node its own folder within shared storage.
