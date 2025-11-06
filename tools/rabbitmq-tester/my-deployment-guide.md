@@ -111,6 +111,9 @@ $RABBITMQ_USER = kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciu
 $RABBITMQ_PASSWORD = kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
 Write-Host "User: $RABBITMQ_USER"
 Write-Host "Password: $RABBITMQ_PASSWORD"
+
+# You can also verify users in the server
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl list_users
 ```
 
 ## Rollout after changing any k8s file
@@ -121,4 +124,10 @@ kubectl rollout restart statefulset/carpeta-rabbitmq-server -n carpeta-ciudadana
 
 # Con esto verificas que terminó el rollout:
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
+```
+
+## KILL the deployment
+
+```powershell
+kubectl delete -f k8s/
 ```
