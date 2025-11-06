@@ -42,6 +42,7 @@ python producer.py
 ```
 
 You'll see a menu where you can:
+
 - Select which queue to send to (1-3)
 - Specify how many messages to send
 - Send multiple batches without reconnecting
@@ -82,6 +83,7 @@ python consumer.py
 ```
 
 You'll see a menu where you can:
+
 - Select which queue to consume from (1-3)
 - Switch between queues without reconnecting
 - Press Ctrl+C to return to menu (not exit)
@@ -173,6 +175,8 @@ python consumer.py --queue test_queue
 python producer.py --queue test_queue --count 5
 ```
 
+> Note: if you don't specify --queue, you'll enter interactive mode, to select the queue.
+
 ### Document Verification Flow
 
 ```bash
@@ -196,6 +200,7 @@ python producer.py --queue document_verified_response
 **Error**: `[ERROR] Connection failed: [Errno 111] Connection refused`
 
 **Solution**:
+
 - Verify RabbitMQ is running: `kubectl get pods -n carpeta-ciudadana`
 - Check port-forward is active
 - Verify credentials are correct
@@ -205,6 +210,7 @@ python producer.py --queue document_verified_response
 **Error**: Queue doesn't exist
 
 **Solution**:
+
 - Queues are created automatically by RabbitMQ cluster
 - Check queue definitions in `services/rabbitmq-service/k8s/05-queue-definitions.yaml`
 - Verify cluster is properly deployed
@@ -214,6 +220,7 @@ python producer.py --queue document_verified_response
 **Error**: `ModuleNotFoundError: No module named 'pika'`
 
 **Solution**:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -229,4 +236,4 @@ pip install -r requirements.txt
 
 - RabbitMQ Service Documentation: `services/rabbitmq-service/README.md`
 - Queue Definitions: `services/rabbitmq-service/k8s/05-queue-definitions.yaml`
-- Pika Documentation: https://pika.readthedocs.io/
+- Pika Documentation: <https://pika.readthedocs.io/>
