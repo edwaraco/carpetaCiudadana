@@ -8,6 +8,7 @@ public record DocumentoUrlResponse(
     String urlDescarga,
     LocalDateTime expiraEn,
     Integer minutosValidez,
+<<<<<<< HEAD
     String mensaje) {
   public static DocumentoUrlResponse of(
       String documentoId, String titulo, String urlDescarga, int minutosValidez) {
@@ -22,3 +23,19 @@ public record DocumentoUrlResponse(
             + " minutos.");
   }
 }
+=======
+    String mensaje
+) {
+    public static DocumentoUrlResponse of(String documentoId, String titulo, String urlDescarga, int minutosValidez) {
+        return new DocumentoUrlResponse(
+            documentoId,
+            titulo,
+            urlDescarga,
+            LocalDateTime.now().plusMinutes(minutosValidez),
+            minutosValidez,
+            "URL de descarga generada exitosamente. Esta URL expirará en " + minutosValidez + " minutos."
+        );
+    }
+}
+
+>>>>>>> feature/2-be-folder-management
