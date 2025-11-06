@@ -1,26 +1,48 @@
 # RabbitMQ Service - Carpeta Ciudadana
 
-Servicio de mensajería basado en RabbitMQ desplegado en Kubernetes usando el **RabbitMQ Cluster Operator**.
+## 📋 ¿Qué es este servicio?
 
-## 📋 Descripción
+Servicio de mensajería basado en **RabbitMQ** desplegado en **Kubernetes** que proporciona comunicación asíncrona y confiable entre los microservicios del sistema Carpeta Ciudadana. 
 
-Este servicio proporciona un cluster RabbitMQ de 3 nodos con **Quorum Queues** para alta disponibilidad y durabilidad de mensajes. Utiliza el algoritmo de consenso **Raft** para replicación con un factor de replicación de 2.
+Este servicio es fundamental para la arquitectura event-driven del sistema, permitiendo el procesamiento asíncrono de tareas críticas como:
+- Verificación de documentos
+- Notificaciones a usuarios
+- Eliminación de documentos
+- Auditoría de eventos
+
+## 🎯 Características Principales
+
+### Alta Disponibilidad
+- **Cluster de 3 nodos** con replicación automática
+- **Quorum Queues** con algoritmo de consenso Raft
+- **Failover automático** en menos de 5 segundos
+- Tolerancia a fallas de hasta 1 nodo sin pérdida de datos
+
+### Durabilidad y Consistencia
+- **Replication Factor de 2**: Mensajes replicados en 2 de 3 nodos
+- **Persistencia garantizada**: Almacenamiento en volúmenes persistentes (10Gi por nodo)
+- **Sin pérdida de mensajes**: ACK solo cuando se persiste en quorum
+
+### Gestión Automatizada
+- **RabbitMQ Cluster Operator**: Gestión declarativa del cluster
+- **Peer Discovery automático**: Descubrimiento de nodos vía Kubernetes API
+- **StatefulSet**: Identidad estable para cada nodo
+- **Auto-healing**: Recuperación automática de particiones de red
+
+### Monitoreo y Observabilidad
+- **Management UI**: Interfaz web en puerto 15672
+- **Prometheus metrics**: Endpoint de métricas en puerto 15692
+- **Logging estructurado**: Logs en formato JSON para agregación
 
 ## 🏗️ Arquitectura
-
-- **Cluster RabbitMQ**: 3 nodos (mínimo para Quorum Queues)
-- **Replication Factor**: 2 (mensajes replicados en 2 nodos)
-- **Peer Discovery**: Kubernetes-based (automático)
-- **Persistence**: Shared volume con carpeta por nodo
-- **Management**: RabbitMQ Cluster Operator
 
 ```mermaid
 graph TB
     subgraph "Kubernetes Cluster"
         subgraph "RabbitMQ StatefulSet"
-            Node0["🔵 carpeta-rabbitmq-server-0<br/>Seed Node<br/>PVC: data-0"]
-            Node1["⚪ carpeta-rabbitmq-server-1<br/>Member<br/>PVC: data-1"]
-            Node2["⚪ carpeta-rabbitmq-server-2<br/>Member<br/>PVC: data-2"]
+            Node0["🔵 carpeta-rabbitmq-server-0<br/>Seed Node<br/>PVC: 10Gi"]
+            Node1["⚪ carpeta-rabbitmq-server-1<br/>Member<br/>PVC: 10Gi"]
+            Node2["⚪ carpeta-rabbitmq-server-2<br/>Member<br/>PVC: 10Gi"]
         end
         
         Operator["RabbitMQ Cluster Operator<br/>Gestión automática"]
@@ -42,7 +64,7 @@ graph TB
     
     Ingress --> Service
     
-    Apps[Spring Boot Services] -->|AMQP| Service
+    Apps[Microservicios] -->|AMQP| Service
     Admin[Administrator] -->|HTTPS| Ingress
     
     style Node0 fill:#4a90e2,stroke:#2e5c8a,color:#fff
@@ -51,370 +73,235 @@ graph TB
     style Operator fill:#f0ad4e,stroke:#d58512
 ```
 
-## 🚀 Pre-requisitos
+### Componentes
 
-### Software Requerido
+| Componente | Descripción | Puerto |
+|------------|-------------|--------|
+| **AMQP Server** | Protocolo de mensajería | 5672 |
+| **Management UI** | Interfaz web de administración | 15672 |
+| **Prometheus Exporter** | Métricas para monitoreo | 15692 |
+| **Cluster Operator** | Gestión del ciclo de vida | N/A |
 
-- **kubectl** 1.24+
-- **krew** (plugin manager para kubectl)
-- **Cluster Kubernetes**: Minikube, Kind, K3s, o cloud (GKE, EKS, AKS)
-- **Recursos Mínimos**:
-  - CPU: 3 cores
-  - RAM: 6GB
-  - Disk: 30GB
+### Queues Configuradas
 
-### Instalar krew
+1. **document_verification_request**: Recibe solicitudes de verificación de documentos
+2. **document_verified_response**: Envía respuestas de verificación
+3. **test_queue**: Queue de pruebas y validación
 
-```bash
-# macOS/Linux
-(
-  set -x; cd "$(mktemp -d)" &&
-  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
-  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
-  KREW="krew-${OS}_${ARCH}" &&
-  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
-  tar zxvf "${KREW}.tar.gz" &&
-  ./"${KREW}" install krew
-)
+Cada queue tiene su correspondiente **Dead Letter Queue (DLQ)** para mensajes que fallan después de 3 reintentos.
 
-# Agregar al PATH
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
-```
+## 🚀 Inicio Rápido
 
-### Instalar kubectl rabbitmq plugin
+### Pre-requisitos
+
+- Kubernetes cluster (Minikube, Kind, K3s, GKE, EKS, AKS)
+- kubectl 1.24+
+- 3 CPU cores mínimo
+- 6GB RAM mínimo
+- 30GB almacenamiento
+
+### Instalación en 3 pasos
 
 ```bash
-kubectl krew install rabbitmq
-```
+# 1. Instalar el RabbitMQ Cluster Operator
+kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
 
-### Verificar Instalación
-
-```bash
-kubectl rabbitmq version
-kubectl rabbitmq help
-```
-
-## 🛠️ Makefile - Simplified Commands
-
-A comprehensive Makefile is provided to simplify all kubectl operations:
-
-```bash
-# Show all available commands
-make help
-
-# Quick start (install everything)
-make quick-start
-
-# Installation
-make install-operator    # Install RabbitMQ Cluster Operator
-make install-cluster     # Install 3-node cluster
-make create-queues       # Create required queues
-
-# Status & Monitoring
-make status              # Show overall cluster status
-make cluster-status      # RabbitMQ internal status
-make list-queues         # List all queues
-make logs                # View logs from all pods
-
-# Access
-make credentials         # Get admin credentials
-make port-forward        # Port-forward services
-make management-ui       # Open Management UI
-
-# Scaling
-make scale REPLICAS=5    # Scale cluster to 5 nodes
-
-# Testing
-make test-connection     # Test cluster connectivity
-make test-queues         # Test with producer/consumer
-
-# Cleanup
-make uninstall           # Remove cluster (keep operator)
-make uninstall-all       # Remove everything
-```
-
-See `Makefile` for all 30+ available commands.
-
-## 📦 Instalación
-
-### 1. Instalar el RabbitMQ Cluster Operator
-
-```bash
-# Desde el directorio services/rabbitmq-service
+# 2. Desplegar el cluster
 cd services/rabbitmq-service
+kubectl apply -f k8s/
 
-# Aplicar el Cluster Operator
-kubectl apply -f k8s/00-namespace.yaml
-kubectl apply -f k8s/01-cluster-operator.yaml
-
-# Verificar que el operator esté corriendo
-kubectl get pods -n rabbitmq-system
-```
-
-**Salida esperada**:
-```
-NAME                                         READY   STATUS    RESTARTS   AGE
-rabbitmq-cluster-operator-7d9b8b9f4d-xxxxx   1/1     Running   0          30s
-```
-
-### 2. Crear el Cluster RabbitMQ
-
-```bash
-# Aplicar configuración de storage
-kubectl apply -f k8s/02-storage.yaml
-
-# Crear el cluster (3 nodos)
-kubectl apply -f k8s/03-rabbitmq-cluster.yaml
-
-# Monitorear el despliegue
+# 3. Verificar que esté corriendo
 kubectl get rabbitmqclusters -n carpeta-ciudadana
-kubectl get pods -n carpeta-ciudadana -l app.kubernetes.io/name=carpeta-rabbitmq
+kubectl get pods -n carpeta-ciudadana -w
 ```
 
-**Tiempo de despliegue**: ~2-3 minutos
-
-**Salida esperada**:
-```
-NAME              ALLREPLICASREADY   RECONCILESUCCESS   AGE
-carpeta-rabbitmq  True               True               2m
-
-NAME                           READY   STATUS    RESTARTS   AGE
-carpeta-rabbitmq-server-0      1/1     Running   0          2m
-carpeta-rabbitmq-server-1      1/1     Running   0          90s
-carpeta-rabbitmq-server-2      1/1     Running   0          60s
-```
-
-### 3. Verificar el Cluster
-
-```bash
-# Ver estado del cluster
-kubectl rabbitmq get carpeta-rabbitmq -n carpeta-ciudadana
-
-# Ver nodos del cluster
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmqctl cluster_status
-
-# Listar queues
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmqctl list_queues name type
-```
-
-### 4. Acceder al Management UI
+### Acceso al Management UI
 
 ```bash
 # Port-forward para acceso local
 kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 15672:15672
 
-# O aplicar Ingress
-kubectl apply -f k8s/04-ingress.yaml
+# Abrir en navegador
+open http://localhost:15672
 ```
 
-**Management UI**: http://localhost:15672
+**Credenciales predeterminadas:**
+- Usuario: `admin`
+- Contraseña: `admin123`
 
-**Credenciales**: Obtener desde secret
-```bash
-kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d
-kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | base64 -d
-```
-
-## 🔧 Configuración
-
-### Peer Discovery en Kubernetes
-
-El plugin `rabbitmq_peer_discovery_k8s` está habilitado automáticamente por el Cluster Operator. Configuración clave:
-
-- **Seed Node**: Pod con `-0` suffix (carpeta-rabbitmq-server-0)
-- **Discovery**: Automático vía Kubernetes API
-- **StatefulSet ordinal start**: 0 (default)
-
-```yaml
-# Configuración automática del Operator
-cluster_formation.peer_discovery_backend = kubernetes
-cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
-cluster_formation.k8s.address_type = hostname
-```
-
-### Quorum Queues
-
-Las queues deben crearse con tipo `quorum`:
+O extraer las credenciales generadas automáticamente:
 
 ```bash
-# Via kubectl rabbitmq plugin
-kubectl rabbitmq manage carpeta-rabbitmq -n carpeta-ciudadana
-
-# En Management UI, crear queue:
-# - Type: Quorum
-# - Replication factor: 2
-# - Arguments: x-queue-type=quorum
+# Linux/macOS
+export RABBITMQ_USER=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d)
+export RABBITMQ_PASSWORD=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | base64 -d)
+echo "User: $RABBITMQ_USER"
+echo "Password: $RABBITMQ_PASSWORD"
 ```
 
-**Desde código (Spring Boot)**:
-```java
-@Bean
-public Queue documentDeletionQueue() {
-    return QueueBuilder
-        .durable("documento.deletion.queue")
-        .withArgument("x-queue-type", "quorum")
-        .withArgument("x-quorum-initial-group-size", 3)
-        .build();
-}
-```
+## 📊 Operaciones Comunes
 
-## 📊 Operaciones
-
-### Escalar el Cluster
+### Ver estado del cluster
 
 ```bash
-# Escalar a 5 nodos
-kubectl rabbitmq manage carpeta-rabbitmq -n carpeta-ciudadana
-# Modificar replicas en el CR
-kubectl edit rabbitmqcluster carpeta-rabbitmq -n carpeta-ciudadana
+kubectl rabbitmq get carpeta-rabbitmq -n carpeta-ciudadana
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
+```
 
-# O mediante patch
+### Listar queues
+
+```bash
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl list_queues name type members
+```
+
+### Ver logs
+
+```bash
+kubectl logs -n carpeta-ciudadana carpeta-rabbitmq-server-0 -f
+```
+
+### Escalar el cluster
+
+```bash
 kubectl patch rabbitmqcluster carpeta-rabbitmq -n carpeta-ciudadana \
   --type merge -p '{"spec":{"replicas":5}}'
 ```
 
-### Monitoreo
+### Backup de configuración
 
 ```bash
-# Estado del cluster
-kubectl rabbitmq get carpeta-rabbitmq -n carpeta-ciudadana
-
-# Logs del nodo 0
-kubectl logs -n carpeta-ciudadana carpeta-rabbitmq-server-0 -f
-
-# Métricas de Prometheus
-kubectl port-forward -n carpeta-ciudadana carpeta-rabbitmq-server-0 15692:15692
-curl http://localhost:15692/metrics
-```
-
-### Backup y Restore
-
-```bash
-# Listar definitions
-kubectl rabbitmq export-definitions carpeta-rabbitmq -n carpeta-ciudadana
-
-# Backup a archivo
 kubectl rabbitmq export-definitions carpeta-rabbitmq -n carpeta-ciudadana > backup.json
-
-# Restore desde archivo
-kubectl rabbitmq import-definitions carpeta-rabbitmq -n carpeta-ciudadana backup.json
 ```
 
-### Troubleshooting
+## 🛠️ Makefile - Comandos Simplificados
+
+El servicio incluye un Makefile completo con 30+ comandos para facilitar las operaciones:
 
 ```bash
-# Ver eventos del cluster
-kubectl describe rabbitmqcluster carpeta-rabbitmq -n carpeta-ciudadana
+# Ver todos los comandos disponibles
+make help
 
-# Ver logs del operator
-kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-operator
+# Instalación rápida
+make quick-start
 
-# Reiniciar un nodo específico
-kubectl delete pod carpeta-rabbitmq-server-1 -n carpeta-ciudadana
+# Estado y monitoreo
+make status              # Ver estado general
+make list-queues         # Listar todas las queues
+make logs                # Ver logs de todos los pods
 
-# Verificar discovery de peers
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmq-diagnostics cluster_status
+# Acceso
+make credentials         # Obtener credenciales
+make port-forward        # Port-forward de servicios
+make management-ui       # Abrir Management UI
+
+# Testing
+make test-connection     # Probar conectividad
+make test-queues         # Probar con producer/consumer
+
+# Limpieza
+make uninstall           # Eliminar cluster
+make uninstall-all       # Eliminar todo (incluyendo operator)
 ```
 
-## 🧪 Testing
+## 🔗 Documentación Adicional
 
-### Test Básico de Conectividad
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**: Guía completa de despliegue paso a paso con comandos específicos para Windows y Linux
+- **[docs/QUORUM_QUEUES.md](./docs/QUORUM_QUEUES.md)**: Guía detallada sobre Quorum Queues y algoritmo Raft
+- **[docs/INSTALL_KUBECTL_PLUGIN.md](./docs/INSTALL_KUBECTL_PLUGIN.md)**: Instalación del plugin kubectl rabbitmq con krew
+- **Makefile**: Comandos helper para todas las operaciones comunes
 
-```bash
-# Desde el directorio tools/rabbitmq-tester
-cd ../../tools/rabbitmq-tester
-
-# Port-forward para testing local
-kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 &
-
-# Obtener credenciales
-export RABBITMQ_USER=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d)
-export RABBITMQ_PASSWORD=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | base64 -d)
-
-# Ejecutar producer
-python producer.py --host localhost --port 5672 --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# Ejecutar consumer
-python consumer.py --host localhost --port 5672 --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-```
-
-### Test de Failover
-
-```bash
-# 1. Iniciar consumer
-python consumer.py &
-
-# 2. Enviar mensajes
-python producer.py --count 10
-
-# 3. Simular fallo del seed node
-kubectl delete pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
-
-# 4. Verificar que el cluster sigue funcionando
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-1 -- rabbitmqctl cluster_status
-
-# 5. Enviar más mensajes (debería funcionar)
-python producer.py --count 10
-```
-
-## 🔒 Seguridad
-
-### Credenciales
-
-Las credenciales se generan automáticamente y se almacenan en secrets:
-
-```bash
-# Ver el secret
-kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o yaml
-
-# Rotar credenciales
-kubectl delete secret carpeta-rabbitmq-default-user -n carpeta-ciudadana
-kubectl rabbitmq secrets carpeta-rabbitmq -n carpeta-ciudadana
-```
-
-### TLS
-
-Para habilitar TLS, ver: https://www.rabbitmq.com/kubernetes/operator/using-operator#tls
-
-## 📚 Referencias
-
-### Documentación RabbitMQ
-
-- [RabbitMQ Kubernetes Operator Overview](https://www.rabbitmq.com/kubernetes/operator/operator-overview)
-- [RabbitMQ Cluster Formation](https://www.rabbitmq.com/docs/cluster-formation)
-- [RabbitMQ Quorum Queues](https://www.rabbitmq.com/docs/quorum-queues)
-- [Peer Discovery on Kubernetes](https://www.rabbitmq.com/docs/cluster-formation#peer-discovery-k8s)
-- [kubectl Plugin](https://www.rabbitmq.com/kubernetes/operator/kubectl-plugin)
-- [Configure Operator Defaults](https://www.rabbitmq.com/kubernetes/operator/configure-operator-defaults)
-
-### Ejemplos
-
-- [DIY Kubernetes Examples - Minikube](https://github.com/rabbitmq/diy-kubernetes-examples/tree/master/minikube)
-
-### ADRs del Proyecto
+### ADRs Relacionados
 
 - [ADR-0003: Event-Driven Architecture](../../docs/ADR/0003-eliminacion-documentos-event-driven-rabbitmq.md)
 - [ADR-0004: Quorum Queues + Kubernetes](../../docs/ADR/0004-rabbitmq-quorum-queues-arquitectura-leader-followers.md)
 - [ADR-0005: Migración a Kubernetes](../../docs/ADR/0005-ubicacion-rabbitmq-docker-compose-escalable.md)
 
-## 🗑️ Limpieza
+## 🧪 Testing
+
+Ver herramientas de testing en `tools/rabbitmq-tester/`:
 
 ```bash
-# Eliminar el cluster
+cd ../../tools/rabbitmq-tester
+
+# Port-forward primero
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 &
+
+# Terminal 1: Consumer
+python consumer.py --host localhost --user admin --password admin123
+
+# Terminal 2: Producer
+python producer.py --count 10 --host localhost --user admin --password admin123
+```
+
+## 🔒 Seguridad
+
+- **Credenciales en Secrets**: Usuario y contraseña almacenados en Kubernetes Secrets
+- **Network Policies**: Aislamiento de red a nivel de cluster
+- **RBAC**: Control de acceso basado en roles
+- **TLS opcional**: Configuración de Ingress con certificados TLS
+
+## 📈 Escalabilidad
+
+El cluster puede escalar horizontalmente de 3 a N nodos:
+
+- **3 nodos**: Desarrollo y staging (configuración actual)
+- **5 nodos**: Producción con carga media
+- **7+ nodos**: Producción con alta carga (>10K msg/s)
+
+Recomendaciones de recursos por escala:
+- **Ligera** (<1K msg/s): 500m CPU / 1Gi RAM por nodo ✅ Actual
+- **Media** (1K-10K msg/s): 1 CPU / 2Gi RAM por nodo
+- **Alta** (>10K msg/s): 2 CPU / 4Gi RAM por nodo
+
+## 🆘 Troubleshooting
+
+### Pods no inician
+
+```bash
+kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-operator
+kubectl describe rabbitmqcluster carpeta-rabbitmq -n carpeta-ciudadana
+```
+
+### Connection refused
+
+```bash
+# Verificar port-forward activo
+ps aux | grep port-forward
+
+# Reiniciar port-forward
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+```
+
+### Problemas de autenticación
+
+Ver guía completa en `DEPLOYMENT_GUIDE.md` sección de Troubleshooting.
+
+## 🗑️ Desinstalación
+
+```bash
+# Eliminar cluster (mantiene operator)
 kubectl delete -f k8s/03-rabbitmq-cluster.yaml
 
-# Eliminar storage (⚠️ pérdida de datos)
-kubectl delete -f k8s/02-storage.yaml
+# Eliminar todo incluyendo datos
+kubectl delete -f k8s/
 
-# Eliminar el operator
-kubectl delete -f k8s/01-cluster-operator.yaml
-kubectl delete -f k8s/00-namespace.yaml
+# Eliminar operator
+kubectl delete -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
 ```
+
+## 📚 Referencias Oficiales
+
+- [RabbitMQ Kubernetes Operator Overview](https://www.rabbitmq.com/kubernetes/operator/operator-overview)
+- [RabbitMQ Cluster Formation](https://www.rabbitmq.com/docs/cluster-formation)
+- [RabbitMQ Quorum Queues](https://www.rabbitmq.com/docs/quorum-queues)
+- [Peer Discovery on Kubernetes](https://www.rabbitmq.com/docs/cluster-formation#peer-discovery-k8s)
+- [kubectl Plugin Documentation](https://www.rabbitmq.com/kubernetes/operator/kubectl-plugin)
+- [Configure Operator Defaults](https://www.rabbitmq.com/kubernetes/operator/configure-operator-defaults)
+- [DIY Kubernetes Examples](https://github.com/rabbitmq/diy-kubernetes-examples/tree/master/minikube)
 
 ---
 
-**Última actualización**: 2025-11-05  
-**Mantenedor**: Equipo Carpeta Ciudadana
+**Última actualización**: 2025-11-06  
+**Mantenedor**: Equipo Carpeta Ciudadana  
+**Versión RabbitMQ**: 3.13-management  
+**Versión Operator**: Latest
