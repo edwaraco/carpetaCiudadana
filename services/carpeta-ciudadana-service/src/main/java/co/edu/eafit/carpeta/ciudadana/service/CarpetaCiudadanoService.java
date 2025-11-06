@@ -1,9 +1,6 @@
 package co.edu.eafit.carpeta.ciudadana.service;
 
-import co.edu.eafit.carpeta.ciudadana.dto.request.BuscarCarpetaRequest;
-import co.edu.eafit.carpeta.ciudadana.dto.request.CrearCarpetaRequest;
-import co.edu.eafit.carpeta.ciudadana.dto.request.ObtenerDocumentoRequest;
-import co.edu.eafit.carpeta.ciudadana.dto.request.ObtenerDocumentosCarpetaRequest;
+import co.edu.eafit.carpeta.ciudadana.dto.request.*;
 import co.edu.eafit.carpeta.ciudadana.dto.request.BuscarCarpetaRequest;
 import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentosPaginadosResponse;
 import co.edu.eafit.carpeta.ciudadana.entity.CarpetaCiudadano;
@@ -37,4 +34,7 @@ public interface CarpetaCiudadanoService {
     DocumentosPaginadosResponse obtenerDocumentosPaginados(String carpetaId, String cursor, Integer pageSize);
 
     String generarUrlDescarga(String carpetaId, String documentoId);
+
+    void actualizarEstadoDocumento(
+          String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo);
 }
