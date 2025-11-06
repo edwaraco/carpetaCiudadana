@@ -20,7 +20,7 @@ data:
       "users": [
         {
           "name": "admin",
-          "password_hash": "JDJiJDEyJFNQSGlHV1Q3eGlNbzNjZi5xZm5adU9Fc3F3RzhqREw1TUVqVzBIc3N6R0NxZW9DQXlTUlBX",
+          "password_hash": "sQUMt64OIOZp9YFvfzTN81RzzTmgZCRHnWmFGdaMlSiQk/yx",
           "hashing_algorithm": "rabbit_password_hashing_sha256",
           "tags": ["administrator"]
         }

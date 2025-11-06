@@ -185,6 +185,20 @@ If you get "Authentication failed" when trying to log in:
      kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
      ```
 
+3. If user exists, it's defined on definitions.json, but the password doesn't match:
+   - You can either change the password on runtime, export the definitions file, and update the hashed password of your local definition.
+
+    ```powershell
+    # Change password for the user. Admin used here as example
+    kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl change_password admin admin123
+
+    # Give admin user administrator tag
+    kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl set_user_tags admin administrator
+    
+    # You will see the actual hash of the password here, on password_hash field
+    $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("admin:admin123")); Invoke-RestMethod -Uri "http://localhost:15672/api/users/admin" -Headers @{Authorization="Basic $auth"} | ConvertTo-Json
+    ```
+
 ### Queues Not Created
 
 If queues are missing:
