@@ -115,19 +115,19 @@ describe('DashboardPage', () => {
   it('renders all quick action cards in Spanish', () => {
     renderWithI18n(<DashboardPageWithRouter />);
 
-    expect(screen.getByText(/Cargar Documento/i)).toBeInTheDocument();
+    // These are the actual quick actions in DashboardPage
     expect(screen.getByText(/Mis Documentos/i)).toBeInTheDocument();
     expect(screen.getByText(/Solicitudes de Documentos/i)).toBeInTheDocument();
     expect(screen.getByText(/Cambiar Operador/i)).toBeInTheDocument();
   });
 
-  it('renders quick action descriptions in Spanish', () => {
+  it('renders quick action cards', () => {
     renderWithI18n(<DashboardPageWithRouter />);
 
-    expect(screen.getByText(/Agregue un nuevo documento a su carpeta/i)).toBeInTheDocument();
-    expect(screen.getByText(/Vea y gestione sus documentos/i)).toBeInTheDocument();
-    expect(screen.getByText(/Revise solicitudes pendientes/i)).toBeInTheDocument();
-    expect(screen.getByText(/Transfiera a otro operador/i)).toBeInTheDocument();
+    // Verify quick action cards exist using data-testid (independent of translations)
+    expect(screen.getByTestId('quick-action-my-documents')).toBeInTheDocument();
+    expect(screen.getByTestId('quick-action-requested-document')).toBeInTheDocument();
+    expect(screen.getByTestId('quick-action-portability')).toBeInTheDocument();
   });
 
   it('renders recent activity section in Spanish', () => {
@@ -138,37 +138,31 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/Su actividad de documentos aparecerá aquí/i)).toBeInTheDocument();
   });
 
-  it('navigates to documents page when clicking upload document action', async () => {
+  it('navigates to documents page when clicking my documents action', async () => {
     const user = userEvent.setup();
     renderWithI18n(<DashboardPageWithRouter />);
 
-    const uploadAction = screen.getByText(/Cargar Documento/i).closest('div[role="button"]');
-    if (uploadAction) {
-      await user.click(uploadAction);
-      expect(mockNavigate).toHaveBeenCalledWith('/documents');
-    }
+    const myDocumentsAction = screen.getByTestId('quick-action-my-documents');
+    await user.click(myDocumentsAction);
+    expect(mockNavigate).toHaveBeenCalledWith('/documents');
   });
 
   it('navigates to requests page when clicking document requests action', async () => {
     const user = userEvent.setup();
     renderWithI18n(<DashboardPageWithRouter />);
 
-    const requestsAction = screen.getByText(/Solicitudes de Documentos/i).closest('div[role="button"]');
-    if (requestsAction) {
-      await user.click(requestsAction);
-      expect(mockNavigate).toHaveBeenCalledWith('/requests');
-    }
+    const requestsAction = screen.getByTestId('quick-action-requested-document');
+    await user.click(requestsAction);
+    expect(mockNavigate).toHaveBeenCalledWith('/requests');
   });
 
   it('navigates to portability page when clicking change operator action', async () => {
     const user = userEvent.setup();
     renderWithI18n(<DashboardPageWithRouter />);
 
-    const portabilityAction = screen.getByText(/Cambiar Operador/i).closest('div[role="button"]');
-    if (portabilityAction) {
-      await user.click(portabilityAction);
-      expect(mockNavigate).toHaveBeenCalledWith('/portability');
-    }
+    const portabilityAction = screen.getByTestId('quick-action-portability');
+    await user.click(portabilityAction);
+    expect(mockNavigate).toHaveBeenCalledWith('/portability');
   });
 
   it('shows badge on document requests card when there are pending requests', () => {

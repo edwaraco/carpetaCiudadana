@@ -1,18 +1,21 @@
 /**
- * Request Service Factory
+ * Request Service Factory (Document Requests)
+ *
+ * Crea el servicio de solicitudes apropiado basado en la configuración de mocks.
+ * Soporta configuración granular por contexto.
  */
 
-import { IRequestService } from './IRequestService';
+import type { IRequestService } from './IRequestService';
 import { RequestApiService } from './api/RequestApiService';
 import { RequestMockService } from './mocks/RequestMockService';
-import { isMockAPIEnabled } from '@/shared/utils/env';
+import { shouldUseMock } from '@/shared/config/mockConfig';
 
 function createRequestService(): IRequestService {
-  if (isMockAPIEnabled()) {
-    console.log('🔧 Using MOCK Request Service');
+  if (shouldUseMock('REQUESTS')) {
+    console.log('🔧 [Requests] Using MOCK Service');
     return new RequestMockService();
   }
-  console.log('🚀 Using REAL Request Service');
+  console.log('🚀 [Requests] Using REAL API Service');
   return new RequestApiService();
 }
 

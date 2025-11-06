@@ -15,6 +15,7 @@ vi.mock('../hooks/useRegisterCitizen', () => ({
     isLoading: false,
     error: null,
     data: null,
+    reset: vi.fn(),
   })),
 }));
 
@@ -23,6 +24,8 @@ vi.mock('../hooks/useValidateCitizen', () => ({
     validateCitizen: vi.fn().mockResolvedValue(undefined),
     isLoading: false,
     data: null,
+    error: null,
+    reset: vi.fn(),
   })),
 }));
 
@@ -126,6 +129,8 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: true,
       data: null,
+      error: null,
+      reset: vi.fn(),
     });
 
     const user = userEvent.setup();
@@ -146,9 +151,12 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
       data: {
+        exists: false,
         available: true,
-        currentOperator: null,
+        currentOperator: undefined,
       },
+      error: null,
+      reset: vi.fn(),
     });
 
     const user = userEvent.setup();
@@ -169,9 +177,12 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
       data: {
+        exists: true,
         available: false,
         currentOperator: 'MiCarpeta Colombia',
       },
+      error: null,
+      reset: vi.fn(),
     });
 
     const user = userEvent.setup();
@@ -195,9 +206,12 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
       data: {
+        exists: false,
         available: true,
-        currentOperator: null,
+        currentOperator: undefined,
       },
+      error: null,
+      reset: vi.fn(),
     });
 
     vi.mocked(useRegisterCitizen).mockReturnValue({
@@ -205,9 +219,21 @@ describe('RegisterCitizenForm', () => {
       isLoading: false,
       error: null,
       data: {
+        citizen: {
+          cedula: '1234567890',
+          fullName: 'Juan Pérez',
+          address: 'Calle 123',
+          personalEmail: 'juan.perez@gmail.com',
+          folderEmail: 'juan.perez@carpetacolombia.co',
+          currentOperator: 'MiCarpeta',
+          registrationDate: new Date(),
+          status: 'ACTIVE',
+          carpetaId: 'test-carpeta-1234567890',
+        },
         folderEmail: 'juan.perez@carpetacolombia.co',
         message: 'Registration successful',
       },
+      reset: vi.fn(),
     });
 
     renderWithI18n(<RegisterCitizenForm onSuccess={onSuccess} />);
@@ -229,9 +255,12 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
       data: {
+        exists: false,
         available: true,
-        currentOperator: null,
+        currentOperator: undefined,
       },
+      error: null,
+      reset: vi.fn(),
     });
 
     vi.mocked(useRegisterCitizen).mockReturnValue({
@@ -239,6 +268,7 @@ describe('RegisterCitizenForm', () => {
       isLoading: false,
       error: null,
       data: null,
+      reset: vi.fn(),
     });
 
     const user = userEvent.setup();
@@ -272,6 +302,7 @@ describe('RegisterCitizenForm', () => {
       isLoading: true,
       error: null,
       data: null,
+      reset: vi.fn(),
     });
 
     renderWithI18n(<RegisterCitizenForm />);
@@ -285,8 +316,13 @@ describe('RegisterCitizenForm', () => {
     vi.mocked(useRegisterCitizen).mockReturnValue({
       registerCitizen: vi.fn(),
       isLoading: false,
-      error: new Error('Error de conexión'),
+      error: {
+        code: 'CONNECTION_ERROR',
+        message: 'Error de conexión',
+        statusCode: 500,
+      },
       data: null,
+      reset: vi.fn(),
     });
 
     renderWithI18n(<RegisterCitizenForm />);
@@ -313,9 +349,12 @@ describe('RegisterCitizenForm', () => {
       validateCitizen: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
       data: {
+        exists: true,
         available: false,
         currentOperator: 'Otro Operador',
       },
+      error: null,
+      reset: vi.fn(),
     });
 
     const user = userEvent.setup();
@@ -341,9 +380,21 @@ describe('RegisterCitizenForm', () => {
       isLoading: false,
       error: null,
       data: {
+        citizen: {
+          cedula: '1234567890',
+          fullName: 'Maria Garcia',
+          address: 'Calle 123',
+          personalEmail: 'maria.garcia@gmail.com',
+          folderEmail,
+          currentOperator: 'MiCarpeta',
+          registrationDate: new Date(),
+          status: 'ACTIVE',
+          carpetaId: 'test-carpeta-1234567890',
+        },
         folderEmail,
         message: 'Success',
       },
+      reset: vi.fn(),
     });
 
     renderWithI18n(<RegisterCitizenForm onSuccess={onSuccess} />);

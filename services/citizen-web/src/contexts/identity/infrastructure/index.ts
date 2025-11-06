@@ -1,18 +1,21 @@
 /**
  * Identity Service Factory
+ *
+ * Crea el servicio de identidad apropiado basado en la configuración de mocks.
+ * Soporta configuración granular por contexto.
  */
 
-import { IIdentityService } from './IIdentityService';
+import type { IIdentityService } from './IIdentityService';
 import { IdentityApiService } from './api/IdentityApiService';
 import { IdentityMockService } from './mocks/IdentityMockService';
-import { isMockAPIEnabled } from '@/shared/utils/env';
+import { shouldUseMock } from '@/shared/config/mockConfig';
 
 function createIdentityService(): IIdentityService {
-  if (isMockAPIEnabled()) {
-    console.log('🔧 Using MOCK Identity Service');
+  if (shouldUseMock('IDENTITY')) {
+    console.log('🔧 [Identity] Using MOCK Service');
     return new IdentityMockService();
   }
-  console.log('🚀 Using REAL Identity Service');
+  console.log('🚀 [Identity] Using REAL API Service');
   return new IdentityApiService();
 }
 

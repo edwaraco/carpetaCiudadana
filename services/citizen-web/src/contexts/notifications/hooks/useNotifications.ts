@@ -11,7 +11,7 @@ export function useNotifications(page = 1, pageSize = 10, unreadOnly = false) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<PaginatedResponse<Notification>['pagination'] | null>(null);
+  const [pagination, setPagination] = useState<Omit<PaginatedResponse<Notification>, 'items'> | null>(null);
 
   const fetchNotifications = useCallback(async (currentPage: number) => {
     try {
@@ -24,7 +24,8 @@ export function useNotifications(page = 1, pageSize = 10, unreadOnly = false) {
 
       if (response.success && response.data) {
         setNotifications(response.data.items);
-        setPagination(response.data.pagination);
+        const { ...paginationData } = response.data;
+        setPagination(paginationData);
       } else {
         setError(response.error?.message || 'Error al cargar notificaciones');
       }

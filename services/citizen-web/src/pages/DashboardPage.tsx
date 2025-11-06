@@ -18,7 +18,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 import {
-  CloudUpload,
   Folder,
   Inbox,
   SwapHoriz,
@@ -69,15 +68,6 @@ export const DashboardPage: React.FC = () => {
   ];
 
   const quickActions = [
-    {
-      icon: <CloudUpload sx={{ fontSize: 40 }} />,
-      title: t('dashboardPage.quickActions.uploadDocument.title'),
-      description: t('dashboardPage.quickActions.uploadDocument.description'),
-      action: () => navigate('/documents'),
-      color: 'primary',
-      id: 'upload-document',
-      feature: 'UPLOAD_DOCUMENTS' as FeatureFlag,
-    },
     {
       icon: <Folder sx={{ fontSize: 40 }} />,
       title: t('dashboardPage.quickActions.myDocuments.title'),
@@ -174,6 +164,7 @@ export const DashboardPage: React.FC = () => {
                       },
                     }}
                     onClick={action.action}
+                    data-testid={`quick-action-${action.id}`}
                   >
                     <CardContent sx={{ textAlign: 'center', position: 'relative' }}>
                       {action.badge && (

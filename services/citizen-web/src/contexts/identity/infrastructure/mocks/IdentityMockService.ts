@@ -28,6 +28,7 @@ export class IdentityMockService implements IIdentityService {
       currentOperator: 'MiCarpeta',
       registrationDate: new Date('2024-01-15'),
       status: 'ACTIVE',
+      carpetaId: 'mock-carpeta-1234567890',
     };
     this.registeredCitizens.set(testCitizen.cedula, testCitizen);
   }
@@ -60,6 +61,7 @@ export class IdentityMockService implements IIdentityService {
       currentOperator: 'MiCarpeta',
       registrationDate: new Date(),
       status: 'ACTIVE',
+      carpetaId: `mock-carpeta-${request.cedula}`,
     };
 
     // Store in memory

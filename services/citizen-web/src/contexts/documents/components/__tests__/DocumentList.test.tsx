@@ -5,68 +5,103 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { DocumentList } from '../DocumentList';
-import { useDocuments, useDeleteDocument } from '../../hooks';
-import { documentService } from '../../infrastructure';
-import { Document } from '../../domain/types';
+import { DocumentList } from '@/contexts/documents/components/DocumentList';
+import { useDocuments, useDeleteDocument } from '@/contexts/documents/hooks';
+import type { Document } from '@/contexts/documents/domain/types';
 
 // Mock the hooks
-vi.mock('../../hooks', () => ({
+vi.mock('@/contexts/documents/hooks', () => ({
   useDocuments: vi.fn(),
   useDeleteDocument: vi.fn(),
-}));
-
-// Mock the documentService
-vi.mock('../../infrastructure', () => ({
-  documentService: {
-    downloadDocument: vi.fn(),
-  },
 }));
 
 interface DocumentCardProps {
   document: Document;
   onView?: (documentId: string) => void;
-  onDownload?: (documentId: string) => void;
   onDelete?: (documentId: string) => void;
 }
 
 // Mock DocumentCard component
-vi.mock('../DocumentCard', () => ({
-  DocumentCard: ({ document, onView, onDownload, onDelete }: DocumentCardProps) => (
+vi.mock('@/contexts/documents/components/DocumentCard', () => ({
+  DocumentCard: ({ document, onView, onDelete }: DocumentCardProps) => (
     <div data-testid={`document-card-${document.documentId}`}>
       <span>{document.metadata.title}</span>
-      <button onClick={() => onView?.(document.documentId)}>View</button>
-      <button onClick={() => onDownload?.(document.documentId)}>Download</button>
-      <button onClick={() => onDelete?.(document.documentId)}>Delete</button>
+      {onView && <button onClick={() => onView(document.documentId)}>View</button>}
+      {onDelete && <button onClick={() => onDelete(document.documentId)}>Delete</button>}
     </div>
   ),
 }));
 
+// Mock feature flags
+vi.mock('@/shared/config/featureFlags', () => ({
+  isFeatureEnabled: vi.fn((flag: string) => {
+    if (flag === 'DELETE_DOCUMENTS') return true;
+    if (flag === 'DOWNLOAD_DOCUMENTS') return true;
+    return false;
+  }),
+}));
+
 describe('DocumentList', () => {
   const mockRefetch = vi.fn();
+  const mockLoadMore = vi.fn();
   const mockDeleteDocument = vi.fn();
 
-  const mockDocuments = [
+  // Mock localStorage
+  const mockCarpetaId = 'test-carpeta-id-123';
+
+  const mockDocuments: Document[] = [
     {
       documentId: '1',
-      metadata: {title: 'Cedula.pdf'},
-      documentType: 'CERTIFICADO',
-      issueDate: '2024-01-15',
-      issuingEntity: 'Registraduría',
-      storageLocation: 'https://storage.example.com/doc1.pdf',
+      metadata: {
+        title: 'Cedula.pdf',
+        type: 'CEDULA',
+        context: 'CIVIL_REGISTRY',
+        issueDate: undefined,
+        issuingEntity: undefined,
+      },
+      content: {
+        format: 'PDF',
+        sizeBytes: 1024000,
+        hash: 'abc123',
+        storageUrl: 'https://storage.example.com/doc1.pdf',
+        presignedUrl: undefined,
+      },
+      certification: undefined,
+      documentStatus: 'CERTIFIED',
+      receptionDate: new Date('2024-01-15'),
     },
     {
       documentId: '2',
-      metadata: {title: 'Diploma.pdf'},
-      documentType: 'CERTIFICADO',
-      issueDate: '2023-12-20',
-      issuingEntity: 'Universidad Nacional',
-      storageLocation: 'https://storage.example.com/doc2.pdf',
+      metadata: {
+        title: 'Diploma.pdf',
+        type: 'DIPLOMA',
+        context: 'EDUCATION',
+        issueDate: undefined,
+        issuingEntity: undefined,
+      },
+      content: {
+        format: 'PDF',
+        sizeBytes: 2048000,
+        hash: 'def456',
+        storageUrl: 'https://storage.example.com/doc2.pdf',
+        presignedUrl: undefined,
+      },
+      certification: undefined,
+      documentStatus: 'TEMPORARY',
+      receptionDate: new Date('2023-12-20'),
     },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock localStorage
+    Storage.prototype.getItem = vi.fn((key: string) => {
+      if (key === 'carpetaId') return mockCarpetaId;
+      return null;
+    });
+    Storage.prototype.setItem = vi.fn();
+    Storage.prototype.removeItem = vi.fn();
 
     // Default mock implementations
     (useDeleteDocument as unknown as Mock).mockReturnValue({
@@ -80,8 +115,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: true,
+        isLoadingMore: false,
         error: null,
-        pagination: null,
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
 
@@ -97,8 +134,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: false,
+        isLoadingMore: false,
         error: errorMessage,
-        pagination: null,
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
 
@@ -113,8 +152,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: [],
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: null,
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
     });
@@ -122,22 +163,20 @@ describe('DocumentList', () => {
     it('should display empty state when no documents exist', () => {
       render(<DocumentList />);
 
-      expect(screen.getByText('No documents yet')).toBeInTheDocument();
-      expect(screen.getByText('Upload your first document to get started')).toBeInTheDocument();
+      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
 
     it('should show upload button in empty state when onUploadClick is provided', () => {
       const mockOnUploadClick = vi.fn();
       render(<DocumentList onUploadClick={mockOnUploadClick} />);
 
-      const uploadButtons = screen.getAllByText('Upload Document');
-      expect(uploadButtons.length).toBeGreaterThan(0);
+      expect(screen.getByTestId('upload-document-button-empty')).toBeInTheDocument();
     });
 
     it('should not show upload button when onUploadClick is not provided', () => {
       render(<DocumentList />);
 
-      expect(screen.queryByText('Upload Document')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('upload-document-button-empty')).not.toBeInTheDocument();
     });
   });
 
@@ -146,8 +185,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 2 },
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
     });
@@ -165,8 +206,7 @@ describe('DocumentList', () => {
       const mockOnUploadClick = vi.fn();
       render(<DocumentList onUploadClick={mockOnUploadClick} />);
 
-      const uploadButton = screen.getAllByText('Upload Document')[0];
-      expect(uploadButton).toBeInTheDocument();
+      expect(screen.getByTestId('upload-document-button')).toBeInTheDocument();
     });
 
     it('should call onUploadClick when upload button is clicked', async () => {
@@ -175,63 +215,82 @@ describe('DocumentList', () => {
 
       render(<DocumentList onUploadClick={mockOnUploadClick} />);
 
-      const uploadButton = screen.getAllByText('Upload Document')[0];
+      const uploadButton = screen.getByTestId('upload-document-button');
       await user.click(uploadButton);
 
       expect(mockOnUploadClick).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('Pagination', () => {
-    it('should display pagination when there are multiple pages', () => {
+  describe('Cursor-based pagination', () => {
+    it('should display load more button when hasMore is true', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 3, pageSize: 10, totalItems: 25 },
+        hasMore: true,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
 
       render(<DocumentList />);
 
-      // MUI Pagination renders buttons for each page
-      expect(screen.getByRole('navigation')).toBeInTheDocument();
+      expect(screen.getByTestId('load-more-button')).toBeInTheDocument();
     });
 
-    it('should not display pagination when there is only one page', () => {
+    it('should not display load more button when hasMore is false', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 2 },
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
 
       render(<DocumentList />);
 
-      expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('load-more-button')).not.toBeInTheDocument();
     });
 
-    it('should call refetch with new page when pagination is changed', async () => {
+    it('should call loadMore when load more button is clicked', async () => {
       const user = userEvent.setup();
 
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 3, pageSize: 10, totalItems: 25 },
+        hasMore: true,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
 
       render(<DocumentList />);
 
-      // Click on page 2 button
-      const page2Button = screen.getByRole('button', { name: /go to page 2/i });
-      await user.click(page2Button);
+      const loadMoreButton = screen.getByTestId('load-more-button');
+      await user.click(loadMoreButton);
 
-      await waitFor(() => {
-        expect(mockRefetch).toHaveBeenCalledWith(2);
+      expect(mockLoadMore).toHaveBeenCalledTimes(1);
+    });
+
+    it('should disable load more button when loading more', () => {
+      (useDocuments as unknown as Mock).mockReturnValue({
+        documents: mockDocuments,
+        isLoading: false,
+        isLoadingMore: true,
+        error: null,
+        hasMore: true,
+        loadMore: mockLoadMore,
+        refetch: mockRefetch,
       });
+
+      render(<DocumentList />);
+
+      const loadMoreButton = screen.getByTestId('load-more-button');
+      expect(loadMoreButton).toBeDisabled();
     });
   });
 
@@ -240,8 +299,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 2 },
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
     });
@@ -257,31 +318,6 @@ describe('DocumentList', () => {
 
       expect(mockOnViewDocument).toHaveBeenCalledWith('1');
     });
-
-    it('should handle download action', async () => {
-      const user = userEvent.setup();
-      const mockBlob = new Blob(['test'], { type: 'application/pdf' });
-
-      (documentService.downloadDocument as unknown as Mock).mockResolvedValue({
-        success: true,
-        data: mockBlob,
-      });
-
-      // Mock URL.createObjectURL and other DOM methods
-      const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
-      const mockRevokeObjectURL = vi.fn();
-      global.URL.createObjectURL = mockCreateObjectURL;
-      global.URL.revokeObjectURL = mockRevokeObjectURL;
-
-      render(<DocumentList />);
-
-      const downloadButton = screen.getAllByText('Download')[0];
-      await user.click(downloadButton);
-
-      await waitFor(() => {
-        expect(documentService.downloadDocument).toHaveBeenCalledWith('1');
-      });
-    });
   });
 
   describe('Delete confirmation dialog', () => {
@@ -289,8 +325,10 @@ describe('DocumentList', () => {
       (useDocuments as unknown as Mock).mockReturnValue({
         documents: mockDocuments,
         isLoading: false,
+        isLoadingMore: false,
         error: null,
-        pagination: { currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 2 },
+        hasMore: false,
+        loadMore: mockLoadMore,
         refetch: mockRefetch,
       });
     });
@@ -303,8 +341,7 @@ describe('DocumentList', () => {
       const deleteButton = screen.getAllByText('Delete')[0];
       await user.click(deleteButton);
 
-      expect(screen.getByText('Delete Document')).toBeInTheDocument();
-      expect(screen.getByText(/Are you sure you want to delete this document/i)).toBeInTheDocument();
+      expect(screen.getByTestId('delete-dialog')).toBeInTheDocument();
     });
 
     it('should close dialog when cancel is clicked', async () => {
@@ -317,11 +354,11 @@ describe('DocumentList', () => {
       await user.click(deleteButton);
 
       // Click cancel
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      const cancelButton = screen.getByTestId('delete-cancel-button');
       await user.click(cancelButton);
 
       await waitFor(() => {
-        expect(screen.queryByText('Delete Document')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('delete-dialog')).not.toBeInTheDocument();
       });
     });
 
@@ -336,12 +373,12 @@ describe('DocumentList', () => {
       await user.click(deleteButton);
 
       // Click delete
-      const confirmButton = screen.getByRole('button', { name: /^delete$/i });
+      const confirmButton = screen.getByTestId('delete-confirm-button');
       await user.click(confirmButton);
 
       await waitFor(() => {
         expect(mockDeleteDocument).toHaveBeenCalledWith('1');
-        expect(mockRefetch).toHaveBeenCalledWith(1);
+        expect(mockRefetch).toHaveBeenCalled();
       });
     });
 
@@ -362,9 +399,9 @@ describe('DocumentList', () => {
       const deleteButton = screen.getAllByText('Delete')[0];
       await user.click(deleteButton);
 
-      // Check if buttons are disabled
-      expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
-      expect(screen.getByRole('button', { name: /deleting/i })).toBeDisabled();
+      // Check if buttons are disabled using data-testid
+      expect(screen.getByTestId('delete-cancel-button')).toBeDisabled();
+      expect(screen.getByTestId('delete-confirm-button')).toBeDisabled();
     });
   });
 });

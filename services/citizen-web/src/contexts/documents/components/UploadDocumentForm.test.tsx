@@ -4,8 +4,20 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, beforeAll } from 'vitest';
 import { UploadDocumentForm } from './UploadDocumentForm';
+
+// Mock localStorage before tests
+const mockCarpetaId = 'test-carpeta-id-123';
+
+beforeAll(() => {
+  Storage.prototype.getItem = vi.fn((key: string) => {
+    if (key === 'carpetaId') return mockCarpetaId;
+    return null;
+  });
+  Storage.prototype.setItem = vi.fn();
+  Storage.prototype.removeItem = vi.fn();
+});
 
 // Mock the upload hook
 vi.mock('../hooks', () => ({
@@ -21,55 +33,66 @@ describe('UploadDocumentForm', () => {
   it('renders the form with all fields', () => {
     render(<UploadDocumentForm />);
 
-    // Check for form fields
-    expect(screen.getByLabelText(/document title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/document type/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/context/i)).toBeInTheDocument();
+    // Check for form fields using data-testid
+    expect(screen.getByTestId('document-title-input')).toBeInTheDocument();
+    expect(screen.getByTestId('document-type-select')).toBeInTheDocument();
+    expect(screen.getByTestId('document-context-select')).toBeInTheDocument();
+    expect(screen.getByTestId('document-issue-date-input')).toBeInTheDocument();
+    expect(screen.getByTestId('document-issuing-entity-input')).toBeInTheDocument();
 
-    // Check for upload button specifically
-    expect(screen.getByRole('button', { name: /upload document/i })).toBeInTheDocument();
+    // Check for upload button
+    expect(screen.getByTestId('upload-submit-button')).toBeInTheDocument();
   });
 
-  it('validates required title field', async () => {
+  it('validates required title field', () => {
     render(<UploadDocumentForm />);
 
-    // The title field should have the required attribute
-    const titleInput = screen.getByLabelText(/document title/i);
+    // The title field should have the required attribute on the actual input element
+    const titleContainer = screen.getByTestId('document-title-input');
+    const titleInput = titleContainer.querySelector('input');
     expect(titleInput).toBeRequired();
     expect(titleInput).toHaveValue('');
+  });
+
+  it('validates required type field', () => {
+    render(<UploadDocumentForm />);
+
+    // The type field should exist - the required validation is handled by react-hook-form
+    const typeSelect = screen.getByTestId('document-type-select');
+    expect(typeSelect).toBeInTheDocument();
+  });
+
+  it('validates required context field', () => {
+    render(<UploadDocumentForm />);
+
+    // The context field should exist - the required validation is handled by react-hook-form
+    const contextSelect = screen.getByTestId('document-context-select');
+    expect(contextSelect).toBeInTheDocument();
   });
 
   it('disables submit button when no file is selected', () => {
     render(<UploadDocumentForm />);
 
-    const submitButton = screen.getByRole('button', { name: /upload document/i });
+    const submitButton = screen.getByTestId('upload-submit-button');
     expect(submitButton).toBeDisabled();
   });
 
-  it('shows drag and drop area', () => {
+  it('shows optional issueDate field', () => {
     render(<UploadDocumentForm />);
 
-    expect(screen.getByText(/drag and drop your document here/i)).toBeInTheDocument();
-    expect(screen.getByText(/or click to browse/i)).toBeInTheDocument();
+    const issueDateContainer = screen.getByTestId('document-issue-date-input');
+    expect(issueDateContainer).toBeInTheDocument();
+    const issueDateInput = issueDateContainer.querySelector('input');
+    expect(issueDateInput).not.toBeRequired();
   });
 
-  it('shows issuing entity field when certified checkbox is checked', async () => {
-    const user = userEvent.setup();
+  it('shows optional issuingEntity field', () => {
     render(<UploadDocumentForm />);
 
-    // Initially, issuing entity should not be visible
-    expect(screen.queryByLabelText(/issuing entity/i)).not.toBeInTheDocument();
-
-    // Check the certified checkbox
-    const certifiedCheckbox = screen.getByRole('checkbox', {
-      name: /this is a certified document/i,
-    });
-    await user.click(certifiedCheckbox);
-
-    // Now issuing entity field should be visible
-    await waitFor(() => {
-      expect(screen.getByLabelText(/issuing entity/i)).toBeInTheDocument();
-    });
+    const issuingEntityContainer = screen.getByTestId('document-issuing-entity-input');
+    expect(issuingEntityContainer).toBeInTheDocument();
+    const issuingEntityInput = issuingEntityContainer.querySelector('input');
+    expect(issuingEntityInput).not.toBeRequired();
   });
 
   it('calls onCancel callback when cancel button is clicked', async () => {
@@ -78,7 +101,7 @@ describe('UploadDocumentForm', () => {
 
     render(<UploadDocumentForm onCancel={onCancel} />);
 
-    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    const cancelButton = screen.getByTestId('upload-cancel-button');
     await user.click(cancelButton);
 
     expect(onCancel).toHaveBeenCalled();

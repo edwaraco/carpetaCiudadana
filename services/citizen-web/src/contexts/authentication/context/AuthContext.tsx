@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../infrastructure';
 import { Citizen } from '../../identity/domain/types';
-import { LoginRequest, MFAVerificationRequest } from '../domain/types';
+import { LoginRequest, MFAVerificationRequest, MFAType } from '../domain/types';
 import { ApiError } from '../../../shared/utils/api.types';
 
 interface AuthContextValue {
@@ -22,7 +22,7 @@ interface AuthContextValue {
 
   // Methods
   login: (request: LoginRequest) => Promise<void>;
-  verifyMFA: (code: string, type: string) => Promise<void>;
+  verifyMFA: (code: string, type: MFAType) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }

@@ -8,7 +8,7 @@ export interface ApiResponse<T> {
   data?: T;
   error?: ApiError;
   message?: string;
-  timestamp: Date;
+  timestamp?: Date;
 }
 
 export interface ApiError {
