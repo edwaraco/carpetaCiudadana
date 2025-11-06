@@ -17,13 +17,28 @@ data:
       "rabbitmq_version": "3.13.0",
       "product_name": "RabbitMQ",
       "product_version": "3.13.0",
-      "users": [],
+      "users": [
+        {
+          "name": "admin",
+          "password_hash": "sQUMt64OIOZp9YFvfzTN81RzzTmgZCRHnWmFGdaMlSiQk/yx",
+          "hashing_algorithm": "rabbit_password_hashing_sha256",
+          "tags": ["administrator"]
+        }
+      ],
       "vhosts": [
         {
           "name": "/"
         }
       ],
-      "permissions": [],
+      "permissions": [
+        {
+          "user": "admin",
+          "vhost": "/",
+          "configure": ".*",
+          "write": ".*",
+          "read": ".*"
+        }
+      ],
       "topic_permissions": [],
       "parameters": [],
       "global_parameters": [],

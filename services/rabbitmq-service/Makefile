@@ -1,5 +1,6 @@
 # Makefile for RabbitMQ Service Management
 # Simplifies kubectl commands for RabbitMQ Cluster operations
+# ... well, not that much
 
 # Variables
 NAMESPACE := carpeta-ciudadana
