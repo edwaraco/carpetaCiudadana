@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-RabbitMQ Producer - Envía eventos de prueba al cluster
+RabbitMQ Producer - Envía mensajes de prueba al cluster
 
-Este script publica eventos aleatorios a las queues del sistema Carpeta Ciudadana
+Este script publica mensajes a las queues del sistema Carpeta Ciudadana
 para validar el funcionamiento del cluster RabbitMQ con Quorum Queues.
 
 Uso:
     python producer.py
     python producer.py --count 10
-    python producer.py --queue documento.deletion.queue
+    python producer.py --queue document_verification_request
 """
 
 import pika
@@ -23,8 +23,6 @@ import sys
 from pika.exceptions import AMQPConnectionError, UnroutableError
 
 # Configuración de conexión
-# Para Kubernetes, usar port-forward: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
-# Para obtener credenciales K8s: kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d
 RABBITMQ_HOST = 'localhost'
 RABBITMQ_PORT = 5672
 RABBITMQ_USER = 'admin'
@@ -32,37 +30,41 @@ RABBITMQ_PASS = 'admin123'
 
 # Queues disponibles del sistema
 AVAILABLE_QUEUES = [
-    'documento.deletion.queue',
-    'minio.cleanup.queue',
-    'metadata.cleanup.queue'
+    'document_verification_request',
+    'document_verified_response',
+    'test_queue'
 ]
 
-# Textos aleatorios para generar eventos
-SAMPLE_TEXTS = [
-    "Eliminación de documento temporal solicitada por el ciudadano",
-    "Limpieza de archivo en MinIO bucket carpeta-ciudadana-docs",
-    "Actualización de metadata en DynamoDB tras eliminación",
-    "Procesamiento de evento de portabilidad de documentos",
-    "Sincronización de estado entre MinIO y DynamoDB",
-    "Notificación de cambio de estado de documento",
-    "Validación de integridad de documento certificado",
-    "Auditoría de acceso a carpeta ciudadana",
-    "Registro de operación batch de documentos",
-    "Evento de replicación entre regiones AWS"
+# Datos de ejemplo para document_verification_request
+DOCUMENT_TITLES = [
+    "Diploma Grado",
+    "Certificado Laboral",
+    "Cedula de Ciudadania",
+    "Pasaporte",
+    "Licencia de Conduccion",
+    "Titulo Profesional",
+    "Certificado Medico",
+    "Extracto Bancario"
 ]
 
-DOCUMENT_TYPES = [
-    "CEDULA", "PASAPORTE", "REGISTRO_CIVIL", "LICENCIA_CONDUCCION",
-    "TARJETA_PROFESIONAL", "TITULO_UNIVERSITARIO", "CERTIFICADO_LABORAL",
-    "EXTRACTO_BANCARIO", "FACTURA_SERVICIOS", "CERTIFICADO_MEDICO"
+AWS_REGIONS = ["us-east-1", "us-west-2", "sa-east-1"]
+BUCKET_NAMES = ["carpeta-ciudadana-docs", "carpeta-ciudadana-prod", "carpeta-docs"]
+
+# Respuestas de ejemplo para document_verified_response
+VERIFICATION_STATUSES = [200, 400, 500]
+SUCCESS_MESSAGES = [
+    "ha sido autenticado exitosamente",
+    "fue verificado correctamente",
+    "paso la validacion satisfactoriamente"
+]
+ERROR_MESSAGES = [
+    "no pudo ser verificado",
+    "fallo la autenticacion",
+    "presenta inconsistencias"
 ]
 
-OPERATIONS = [
-    "DELETE", "CLEANUP", "UPDATE", "SYNC", "VALIDATE", "AUDIT", "REPLICATE"
-]
 
-
-def create_random_event(event_type="documento.deletion.requested"):
+def create_verification_request():
     """
     Crea un evento aleatorio con estructura completa
     """
