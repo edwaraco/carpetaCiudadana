@@ -60,15 +60,6 @@ services:
       - dynamodb-local
     restart: unless-stopped
 
-  # ==========================================
-  # Message Broker - RabbitMQ
-  # ==========================================
-  # RabbitMQ has been migrated to Kubernetes
-  # See: services/rabbitmq-service/README.md
-  # ADR-0004: RabbitMQ Quorum Queues en Kubernetes
-  # ADR-0005: Migración de Docker Compose a Kubernetes
-  # ==========================================
-
   # Microservicio de Carpeta Ciudadana
   carpeta-ciudadana-service:
     build:
@@ -79,24 +70,14 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      # DynamoDB
       - AWS_DYNAMODB_ENDPOINT=http://dynamodb-local:8000
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
-      # MinIO
       - MINIO_ENDPOINT=http://192.168.20.83:9000
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
-      # RabbitMQ - Now in Kubernetes
-      # For local development, use port-forward:
-      # kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
-      # Then configure: SPRING_RABBITMQ_HOST=host.docker.internal
-      # SPRING_RABBITMQ_HOST=host.docker.internal
-      # SPRING_RABBITMQ_PORT=5672
-      # SPRING_RABBITMQ_USERNAME=<from-k8s-secret>
-      # SPRING_RABBITMQ_PASSWORD=<from-k8s-secret>
     depends_on:
       minio:
         condition: service_healthy
