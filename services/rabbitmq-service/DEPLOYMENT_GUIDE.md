@@ -396,7 +396,7 @@ xdg-open http://localhost:15672
 
 ### Verificar Acceso al UI
 
-1. Abrir http://localhost:15672 en tu navegador
+1. Abrir <http://localhost:15672> en tu navegador
 2. Ingresar credenciales (admin/admin123)
 3. Deberías ver el dashboard con:
    - **Overview**: 3 nodos running
@@ -574,6 +574,7 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
 **Soluciones comunes:**
 
 1. **Recursos insuficientes:**
+
    ```bash
    # Ver recursos disponibles
    kubectl top nodes
@@ -583,6 +584,7 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    ```
 
 2. **Problemas con PVC:**
+
    ```bash
    # Ver estado de PVCs
    kubectl get pvc -n carpeta-ciudadana
@@ -592,6 +594,7 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    ```
 
 3. **Problemas de red:**
+
    ```bash
    # Verificar que los pods puedan comunicarse entre sí
    kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- ping carpeta-rabbitmq-server-1.carpeta-rabbitmq-nodes.carpeta-ciudadana
@@ -767,44 +770,52 @@ kubectl get pods -n carpeta-ciudadana -w
 ### Fun Facts y Tips
 
 **1. Peer Discovery Automático**
-   - El pod `-0` siempre es el seed node
-   - Los demás pods esperan a que `-0` esté ready antes de unirse
-   - El discovery usa Kubernetes API (no requiere configuración manual)
+
+- El pod `-0` siempre es el seed node
+- Los demás pods esperan a que `-0` esté ready antes de unirse
+- El discovery usa Kubernetes API (no requiere configuración manual)
 
 **2. Persistencia Inteligente**
-   - Cada nodo tiene su propio PVC (Persistent Volume Claim)
-   - Los datos persisten incluso si eliminas los pods
-   - Para borrar datos, debes eliminar los PVCs explícitamente
+
+- Cada nodo tiene su propio PVC (Persistent Volume Claim)
+- Los datos persisten incluso si eliminas los pods
+- Para borrar datos, debes eliminar los PVCs explícitamente
 
 **3. Quorum = Mayoría Simple**
-   - Con 3 nodos: Quorum = 2 (⌈(3+1)/2⌉)
-   - Puedes perder 1 nodo sin pérdida de datos
-   - Si pierdes 2 nodos, el cluster queda read-only
+
+- Con 3 nodos: Quorum = 2 (⌈(3+1)/2⌉)
+- Puedes perder 1 nodo sin pérdida de datos
+- Si pierdes 2 nodos, el cluster queda read-only
 
 **4. Replication Factor**
-   - RF = 2 significa que cada mensaje está en 2 nodos
-   - No confundir con "x-quorum-initial-group-size" (número de réplicas)
-   - El quorum siempre es mayoría simple, independiente del RF
+
+- RF = 2 significa que cada mensaje está en 2 nodos
+- No confundir con "x-quorum-initial-group-size" (número de réplicas)
+- El quorum siempre es mayoría simple, independiente del RF
 
 **5. Leader Election**
-   - Raft elige un líder por queue (no por cluster)
-   - El líder maneja todas las escrituras para esa queue
-   - Si el líder falla, se elige uno nuevo en <5 segundos
+
+- Raft elige un líder por queue (no por cluster)
+- El líder maneja todas las escrituras para esa queue
+- Si el líder falla, se elige uno nuevo en <5 segundos
 
 **6. Dead Letter Queues (DLQ)**
-   - Mensajes que fallan 3 veces van a DLQ automáticamente
-   - Las DLQs son también quorum queues para durabilidad
-   - Requieren intervención manual para reprocesar
+
+- Mensajes que fallan 3 veces van a DLQ automáticamente
+- Las DLQs son también quorum queues para durabilidad
+- Requieren intervención manual para reprocesar
 
 **7. Management UI Tips**
-   - El botón "Get messages" consume mensajes (no es peek)
-   - Usa "Publish message" para testing rápido
-   - Las estadísticas se actualizan cada 5 segundos
+
+- El botón "Get messages" consume mensajes (no es peek)
+- Usa "Publish message" para testing rápido
+- Las estadísticas se actualizan cada 5 segundos
 
 **8. Cluster Partition Handling**
-   - Configurado en modo "autoheal"
-   - Si hay split-brain, el cluster se auto-repara
-   - La partición minoritaria pierde sus datos
+
+- Configurado en modo "autoheal"
+- Si hay split-brain, el cluster se auto-repara
+- La partición minoritaria pierde sus datos
 
 ---
 
@@ -814,8 +825,8 @@ kubectl get pods -n carpeta-ciudadana -w
 - **docs/QUORUM_QUEUES.md**: Guía detallada de Quorum Queues
 - **docs/INSTALL_KUBECTL_PLUGIN.md**: Instalación de kubectl rabbitmq plugin
 - **Makefile**: 30+ comandos helper simplificados
-- **RabbitMQ Docs**: https://www.rabbitmq.com/docs
-- **Kubernetes Operator**: https://www.rabbitmq.com/kubernetes/operator/operator-overview
+- **RabbitMQ Docs**: <https://www.rabbitmq.com/docs>
+- **Kubernetes Operator**: <https://www.rabbitmq.com/kubernetes/operator/operator-overview>
 
 ---
 
