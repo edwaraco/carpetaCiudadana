@@ -138,6 +138,19 @@ kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
   arguments='{"x-queue-type":"quorum","x-quorum-initial-group-size":3}'
 ```
 
+### Otros
+```bash
+kubectl logs -n carpeta-ciudadana <pod-name>
+
+kubectl describe pods -n carpeta-ciudadana carpeta-rabbitmq-server-0
+
+kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp'
+
+kubectl get pvc -n carpeta-ciudadana
+
+kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-operator --tail=50
+```
+
 ---
 
 **¿Necesitas ayuda?** Ver documentación completa en `README.md`
