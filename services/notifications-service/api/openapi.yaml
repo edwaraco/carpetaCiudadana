@@ -1,0 +1,90 @@
+openapi: 3.0.0
+info:
+  title: Servicio de Notificaciones por Correo
+  version: 1.0.0
+  description: Microservicio dedicado exclusivamente al envío de correos electrónicos. Requiere autenticación Bearer Token.
+servers:
+  - url: https://notifications.service/api
+    description: Entorno de Producción
+paths:
+  /v1/email/send:
+    post:
+      summary: Envía un correo electrónico con los detalles proporcionados.
+      tags:
+        - Correo
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: header
+          name: X-Request-ID
+          schema:
+            type: string
+          required: false
+          description: Identificador único para trazar la solicitud a través de múltiples servicios.
+          example: 98f1a7b3-4c9d-4e0f-9f1c-6a8d7e5b2c1a
+        - in: header
+          name: X-Client-ID
+          schema:
+            type: string
+          required: false
+          description: Identificador del Operador que realiza la solicitud. La identidad principal se valida en el JWT.
+          example: OPERADOR-001
+          
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - senderEmail
+                - recipientEmail
+                - subject
+                - message
+              properties:
+                senderEmail:
+                  type: string
+                  format: email
+                  description: Correo electrónico del remitente. Debe estar configurado en el servidor SMTP.
+                  example: "no-reply@mi-dominio.com"
+                recipientEmail:
+                  type: string
+                  format: email
+                  description: Correo electrónico del destinatario.
+                  example: "ciudadano@ejemplo.com"
+                subject:
+                  type: string
+                  description: Título o asunto del correo electrónico.
+                  example: "Confirmación de Autenticación MFA"
+                message:
+                  type: string
+                  description: Cuerpo del mensaje (puede ser texto plano o HTML).
+                  example: "Su código de verificación es 123456."
+      responses:
+        '202':
+          description: Solicitud de envío aceptada (procesamiento asíncrono).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "accepted"
+                  trackingId:
+                    type: string
+                    description: Identificador para rastrear el correo.
+                    example: "email-xyz123"
+        '400':
+          description: Datos de entrada inválidos (ej. formato de correo incorrecto).
+        '401':
+          description: No autorizado. Falta el token Bearer o el token es inválido/expirado.
+        '500':
+          description: Error interno del servidor de correo.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

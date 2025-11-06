@@ -1,0 +1,14 @@
+# Environment files
+.env
+sendgrid.env
+
+# Compiled binaries
+notifications-service
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
