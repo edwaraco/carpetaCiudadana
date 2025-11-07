@@ -8,9 +8,10 @@ metadata:
   labels:
     app: carpeta-ciudadana
     component: rabbitmq
-provisioner: kubernetes.io/host-path  # generic, works on minikube and docker desktop
+provisioner: docker.io/hostpath  # for Docker Desktop only
+#provisioner: kubernetes.io/host-path  # generic, works on minikube and docker desktop
 #provisioner: k8s.io/minikube-hostpath  # for minikube only
-#provisioner: kubernetes.io/no-provisioner # for manual PVs or docker desktop
+#provisioner: kubernetes.io/no-provisioner # for manual PVs
 # For cloud providers, use:
 # - kubernetes.io/aws-ebs (AWS)
 # - kubernetes.io/gce-pd (GCP)
