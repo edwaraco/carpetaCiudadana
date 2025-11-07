@@ -106,6 +106,121 @@ docker build -t document-authentication-service:latest .
 docker run -p 8083:8083 --env-file .env document-authentication-service:latest
 ```
 
+### Con Kubernetes
+
+Este servicio puede desplegarse en Kubernetes para facilitar su integración con RabbitMQ y otros microservicios del ecosistema Carpeta Ciudadana.
+
+#### Prerrequisitos
+
+- Kubernetes cluster (minikube, k3s, GKE, EKS, etc.)
+- kubectl configurado
+- Namespace `carpeta-ciudadana` creado
+- RabbitMQ desplegado como `carpeta-rabbitmq` en el mismo namespace
+
+#### Despliegue Automático
+
+El servicio incluye un script de despliegue automatizado:
+
+```bash
+cd services/document-authentication-service
+./k8s/deploy.sh
+```
+
+Este script realiza los siguientes pasos:
+1. Construye la imagen Docker del servicio
+2. Carga la imagen en minikube (o cluster local)
+3. Aplica los manifiestos de ConfigMap
+4. Aplica los manifiestos de Deployment y Services
+5. Espera a que el pod esté listo
+6. Muestra las URLs de acceso y comandos útiles
+
+#### Despliegue Manual
+
+Si prefieres desplegar manualmente:
+
+```bash
+# 1. Construir la imagen Docker
+docker build -t document-authentication-service:latest .
+
+# 2. Cargar imagen en minikube (solo para minikube)
+minikube image load document-authentication-service:latest
+
+# 3. Aplicar manifiestos
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/deployment.yaml
+
+# 4. Verificar el despliegue
+kubectl get pods -n carpeta-ciudadana -l app=document-authentication-service
+```
+
+#### Configuración de Kubernetes
+
+La configuración se gestiona mediante un ConfigMap (`k8s/configmap.yaml`) con las siguientes variables:
+
+- **SERVICE_PORT**: Puerto del servicio (8083)
+- **RABBITMQ_URL**: URL de conexión a RabbitMQ (apunta a `carpeta-rabbitmq:5672`)
+- **DOCUMENT_AUTHENTICATED_QUEUE**: Cola para publicar eventos
+- **CARPETA_CIUDADANA_SERVICE_URL**: URL interna del servicio carpeta-ciudadana
+- **GOV_CARPETA_SERVICE_URL**: URL de Gov Carpeta API
+- **JWT_SECRET_KEY**: Clave secreta para validación de JWT
+- **Circuit Breaker settings**: Configuración de resiliencia
+
+#### Servicios Expuestos
+
+El despliegue crea dos servicios:
+
+1. **ClusterIP** (Interno): `document-authentication-service.carpeta-ciudadana.svc.cluster.local:8083`
+   - Para comunicación entre microservicios dentro del cluster
+
+2. **NodePort** (Externo): `<minikube-ip>:30093`
+   - Para acceso desde fuera del cluster (desarrollo/testing)
+
+#### Verificación del Despliegue
+
+```bash
+# Ver estado de pods
+kubectl get pods -n carpeta-ciudadana -l app=document-authentication-service
+
+# Ver logs
+kubectl logs -n carpeta-ciudadana -l app=document-authentication-service -f
+
+# Probar health check (desde fuera del cluster)
+curl http://$(minikube ip):30093/api/v1/health
+
+# Probar health check (desde dentro del cluster)
+kubectl run -it --rm debug --image=curlimages/curl --restart=Never -n carpeta-ciudadana -- \
+  curl http://document-authentication-service:8083/api/v1/health
+```
+
+#### Integración con RabbitMQ
+
+El servicio se conecta automáticamente a RabbitMQ usando la URL configurada en el ConfigMap:
+
+```
+amqp://admin:admin123@carpeta-rabbitmq:5672/
+```
+
+**Nota**: Asegúrate de que RabbitMQ esté desplegado antes de iniciar este servicio. El nombre del servicio debe ser `carpeta-rabbitmq` en el namespace `carpeta-ciudadana`.
+
+La cola utilizada es:
+- **document_authenticated_response**: Cola donde se publican los eventos de autenticación completados
+
+#### Recursos
+
+El servicio está configurado con los siguientes límites de recursos:
+
+- **Requests**: 128Mi RAM, 100m CPU
+- **Limits**: 512Mi RAM, 500m CPU
+
+Estos valores pueden ajustarse en `k8s/deployment.yaml` según las necesidades.
+
+#### Health Checks
+
+- **Readiness Probe**: Verifica que el servicio esté listo (delay inicial: 15s, período: 5s)
+- **Liveness Probe**: Detecta si el servicio está vivo (delay inicial: 30s, período: 10s)
+
+Ambos probes utilizan el endpoint `/api/v1/health`.
+
 ## Configuración
 
 Todas las configuraciones se manejan a través de variables de entorno definidas en el archivo `.env`:

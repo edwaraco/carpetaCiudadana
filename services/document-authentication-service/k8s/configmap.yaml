@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: document-authentication-config
+  namespace: carpeta-ciudadana
+data:
+  # Service Configuration
+  SERVICE_PORT: "8083"
+  SERVICE_NAME: "document-authentication-service"
+  LOG_LEVEL: "INFO"
+  
+  # RabbitMQ Configuration
+  RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672/"
+  DOCUMENT_AUTHENTICATED_QUEUE: "document_authenticated_response"
+  
+  # External Services
+  CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service.carpeta-ciudadana.svc.cluster.local:8082"
+  GOV_CARPETA_SERVICE_URL: "https://govcarpeta-apis-4905ff3c005b.herokuapp.com"
+  
+  # JWT Configuration (same as carpeta-ciudadana-service)
+  JWT_SECRET_KEY: "your-secret-key-here"
+  JWT_ALGORITHM: "HS256"
+  
+  # Circuit Breaker Configuration
+  CIRCUIT_BREAKER_FAILURE_THRESHOLD: "5"
+  CIRCUIT_BREAKER_TIMEOUT_SECONDS: "60"
+  CIRCUIT_BREAKER_RECOVERY_TIMEOUT: "30"
