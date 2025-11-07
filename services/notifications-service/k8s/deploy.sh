@@ -10,7 +10,7 @@ if [ -f "../.env" ]; then
     if [ -n "$SENDGRID_KEY" ]; then
         echo "🔧 Updating configmap with real SendGrid API key..."
         # Create a temporary configmap with the real API key
-        sed "s/SG\.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING/$SENDGRID_KEY/g" k8s/configmap.yaml > /tmp/configmap-temp.yaml
+        sed "s/SG\.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING/$SENDGRID_KEY/g" configmap.yaml > /tmp/configmap-temp.yaml
         USE_TEMP_CONFIG=true
     else
         echo "⚠️  No SendGrid API key found in .env file"
@@ -33,11 +33,11 @@ if [ "$USE_TEMP_CONFIG" = true ]; then
     kubectl apply -f /tmp/configmap-temp.yaml
     rm /tmp/configmap-temp.yaml
 else
-    kubectl apply -f k8s/configmap.yaml
+    kubectl apply -f configmap.yaml
 fi
 
 echo "🚀 Deploying notifications-service..."
-kubectl apply -f k8s/deployment.yaml
+kubectl apply -f deployment.yaml
 
 echo "⏳ Waiting for notifications-service to be ready..."
 kubectl wait --for=condition=ready pod -l app=notifications-service -n carpeta-ciudadana --timeout=120s

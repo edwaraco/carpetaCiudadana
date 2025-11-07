@@ -38,9 +38,12 @@ func main() {
 	// Initialize RabbitMQ publisher
 	publisher, err := rabbitmq.NewPublisher(&cfg.RabbitMQ)
 	if err != nil {
-		log.Fatalf("ERROR: Failed to initialize RabbitMQ publisher: %v", err)
+		log.Printf("WARNING: Failed to initialize RabbitMQ publisher: %v", err)
+		log.Printf("WARNING: Service will continue without message publishing functionality")
+		publisher = nil
+	} else {
+		defer publisher.Close()
 	}
-	defer publisher.Close()
 
 	// Initialize handlers
 	h := handlers.NewHandlers(db, jwtService, publisher, cfg)

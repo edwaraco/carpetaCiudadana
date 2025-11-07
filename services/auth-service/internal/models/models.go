@@ -115,7 +115,7 @@ type UserRegistrationEvent struct {
 	Token           string      `json:"token"`            // Verification token
 	VerificationURL string      `json:"verification_url"` // Complete frontend URL
 	ExpiresAt       time.Time   `json:"expires_at"`       // Token expiration
-	RoutingKey      string      `json:"routing_key"`      // "user.registration.email"
+	RoutingKey      string      `json:"routing_key"`      // "notifications.send"
 }
 
 type UserRegistrationCompleteEvent struct {
@@ -124,7 +124,7 @@ type UserRegistrationCompleteEvent struct {
 	Timestamp      time.Time   `json:"timestamp"`
 	UserDocumentID string      `json:"user_document_id"` // Primary user identifier
 	UserData       UserProfile `json:"user_data"`        // Full profile data
-	RoutingKey     string      `json:"routing_key"`      // "user.registration.complete"
+	RoutingKey     string      `json:"routing_key"`      // "notifications.send"
 }
 
 // Identity service request for ciudadano-registry-service
@@ -186,11 +186,9 @@ const (
 	EventUserPasswordReset        = "user.password_reset"
 )
 
-// Routing keys constants
+// Routing keys for RabbitMQ events
 const (
-	RoutingKeyUserRegistrationEmail    = "user.registration.email"
-	RoutingKeyUserRegistrationComplete = "user.registration.complete"
-	RoutingKeyUserPasswordReset        = "user.password_reset"
+	RoutingKeyNotifications = "notifications.send"
 )
 
 // UserInfo represents basic user information for responses

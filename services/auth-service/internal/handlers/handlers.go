@@ -62,10 +62,16 @@ func (h *Handlers) HealthCheck(c echo.Context) error {
 	}
 
 	// Check RabbitMQ health
-	if err := h.publisher.Health(); err != nil {
-		health.RabbitMQ = "unhealthy"
+	if h.publisher != nil {
+		if err := h.publisher.Health(); err != nil {
+			health.RabbitMQ = "unhealthy"
+			health.Status = "degraded"
+			log.Printf("WARN: RabbitMQ health check failed: %v", err)
+		}
+	} else {
+		health.RabbitMQ = "unavailable"
 		health.Status = "degraded"
-		log.Printf("WARN: RabbitMQ health check failed: %v", err)
+		log.Printf("WARN: RabbitMQ publisher not available")
 	}
 
 	statusCode := http.StatusOK
@@ -147,12 +153,18 @@ func (h *Handlers) Register(c echo.Context) error {
 		Token:           jwtToken,
 		VerificationURL: verificationURL,
 		ExpiresAt:       tokenExpiresAt,
-		RoutingKey:      models.RoutingKeyUserRegistrationEmail,
+		RoutingKey:      models.RoutingKeyNotifications,
 	}
 
-	if err := h.publisher.PublishUserRegistrationEvent(registrationEvent); err != nil {
-		log.Printf("ERROR: Failed to publish registration event: %v", err)
-		// Don't fail the request if RabbitMQ is down, but log the error
+	if h.publisher != nil {
+		if err := h.publisher.PublishUserRegistrationEvent(registrationEvent); err != nil {
+			log.Printf("ERROR: Failed to publish registration event: %v", err)
+			// Don't fail the request if RabbitMQ is down, but log the error
+		} else {
+			log.Printf("INFO: Registration event published successfully for user: %s", req.DocumentID)
+		}
+	} else {
+		log.Printf("WARN: RabbitMQ publisher not available, skipping registration event for user: %s", req.DocumentID)
 	}
 
 	response := &models.RegistrationResponse{
@@ -280,11 +292,17 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		Timestamp:      time.Now(),
 		UserDocumentID: authUser.DocumentID,
 		UserData:       *userProfile, // Send full profile data
-		RoutingKey:     models.RoutingKeyUserRegistrationComplete,
+		RoutingKey:     models.RoutingKeyNotifications,
 	}
 
-	if err := h.publisher.PublishUserRegistrationCompleteEvent(completeEvent); err != nil {
-		log.Printf("ERROR: Failed to publish registration complete event: %v", err)
+	if h.publisher != nil {
+		if err := h.publisher.PublishUserRegistrationCompleteEvent(completeEvent); err != nil {
+			log.Printf("ERROR: Failed to publish registration complete event: %v", err)
+		} else {
+			log.Printf("INFO: Registration complete event published successfully for user: %s", authUser.DocumentID)
+		}
+	} else {
+		log.Printf("WARN: RabbitMQ publisher not available, skipping registration complete event for user: %s", authUser.DocumentID)
 	}
 
 	// Return success response with full user profile

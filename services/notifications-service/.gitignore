@@ -2,6 +2,10 @@
 .env
 sendgrid.env
 
+# Local secrets (never commit these)
+k8s/secret.local.yaml
+k8s/*.local.yaml
+
 # Compiled binaries
 notifications-service
 
