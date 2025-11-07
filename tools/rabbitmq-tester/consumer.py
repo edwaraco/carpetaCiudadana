@@ -1,315 +1,349 @@
 #!/usr/bin/env python3
 """
-RabbitMQ Consumer - Recibe y procesa eventos del cluster
+RabbitMQ Consumer - Receives messages from Carpeta Ciudadana queues
 
-Este script consume eventos de las queues del sistema Carpeta Ciudadana
-para validar el funcionamiento del cluster RabbitMQ con Quorum Queues.
+This script consumes messages from RabbitMQ queues for testing purposes.
+Supports three queues with specific message formats.
 
-Uso:
+Usage:
     python consumer.py
-    python consumer.py --queue minio.cleanup.queue
-    python consumer.py --auto-ack  # Sin confirmación manual
+    python consumer.py --host localhost --port 5672 --user admin --password secret
 """
 
 import pika
 import json
 import argparse
 import sys
-from datetime import datetime
 import signal
-
-# Importar excepciones específicas de pika
+from datetime import datetime
 from pika.exceptions import AMQPConnectionError
 
-# Configuración de conexión
-# Para Kubernetes, usar port-forward: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
-# Para obtener credenciales K8s: kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d
-RABBITMQ_HOST = 'localhost'
+# Connection configuration
+RABBITMQ_HOST = "localhost"
 RABBITMQ_PORT = 5672
-RABBITMQ_USER = 'admin'
-RABBITMQ_PASS = 'admin123'
+RABBITMQ_USER = "admin"
+RABBITMQ_PASS = "admin123"
 
-# Queues disponibles del sistema
+# Available queues
 AVAILABLE_QUEUES = [
-    'documento.deletion.queue',
-    'minio.cleanup.queue',
-    'metadata.cleanup.queue'
+    "document_verification_request",
+    "document_verified_response",
+    "test_queue",
 ]
 
-# Control de señales para shutdown graceful
+# Control flag for graceful shutdown
 should_stop = False
+
+# Display configuration
+MAX_URL_DISPLAY_LENGTH = 80
 
 
 def signal_handler(sig, frame):
-    """Manejador de señal para Ctrl+C"""
+    """Handle interrupt signals for graceful shutdown"""
     global should_stop
-    print("\n\n⚠️  Recibida señal de interrupción. Cerrando gracefully...")
+    print("\n\n[INFO] Interrupt received. Shutting down gracefully...")
     should_stop = True
 
 
-def format_event_output(event, delivery_tag, redelivered):
-    """
-    Formatea el evento para visualización bonita
-    """
+def format_message_output(message, delivery_tag, redelivered, queue_name):
+    """Format message for display"""
     output = []
-    output.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    output.append(f"📬 EVENTO RECIBIDO - {datetime.now().strftime('%H:%M:%S')}")
-    output.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    
-    # Metadata del mensaje
-    output.append(f"📊 Metadata:")
-    output.append(f"   Delivery Tag: {delivery_tag}")
-    output.append(f"   Redelivered: {'Sí ⚠️' if redelivered else 'No'}")
+    output.append("\n" + "=" * 60)
+    output.append(f"MESSAGE RECEIVED - {datetime.now().strftime('%H:%M:%S')}")
+    output.append("=" * 60)
+
+    # Metadata
+    output.append(f"[METADATA]")
+    output.append(f"  Queue: {queue_name}")
+    output.append(f"  Delivery Tag: {delivery_tag}")
+    output.append(f"  Redelivered: {'Yes' if redelivered else 'No'}")
     output.append("")
-    
-    # Información del evento
-    if isinstance(event, dict):
-        output.append(f"🆔 Event ID: {event.get('eventId', 'N/A')}")
-        output.append(f"📝 Event Type: {event.get('eventType', 'N/A')}")
-        output.append(f"🕐 Timestamp: {event.get('timestamp', 'N/A')}")
-        output.append(f"📌 Version: {event.get('version', 'N/A')}")
-        output.append("")
-        
-        # Payload
-        if 'payload' in event:
-            payload = event['payload']
-            output.append(f"📦 Payload:")
-            output.append(f"   Document ID: {payload.get('documentId', 'N/A')}")
-            output.append(f"   Citizen ID: {payload.get('citizenId', 'N/A')}")
-            output.append(f"   Document Type: {payload.get('documentType', 'N/A')}")
-            output.append(f"   Operation: {payload.get('operation', 'N/A')}")
-            output.append("")
-            output.append(f"   📄 TEXTO IMPORTANTE:")
-            output.append(f"   ╭─────────────────────────────────────────────────╮")
-            output.append(f"   │ {payload.get('description', 'N/A'):<47} │")
-            output.append(f"   ╰─────────────────────────────────────────────────╯")
-            output.append("")
-            
-            # Metadata adicional
-            if 'metadata' in payload:
-                meta = payload['metadata']
-                output.append(f"   🗂️  Metadata:")
-                output.append(f"      Bucket: {meta.get('bucket', 'N/A')}")
-                output.append(f"      Region: {meta.get('region', 'N/A')}")
-                output.append(f"      Size: {meta.get('size', 0):,} bytes")
-                output.append(f"      MIME Type: {meta.get('mimeType', 'N/A')}")
-                output.append("")
-        
-        # IDs de correlación
-        output.append(f"🔗 Correlación:")
-        output.append(f"   Correlation ID: {event.get('correlationId', 'N/A')}")
-        output.append(f"   Causation ID: {event.get('causationId', 'N/A')}")
+
+    # Message content
+    output.append(f"[MESSAGE]")
+    if isinstance(message, dict):
+        # Format based on queue type
+        if queue_name == "document_verification_request":
+            output.append(f"  Citizen ID: {message.get('idCitizen', 'N/A')}")
+            output.append(f"  Document Title: {message.get('documentTitle', 'N/A')}")
+            url = message.get("UrlDocument", "N/A")
+            if len(url) > MAX_URL_DISPLAY_LENGTH:
+                url = url[:MAX_URL_DISPLAY_LENGTH] + "..."
+            output.append(f"  Document URL: {url}")
+        elif queue_name == "document_verified_response":
+            output.append(f"  Status: {message.get('status', 'N/A')}")
+            output.append(f"  Message: {message.get('message', 'N/A')}")
+        elif queue_name == "test_queue":
+            output.append(f"  ID: {message.get('id', 'N/A')}")
+            output.append(f"  Timestamp: {message.get('timestamp', 'N/A')}")
+            output.append(f"  Message: {message.get('message', 'N/A')}")
+            if "data" in message:
+                output.append(f"  Data: {json.dumps(message['data'])}")
     else:
-        output.append(f"⚠️  Evento no es un JSON válido")
-    
+        output.append(f"  [WARNING] Message is not valid JSON")
+
     output.append("")
-    output.append("━" * 60)
-    output.append("")
-    
-    # JSON completo
-    output.append("📋 EVENTO COMPLETO (JSON):")
-    output.append("┌" + "─" * 58 + "┐")
-    
-    json_str = json.dumps(event, indent=2, ensure_ascii=False)
-    for line in json_str.split('\n'):
-        output.append(f"│ {line:<56} │")
-    
-    output.append("└" + "─" * 58 + "┘")
-    output.append("")
-    
+    output.append("[FULL MESSAGE JSON]")
+    output.append("-" * 60)
+    output.append(json.dumps(message, indent=2, ensure_ascii=False))
+    output.append("-" * 60)
+
     return "\n".join(output)
 
 
-def callback(ch, method, properties, body, auto_ack=False):
-    """
-    Callback que se ejecuta cuando se recibe un mensaje
-    """
+def callback(ch, method, properties, body, queue_name):
+    """Callback executed when a message is received"""
     global should_stop
-    
+
     try:
-        # Parsear el evento
-        event = json.loads(body)
-        
-        # Mostrar el evento formateado
-        print(format_event_output(event, method.delivery_tag, method.redelivered))
-        
-        # Confirmar recepción (ACK manual)
-        if not auto_ack:
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-            print("✅ Mensaje confirmado (ACK enviado)\n")
-        
+        # Parse message
+        message = json.loads(body)
+
+        # Display formatted message
+        print(
+            format_message_output(
+                message, method.delivery_tag, method.redelivered, queue_name
+            )
+        )
+
+        # Acknowledge receipt
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        print("\n[OK] Message acknowledged\n")
+
     except json.JSONDecodeError as e:
-        print(f"❌ Error parseando JSON: {str(e)}")
-        print(f"   Body raw: {body.decode('utf-8')}\n")
-        
-        # Rechazar mensaje malformado
-        if not auto_ack:
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-            print("❌ Mensaje rechazado (NACK - no requeue)\n")
-    
+        print(f"\n[ERROR] Failed to parse JSON: {str(e)}")
+        print(f"[RAW] {body.decode('utf-8')}\n")
+
+        # Reject malformed message (don't requeue)
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+        print("[ERROR] Message rejected (not requeued)\n")
+
     except Exception as e:
-        print(f"❌ Error procesando mensaje: {str(e)}")
-        
-        # Rechazar y reencolar para reintento
-        if not auto_ack:
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
-            print("⚠️  Mensaje rechazado (NACK - requeue)\n")
+        print(f"\n[ERROR] Failed to process message: {str(e)}")
+
+        # Reject and requeue for retry
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        print("[WARNING] Message rejected (requeued)\n")
+
+
+def display_menu():
+    """Display the main menu"""
+    print("\n" + "=" * 60)
+    print("RabbitMQ Consumer - Carpeta Ciudadana")
+    print("=" * 60)
+    print("\nAvailable queues:")
+    print("  1. document_verification_request")
+    print("  2. document_verified_response")
+    print("  3. test_queue")
+    print("  4. Exit")
+    print("-" * 60)
+
+
+def interactive_mode(connection):
+    """Run interactive mode with menu"""
+    global should_stop
+
+    while True and not should_stop:
+        display_menu()
+        choice = input("\nSelect queue to consume (1-4): ").strip()
+
+        if choice == "4":
+            print("\nExiting...")
+            break
+
+        if choice not in ["1", "2", "3"]:
+            print("[ERROR] Invalid choice. Please select 1-4.")
+            continue
+
+        queue_name = AVAILABLE_QUEUES[int(choice) - 1]
+
+        print(f"\n[INFO] Starting consumer for '{queue_name}'...")
+        print("[INFO] Press Ctrl+C to stop consuming and return to menu\n")
+        print("=" * 60)
+
+        try:
+            channel = connection.channel()
+
+            # Configure QoS
+            channel.basic_qos(prefetch_count=1)
+
+            # Check queue
+            try:
+                method_frame = channel.queue_declare(
+                    queue=queue_name, durable=True, passive=True
+                )
+                message_count = method_frame.method.message_count
+                print(f"[INFO] Queue has {message_count} pending message(s)\n")
+            except Exception as e:
+                print(f"[WARNING] Could not check queue status: {str(e)}\n")
+
+            # Setup consumer
+            channel.basic_consume(
+                queue=queue_name,
+                on_message_callback=lambda ch, method, properties, body: callback(
+                    ch, method, properties, body, queue_name
+                ),
+                auto_ack=False,
+            )
+
+            # Reset stop flag
+            should_stop = False
+
+            # Consume messages
+            print("[INFO] Listening for messages...\n")
+            while not should_stop:
+                try:
+                    connection.process_data_events(time_limit=1)
+                except Exception as e:
+                    print(f"[ERROR] Error in consume loop: {str(e)}")
+                    break
+
+            # Clean up
+            channel.stop_consuming()
+            channel.close()
+
+            # Reset flag for next iteration
+            should_stop = False
+
+        except Exception as e:
+            print(f"[ERROR] Failed to consume from queue: {str(e)}")
+            continue
 
 
 def main():
     global should_stop
-    
+
     parser = argparse.ArgumentParser(
-        description='Consumidor de eventos de prueba para RabbitMQ Cluster'
+        description="RabbitMQ Consumer for testing Carpeta Ciudadana queues"
     )
     parser.add_argument(
-        '--queue',
+        "--host",
         type=str,
-        default='documento.deletion.queue',
+        default="localhost",
+        help="RabbitMQ host (default: localhost)",
+    )
+    parser.add_argument(
+        "--port", type=int, default=5672, help="RabbitMQ port (default: 5672)"
+    )
+    parser.add_argument(
+        "--user", type=str, default="admin", help="RabbitMQ user (default: admin)"
+    )
+    parser.add_argument(
+        "--password",
+        type=str,
+        default="admin123",
+        help="RabbitMQ password (default: admin123)",
+    )
+    parser.add_argument(
+        "--queue",
+        type=str,
         choices=AVAILABLE_QUEUES,
-        help='Queue origen (default: documento.deletion.queue)'
+        help="Queue to consume from (if not specified, interactive mode is used)",
     )
-    parser.add_argument(
-        '--auto-ack',
-        action='store_true',
-        help='Usar auto-acknowledgement (default: manual ACK)'
-    )
-    parser.add_argument(
-        '--prefetch',
-        type=int,
-        default=1,
-        help='Número de mensajes a prefetch (default: 1)'
-    )
-    parser.add_argument(
-        '--host',
-        type=str,
-        default='localhost',
-        help='RabbitMQ host (default: localhost)'
-    )
-    parser.add_argument(
-        '--port',
-        type=int,
-        default=5672,
-        help='RabbitMQ port (default: 5672)'
-    )
-    parser.add_argument(
-        '--user',
-        type=str,
-        default='admin',
-        help='RabbitMQ user (default: admin)'
-    )
-    parser.add_argument(
-        '--password',
-        type=str,
-        default='admin123',
-        help='RabbitMQ password (default: admin123)'
-    )
-    
+
     args = parser.parse_args()
-    
-    # Override global config with command-line args
+
+    # Override global config
     global RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASS
     RABBITMQ_HOST = args.host
     RABBITMQ_PORT = args.port
     RABBITMQ_USER = args.user
     RABBITMQ_PASS = args.password
-    
-    # Registrar manejador de señales
+
+    # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
-    print(f"""
-╔══════════════════════════════════════════════════════════════╗
-║          RabbitMQ Consumer - Carpeta Ciudadana              ║
-╚══════════════════════════════════════════════════════════════╝
 
-📊 Configuración:
-   - Host: {RABBITMQ_HOST}:{RABBITMQ_PORT}
-   - Queue: {args.queue}
-   - ACK Mode: {'Auto' if args.auto_ack else 'Manual'}
-   - Prefetch: {args.prefetch}
+    print("\n" + "=" * 60)
+    print("RabbitMQ Consumer - Carpeta Ciudadana")
+    print("=" * 60)
+    print(f"\n[CONFIG] Host: {RABBITMQ_HOST}:{RABBITMQ_PORT}")
+    print(f"[CONFIG] User: {RABBITMQ_USER}")
+    print("\n[INFO] Connecting to RabbitMQ cluster...")
 
-🔄 Conectando al cluster RabbitMQ...
-""")
-    
     try:
-        # Conectar a RabbitMQ
+        # Connect to RabbitMQ
         credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
         parameters = pika.ConnectionParameters(
             host=RABBITMQ_HOST,
             port=RABBITMQ_PORT,
             credentials=credentials,
             heartbeat=600,
-            blocked_connection_timeout=300
+            blocked_connection_timeout=300,
         )
-        
+
         connection = pika.BlockingConnection(parameters)
-        channel = connection.channel()
-        
-        print("✅ Conexión establecida\n")
-        
-        # Configurar QoS (prefetch)
-        channel.basic_qos(prefetch_count=args.prefetch)
-        print(f"⚙️  QoS configurado: prefetch_count={args.prefetch}\n")
-        
-        # Verificar que la queue exista
-        print(f"🔍 Verificando queue '{args.queue}'...")
-        try:
-            method_frame = channel.queue_declare(
-                queue=args.queue,
-                durable=True,
-                passive=True  # Solo verificar, no crear
-            )
-            message_count = method_frame.method.message_count
-            print(f"✅ Queue existe")
-            print(f"📊 Mensajes pendientes: {message_count}\n")
-        except Exception as e:
-            print(f"⚠️  Warning: No se pudo verificar la queue: {str(e)}\n")
-        
-        # Iniciar consumo
-        print(f"👂 Escuchando mensajes en '{args.queue}'...")
-        print(f"   Presiona Ctrl+C para detener\n")
-        print("=" * 60)
-        print()
-        
-        # Configurar consumer
-        channel.basic_consume(
-            queue=args.queue,
-            on_message_callback=lambda ch, method, properties, body: 
-                callback(ch, method, properties, body, args.auto_ack),
-            auto_ack=args.auto_ack
-        )
-        
-        # Loop de consumo
-        while not should_stop:
+
+        print("[OK] Connection established\n")
+
+        # Run in command-line mode or interactive mode
+        if args.queue:
+            queue_name = args.queue
+            print(f"[INFO] Starting consumer for '{queue_name}'...")
+            print("[INFO] Press Ctrl+C to stop\n")
+            print("=" * 60)
+
+            channel = connection.channel()
+
+            # Configure QoS
+            channel.basic_qos(prefetch_count=1)
+
+            # Check queue
             try:
-                connection.process_data_events(time_limit=1)
+                method_frame = channel.queue_declare(
+                    queue=queue_name, durable=True, passive=True
+                )
+                message_count = method_frame.method.message_count
+                print(f"[INFO] Queue has {message_count} pending message(s)\n")
             except Exception as e:
-                print(f"❌ Error en loop de consumo: {str(e)}")
-                break
-        
-        # Cerrar conexión gracefully
-        print("\n🛑 Cerrando consumer...")
-        channel.stop_consuming()
-        channel.close()
+                print(f"[WARNING] Could not check queue: {str(e)}\n")
+
+            # Setup consumer
+            channel.basic_consume(
+                queue=queue_name,
+                on_message_callback=lambda ch, method, properties, body: callback(
+                    ch, method, properties, body, queue_name
+                ),
+                auto_ack=False,
+            )
+
+            # Consume messages
+            print("[INFO] Listening for messages...\n")
+            while not should_stop:
+                try:
+                    connection.process_data_events(time_limit=1)
+                except Exception as e:
+                    print(f"[ERROR] Error in consume loop: {str(e)}")
+                    break
+
+            # Clean up
+            channel.stop_consuming()
+            channel.close()
+        else:
+            # Interactive mode
+            interactive_mode(connection)
+
+        # Close connection
         connection.close()
-        
-        print("👋 Conexión cerrada\n")
+
+        print("\n[INFO] Connection closed\n")
+
         return 0
-        
+
     except AMQPConnectionError as e:
-        print(f"❌ Error de conexión a RabbitMQ: {str(e)}")
-        print("\n💡 Verificar:")
-        print("   1. RabbitMQ está corriendo: docker compose ps")
-        print("   2. Puerto 5672 está accesible")
-        print("   3. Credenciales son correctas")
+        print(f"[ERROR] Connection failed: {str(e)}")
+        print("\n[HELP] Please verify:")
+        print("  1. RabbitMQ is running")
+        print("  2. Port 5672 is accessible")
+        print("  3. Credentials are correct")
         return 1
     except KeyboardInterrupt:
-        print("\n⚠️  Operación cancelada por el usuario")
+        print("\n\n[INFO] Operation cancelled by user")
         return 1
     except Exception as e:
-        print(f"❌ Error inesperado: {str(e)}")
+        print(f"[ERROR] Unexpected error: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return 1
 

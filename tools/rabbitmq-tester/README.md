@@ -1,308 +1,239 @@
 # RabbitMQ Tester - Carpeta Ciudadana
 
-Scripts Python para testing del cluster RabbitMQ con Quorum Queues en Kubernetes o Docker Compose.
+Simple Python scripts for testing RabbitMQ queues in the Carpeta Ciudadana project.
 
-## 📋 Pre-requisitos
+## Overview
 
-### Software Requerido
+These scripts allow you to send and receive test messages to/from the RabbitMQ queues used in the Carpeta Ciudadana system. They support three main queues with their specific message formats.
 
-- **Docker Desktop** 4.0+ corriendo y saludable
-- **Python** 3.8+ con pip
-- **RAM**: 12GB+ disponible (para cluster de 5 nodos)
+## Supported Queues
 
-### Verificar Instalación
+1. **document_verification_request** - Document verification requests
+2. **document_verified_response** - Document verification responses
+3. **test_queue** - Simple test messages
 
-```powershell
-# Verificar Docker
-docker --version
-docker compose version
+For detailed information about the RabbitMQ service configuration, see `services/rabbitmq-service/README.md`.
 
-# Verificar Python
-python --version
-pip --version
-```
+## Prerequisites
 
-## 🚀 Inicio Rápido
+- Python 3.8+
+- RabbitMQ cluster running (see `services/rabbitmq-service/` for setup)
+- Network access to RabbitMQ (default: localhost:5672)
 
-### Opción A: Testing con Kubernetes (Recomendado)
+## Installation
+
+Install the required Python dependency:
 
 ```bash
-# 1. Iniciar cluster Kubernetes (minikube, kind, etc.)
-minikube start
-
-# 2. Desplegar RabbitMQ
-cd services/rabbitmq-service
-kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
-kubectl apply -f k8s/
-
-# 3. Esperar a que los pods estén listos
-kubectl get pods -n carpeta-ciudadana -w
-
-# 4. Port-forward para acceso local
-kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672 &
-
-# 5. Obtener credenciales
-export RABBITMQ_USER=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d)
-export RABBITMQ_PASSWORD=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | base64 -d)
-
-echo "User: $RABBITMQ_USER"
-echo "Password: $RABBITMQ_PASSWORD"
-```
-
-**Management UI**: <http://localhost:15672> (usar credenciales de arriba)
-
-### Opción B: Testing con Docker Compose (Legacy)
-
-**⚠️ Nota**: RabbitMQ ha sido migrado a Kubernetes. Docker Compose ya no incluye RabbitMQ.
-
-Para desarrollo local con Docker Compose, usar port-forward desde Kubernetes como se muestra arriba.
-
-### 2. Crear Quorum Queues
-
-Opción A - **Management UI** (recomendado):
-
-1. Ir a <http://localhost:15672> → Login: `admin` / `admin123`
-2. Click "Queues" → "Add a new queue"
-3. Type: **Quorum**, Name: `documento.deletion.queue`, Durable: ✅
-4. Repetir para: `minio.cleanup.queue`, `metadata.cleanup.queue`
-
-Opción B - **CLI**:
-
-```powershell
-docker exec -it rabbitmq-leader rabbitmqadmin declare queue `
-  name=documento.deletion.queue durable=true `
-  arguments='{\"x-queue-type\":\"quorum\",\"x-quorum-initial-group-size\":3}'
-```
-
-### 3. Instalar Dependencias Python
-
-```powershell
-# Navegar a esta carpeta
-cd tools\rabbitmq-tester
-
-# Instalar pika
+cd tools/rabbitmq-tester
 pip install -r requirements.txt
 ```
 
-### 4. Ejecutar Tests
+## Usage
 
-**Terminal 1 - Consumer** (espera mensajes):
+### Producer (Send Messages)
 
-```bash
-# Con Kubernetes (usando credenciales de K8s)
-python consumer.py --host localhost --port 5672 \
-  --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
+#### Interactive Mode
 
-# O con valores por defecto (si no cambió admin/admin123)
-python consumer.py
-```
-
-**Terminal 2 - Producer** (envía mensajes):
+Run without arguments to use the interactive menu:
 
 ```bash
-# Con Kubernetes (usando credenciales de K8s)
-python producer.py --count 3 --host localhost --port 5672 \
-  --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# O con valores por defecto
-python producer.py --count 3
-```
-
-✅ **Éxito**: Terminal 1 muestra los 3 eventos con detalle completo incluyendo el **TEXTO IMPORTANTE**.
-
-## 📝 Uso de Scripts
-
-### Producer - Enviar Eventos
-
-```bash
-# Enviar 1 evento (default)
 python producer.py
-
-# Enviar múltiples eventos
-python producer.py --count 10
-
-# Enviar a queue específica
-python producer.py --queue minio.cleanup.queue --count 5
-
-# Cambiar tipo de evento
-python producer.py --event-type documento.minio.cleanup
-
-# Especificar host y credenciales para Kubernetes
-python producer.py --host localhost --port 5672 \
-  --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD --count 5
-
-# Ver ayuda
-python producer.py --help
 ```
 
-### Consumer - Recibir Eventos
+You'll see a menu where you can:
+
+- Select which queue to send to (1-3)
+- Specify how many messages to send
+- Send multiple batches without reconnecting
+
+#### Command-Line Mode
+
+Send messages directly with arguments:
 
 ```bash
-# Consumir con ACK manual (default)
-python consumer.py
+# Send 1 message to document_verification_request
+python producer.py --queue document_verification_request
 
-# Consumir de queue diferente
-python consumer.py --queue metadata.cleanup.queue
+# Send 5 messages to document_verified_response
+python producer.py --queue document_verified_response --count 5
 
-# Auto-acknowledgement (sin confirmación manual)
-python consumer.py --auto-ack
-
-# Aumentar prefetch para mayor throughput
-python consumer.py --prefetch 10
-
-# Especificar host y credenciales para Kubernetes
-python consumer.py --host localhost --port 5672 \
-  --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# Ver ayuda
-python consumer.py --help
+# Send to test_queue with custom connection
+python producer.py --queue test_queue --count 3 \
+  --host localhost --port 5672 --user admin --password admin123
 ```
 
-## 📊 Eventos Generados
+#### Options
 
-Los scripts generan eventos con la siguiente estructura:
+- `--host` - RabbitMQ host (default: localhost)
+- `--port` - RabbitMQ port (default: 5672)
+- `--user` - RabbitMQ username (default: admin)
+- `--password` - RabbitMQ password (default: admin123)
+- `--queue` - Queue name (document_verification_request, document_verified_response, test_queue)
+- `--count` - Number of messages to send (default: 1)
+
+### Consumer (Receive Messages)
+
+#### Interactive Mode
+
+Run without arguments to use the interactive menu:
+
+```bash
+python consumer.py
+```
+
+You'll see a menu where you can:
+
+- Select which queue to consume from (1-3)
+- Switch between queues without reconnecting
+- Press Ctrl+C to return to menu (not exit)
+
+#### Command-Line Mode
+
+Consume messages directly with arguments:
+
+```bash
+# Consume from document_verification_request
+python consumer.py --queue document_verification_request
+
+# Consume from test_queue with custom connection
+python consumer.py --queue test_queue \
+  --host localhost --port 5672 --user admin --password admin123
+```
+
+#### Options
+
+- `--host` - RabbitMQ host (default: localhost)
+- `--port` - RabbitMQ port (default: 5672)
+- `--user` - RabbitMQ username (default: admin)
+- `--password` - RabbitMQ password (default: admin123)
+- `--queue` - Queue name (document_verification_request, document_verified_response, test_queue)
+
+### Using with Kubernetes
+
+If RabbitMQ is running in Kubernetes, use port-forward and pass credentials:
+
+```bash
+# Terminal 1: Port forward
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672
+
+# Terminal 2: Get credentials
+export RABBITMQ_USER=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.username}' | base64 -d)
+export RABBITMQ_PASSWORD=$(kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana -o jsonpath='{.data.password}' | base64 -d)
+
+# Terminal 3: Run producer
+python producer.py --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
+
+# Terminal 4: Run consumer
+python consumer.py --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
+```
+
+## Message Formats
+
+### document_verification_request
 
 ```json
 {
-  "eventId": "uuid-v4",
-  "eventType": "documento.deletion.requested",
-  "timestamp": "2025-11-05T19:30:45.123456Z",
-  "version": "1.0",
-  "payload": {
-    "documentId": "DOC-123456",
-    "citizenId": "CC-12345678",
-    "documentType": "CEDULA | PASAPORTE | ...",
-    "operation": "DELETE | CLEANUP | UPDATE | ...",
-    "description": "Texto aleatorio descriptivo",
-    "metadata": {
-      "bucket": "carpeta-ciudadana-docs",
-      "region": "us-east-1",
-      "size": 2048576,
-      "mimeType": "application/pdf"
-    }
-  },
-  "correlationId": "uuid-v4",
-  "causationId": "uuid-v4"
+  "idCitizen": 1234567890,
+  "UrlDocument": "https://carpeta-ciudadana-docs.s3.amazonaws.com/uuid.image.jpg?AWSAccessKeyId=<key>&Expires=145671",
+  "documentTitle": "Diploma Grado"
 }
 ```
 
-El **consumer** muestra el evento completo + el **TEXTO IMPORTANTE** resaltado en una caja.
+### document_verified_response
 
-## 🐛 Troubleshooting
-
-| Error | Causa | Solución |
-|-------|-------|----------|
-| `ModuleNotFoundError: No module named 'pika'` | Pika no instalado | `pip install pika` |
-| `AMQPConnectionError` | RabbitMQ no está corriendo | `docker compose up -d` en `infrastructure/docker` |
-| `Queue not found` | Queues no declaradas | Crear queues vía Management UI o CLI (ver paso 2) |
-| Consumer no recibe mensajes | Queues vacías o no conectado | Verificar con `docker exec rabbitmq-leader rabbitmqctl list_queues name messages` |
-| `port is already allocated` | Puerto 5672 en uso | Ver proceso: `netstat -ano \| findstr :5672` y matar o cambiar puerto |
-
-### Docker Desktop no está corriendo
-
-**Síntoma**: `error during connect: open //./pipe/dockerDesktopLinuxEngine`
-
-**Solución**:
-
-1. Abrir Docker Desktop desde menú inicio
-2. Esperar a que ícono se ponga verde
-3. Ejecutar `docker info` para verificar
-
-## 🧪 Tests Avanzados
-
-### Test 1: Replicación de Quorum Queues (Kubernetes)
-
-```bash
-# 1. Enviar eventos
-python producer.py --count 5 --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# 2. Verificar replicación (debe mostrar 3 miembros por queue)
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmqctl list_queues name type members
-
-# 3. Simular fallo de un nodo
-kubectl delete pod carpeta-rabbitmq-server-2 -n carpeta-ciudadana
-
-# 4. Consumer debe seguir funcionando (quorum = 2/3 nodos)
-python consumer.py --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# 5. El pod se recrea automáticamente (auto-healing)
-kubectl get pods -n carpeta-ciudadana -w
+```json
+{
+  "status": 200,
+  "message": "El documento: Diploma Grado del ciudadano 1234567890 ha sido autenticado exitosamente"
+}
 ```
 
-### Test 2: Failover del Seed Node (Kubernetes)
+### test_queue
 
-```bash
-# Terminal 1: Iniciar consumer
-python consumer.py --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# Terminal 2: Enviar mensajes
-python producer.py --count 10 --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# Terminal 3: Simular falla del seed node
-kubectl delete pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
-
-# Terminal 2: Raft elige nuevo líder (~5 segundos), sistema sigue funcionando
-sleep 10
-python producer.py --count 5 --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
-
-# Terminal 3: El pod se recrea automáticamente
-kubectl get pods -n carpeta-ciudadana -w
+```json
+{
+  "id": "uuid-v4",
+  "timestamp": "2025-11-06T12:00:00.000000Z",
+  "message": "Test message #123",
+  "data": {
+    "key1": "value1",
+    "key2": 42
+  }
+}
 ```
 
-### Test 3: Escalabilidad del Cluster (Kubernetes)
+## Examples
+
+### Quick Test
 
 ```bash
-# Escalar a 5 nodos
-kubectl patch rabbitmqcluster carpeta-rabbitmq -n carpeta-ciudadana \
-  --type merge -p '{"spec":{"replicas":5}}'
+# Terminal 1: Start consumer
+python consumer.py --queue test_queue
 
-# Verificar cluster
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmqctl cluster_status
-
-# Probar throughput
-python producer.py --count 100 --host localhost --user $RABBITMQ_USER --password $RABBITMQ_PASSWORD
+# Terminal 2: Send test messages
+python producer.py --queue test_queue --count 5
 ```
 
-## � Referencias
+> Note: if you don't specify --queue, you'll enter interactive mode, to select the queue.
 
-### Documentación del Proyecto
+### Document Verification Flow
 
-- [README RabbitMQ Cluster](../../infrastructure/docker/rabbitmq/README.md) - Arquitectura y configuración detallada
-- [ADR-0003: Event-Driven Architecture](../../docs/ADR/0003-eliminacion-documentos-event-driven-rabbitmq.md)
-- [ADR-0004: Quorum Queues Leader-Followers](../../docs/ADR/0004-rabbitmq-quorum-queues-arquitectura-leader-followers.md)
-- [ADR-0005: Ubicación Docker Compose](../../docs/ADR/0005-ubicacion-rabbitmq-docker-compose-escalable.md)
+```bash
+# Terminal 1: Listen for verification requests
+python consumer.py --queue document_verification_request
 
-### Documentación Externa
+# Terminal 2: Send verification request
+python producer.py --queue document_verification_request
 
-- [RabbitMQ Quorum Queues](https://www.rabbitmq.com/docs/quorum-queues)
-- [RabbitMQ Cluster Sizing](https://www.rabbitmq.com/blog/2020/06/18/cluster-sizing-and-other-considerations)
-- [Pika Documentation](https://pika.readthedocs.io/)
+# Terminal 3: Listen for verification responses
+python consumer.py --queue document_verified_response
 
----
+# Terminal 4: Send verification response
+python producer.py --queue document_verified_response
+```
 
-**💡 Tip**: Para desarrollo normal usa 3-5 nodos. Para stress testing escala hasta 10-50 nodos.
+## Troubleshooting
 
-## 🔄 Migración a Kubernetes
+### Connection Failed
 
-Este proyecto ha migrado RabbitMQ de Docker Compose a Kubernetes. Los scripts de testing ahora soportan ambos ambientes:
+**Error**: `[ERROR] Connection failed: [Errno 111] Connection refused`
 
-**Docker Compose (Legacy)**:
-- ❌ RabbitMQ removido de `infrastructure/docker/docker-compose.yml`
-- ❌ Directorio `infrastructure/docker/rabbitmq/` eliminado
+**Solution**:
 
-**Kubernetes (Actual)**:
-- ✅ RabbitMQ desplegado con Cluster Operator
-- ✅ Ubicación: `services/rabbitmq-service/`
-- ✅ Scripts actualizados con flags `--host`, `--port`, `--user`, `--password`
-- ✅ Soporte para obtener credenciales de secrets de Kubernetes
+- Verify RabbitMQ is running: `kubectl get pods -n carpeta-ciudadana`
+- Check port-forward is active
+- Verify credentials are correct
 
-**Para más información**:
-- Ver: `services/rabbitmq-service/README.md` - Guía completa de Kubernetes
-- Ver: `docs/ADR/0004-rabbitmq-quorum-queues-arquitectura-leader-followers.md` - Decisión de arquitectura
-- Ver: `docs/ADR/0005-ubicacion-rabbitmq-docker-compose-escalable.md` - Decisión de migración
+### Queue Not Found
 
----
+**Error**: Queue doesn't exist
 
-**Última actualización**: 2025-11-05 - Migración a Kubernetes completada
+**Solution**:
+
+- Queues are created automatically by RabbitMQ cluster
+- Check queue definitions in `services/rabbitmq-service/k8s/05-queue-definitions.yaml`
+- Verify cluster is properly deployed
+
+### Module Not Found
+
+**Error**: `ModuleNotFoundError: No module named 'pika'`
+
+**Solution**:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Notes
+
+- All messages are persistent (survive RabbitMQ restart)
+- Manual acknowledgment is used (messages are re-delivered on consumer failure)
+- Connection uses heartbeat (600s) to keep connection alive
+- Scripts use simple text-based output (no emojis)
+
+## References
+
+- RabbitMQ Service Documentation: `services/rabbitmq-service/README.md`
+- Queue Definitions: `services/rabbitmq-service/k8s/05-queue-definitions.yaml`
+- Pika Documentation: <https://pika.readthedocs.io/>
