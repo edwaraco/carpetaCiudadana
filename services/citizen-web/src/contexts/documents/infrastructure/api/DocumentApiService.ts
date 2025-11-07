@@ -1,6 +1,6 @@
 /**
  * Document API Service - Real Implementation
- * Connects to Spring Boot backend at /api/v1/carpetas/{carpetaId}/documentos
+ * Connects to Spring Boot backend at /api/v1${this.basePath}/carpetas/{carpetaId}/documentos
  */
 
 import { httpClient } from '@/shared/utils/httpClient';
@@ -22,9 +22,10 @@ import {
 } from '@/contexts/documents/infrastructure/api/documentMappers';
 
 export class DocumentApiService implements IDocumentService {
+  basePath: string = '/documents'
   /**
    * Upload a document to the backend
-   * POST /carpetas/{carpetaId}/documentos
+   * POST ${this.basePath}/carpetas/{carpetaId}/documentos
    */
   async uploadDocument(carpetaId: string, request: UploadDocumentRequest): Promise<ApiResponse<Document>> {
     try {
@@ -38,7 +39,7 @@ export class DocumentApiService implements IDocumentService {
 
       // Call backend endpoint
       const response = await httpClient.post<BackendDocumentoResponse>(
-        `/carpetas/${carpetaId}/documentos`,
+        `${this.basePath}/carpetas/${carpetaId}/documentos`,
         formData,
         {
           headers: {
@@ -63,7 +64,7 @@ export class DocumentApiService implements IDocumentService {
 
   /**
    * Get documents with cursor-based pagination
-   * GET /carpetas/{carpetaId}/documentos?cursor={cursor}
+   * GET ${this.basePath}/carpetas/{carpetaId}/documentos?cursor={cursor}
    *
    * Backend returns: ApiResponse<DocumentosPaginadosResponse>
    * Where DocumentosPaginadosResponse = { items: DocumentoResponse[], nextCursor: string | null, hasMore: boolean }
@@ -76,7 +77,7 @@ export class DocumentApiService implements IDocumentService {
       const params = cursor ? { cursor } : {};
 
       const response = await httpClient.get<CursorPaginatedResponse<BackendDocumentoResponse>>(
-        `/carpetas/${carpetaId}/documentos`,
+        `${this.basePath}/carpetas/${carpetaId}/documentos`,
         { params }
       );
 
@@ -102,12 +103,12 @@ export class DocumentApiService implements IDocumentService {
 
   /**
    * Get a single document by ID
-   * GET /carpetas/{carpetaId}/documentos/{documentId}
+   * GET ${this.basePath}/carpetas/{carpetaId}/documentos/{documentId}
    */
   async getDocument(carpetaId: string, documentId: string): Promise<ApiResponse<Document>> {
     try {
       const response = await httpClient.get<BackendDocumentoResponse>(
-        `/carpetas/${carpetaId}/documentos/${documentId}`
+        `${this.basePath}/carpetas/${carpetaId}/documentos/${documentId}`
       );
 
       if (response.success && response.data) {
@@ -126,11 +127,11 @@ export class DocumentApiService implements IDocumentService {
 
   /**
    * Delete a document
-   * DELETE /carpetas/{carpetaId}/documentos/{documentId}
+   * DELETE ${this.basePath}/carpetas/{carpetaId}/documentos/{documentId}
    */
   async deleteDocument(carpetaId: string, documentId: string): Promise<ApiResponse<void>> {
     try {
-      return await httpClient.delete<void>(`/carpetas/${carpetaId}/documentos/${documentId}`);
+      return await httpClient.delete<void>(`${this.basePath}/carpetas/${carpetaId}/documentos/${documentId}`);
     } catch (error) {
       console.error('Error deleting document:', error);
       throw error;
@@ -139,7 +140,7 @@ export class DocumentApiService implements IDocumentService {
 
   /**
    * Sign/certify a document (future functionality)
-   * POST /carpetas/{carpetaId}/documentos/{documentId}/sign
+   * POST ${this.basePath}/carpetas/{carpetaId}/documentos/{documentId}/sign
    */
   async signDocument(
     carpetaId: string,
@@ -147,7 +148,7 @@ export class DocumentApiService implements IDocumentService {
   ): Promise<ApiResponse<SignDocumentResponse>> {
     try {
       return await httpClient.post<SignDocumentResponse>(
-        `/carpetas/${carpetaId}/documentos/${request.documentId}/sign`,
+        `${this.basePath}/carpetas/${carpetaId}/documentos/${request.documentId}/sign`,
         request
       );
     } catch (error) {
@@ -158,7 +159,7 @@ export class DocumentApiService implements IDocumentService {
 
   /**
    * Get presigned URL for document download
-   * GET /carpetas/{carpetaId}/documentos/{documentId}/descargar
+   * GET ${this.basePath}/carpetas/{carpetaId}/documentos/{documentId}/descargar
    */
   async getPresignedUrl(
     carpetaId: string,
@@ -166,7 +167,7 @@ export class DocumentApiService implements IDocumentService {
   ): Promise<ApiResponse<BackendDocumentoUrlResponse>> {
     try {
       return await httpClient.get<BackendDocumentoUrlResponse>(
-        `/carpetas/${carpetaId}/documentos/${documentId}/descargar`
+        `${this.basePath}/carpetas/${carpetaId}/documentos/${documentId}/descargar`
       );
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
