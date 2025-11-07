@@ -20,5 +20,5 @@ data:
   
   # SendGrid configuration
   SENDGRID_API_KEY: "SG.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING"
-  FROM_EMAIL: "paskugomez@gmail.com"
+  FROM_EMAIL: "carpeta.ciudadana.info@gmail.com"
   FROM_NAME: "Carpeta Ciudadana"

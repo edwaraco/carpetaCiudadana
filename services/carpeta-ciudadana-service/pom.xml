@@ -122,6 +122,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- RabbitMQ para mensajería -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
