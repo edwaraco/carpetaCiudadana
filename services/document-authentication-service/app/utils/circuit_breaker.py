@@ -8,7 +8,7 @@ failures in external service calls gracefully.
 import time
 import logging
 from enum import Enum
-from typing import Callable, Any, TypeVar, Generic
+from typing import Callable, Any, TypeVar, Generic, Optional
 from functools import wraps
 
 from app.config import settings
@@ -41,9 +41,9 @@ class CircuitBreaker:
 
     def __init__(
         self,
-        failure_threshold: int = None,
-        timeout: int = None,
-        recovery_timeout: int = None,
+        failure_threshold: Optional[int] = None,
+        timeout: Optional[int] = None,
+        recovery_timeout: Optional[int] = None,
     ):
         """
         Initialize circuit breaker.
@@ -61,7 +61,7 @@ class CircuitBreaker:
             recovery_timeout or settings.circuit_breaker_recovery_timeout
         )
         self.failure_count = 0
-        self.last_failure_time = None
+        self.last_failure_time: Optional[float] = None
         self.state = CircuitState.CLOSED
 
     def call(self, func: Callable[..., T], *args, **kwargs) -> T:

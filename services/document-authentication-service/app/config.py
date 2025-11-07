@@ -45,7 +45,7 @@ class Settings(BaseSettings):
 
 try:
     # Global settings instance
-    settings = Settings()
+    settings = Settings()  # type: ignore
 except Exception:
     # If settings can't be loaded (e.g., in test environment without .env),
     # create a dummy settings object that will be mocked in tests
@@ -54,4 +54,4 @@ except Exception:
     os.environ.setdefault("RABBITMQ_URL", "amqp://test:test@localhost:5672/")
     os.environ.setdefault("CARPETA_CIUDADANA_SERVICE_URL", "http://localhost:8082")
     os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key")
-    settings = Settings()
+    settings = Settings()  # type: ignore

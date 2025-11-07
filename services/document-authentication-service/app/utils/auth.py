@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 security = HTTPBearer()
 
 
-def decode_jwt_token(token: str, skip_validation: bool = False) -> Optional[JWTPayload]:
+def decode_jwt_token(token: str, skip_validation: bool = False) -> JWTPayload:
     """
     Decode and validate a JWT token.
 

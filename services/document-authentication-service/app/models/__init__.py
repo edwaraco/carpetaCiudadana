@@ -6,7 +6,7 @@ responses, and internal event structures.
 """
 
 from pydantic import BaseModel, Field, UUID4
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 
 
@@ -98,7 +98,8 @@ class DocumentoAutenticadoEvent(BaseModel):
     status_code: str = Field(..., description="Authentication status code")
     mensaje: str = Field(..., description="Authentication result message")
     fecha_autenticacion: datetime = Field(
-        default_factory=datetime.utcnow, description="Authentication timestamp"
+        default_factory=lambda: datetime.now(UTC),
+        description="Authentication timestamp",
     )
 
 
