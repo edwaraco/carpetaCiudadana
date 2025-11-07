@@ -25,11 +25,16 @@ spring:
           secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
   
   # Configuración de RabbitMQ
+  # Para desarrollo local: usar port-forward de Kubernetes
+  # kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+  # Obtener credenciales: kubectl get secret carpeta-rabbitmq-default-user -n carpeta-ciudadana
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:admin}
-    password: ${RABBITMQ_PASSWORD:admin123}
+    username: ${RABBITMQ_USERNAME:}
+    password: ${RABBITMQ_PASSWORD:}
+    connection-timeout: ${RABBITMQ_CONNECTION_TIMEOUT:60000}
+    requested-heartbeat: ${RABBITMQ_HEARTBEAT:30}
     listener:
       simple:
         acknowledge-mode: auto
@@ -38,6 +43,10 @@ spring:
           initial-interval: 3000
           max-attempts: 3
           multiplier: 2
+    cache:
+      channel:
+        size: 25
+        checkout-timeout: 5000
 
 # Configuración de MinIO
 minio:

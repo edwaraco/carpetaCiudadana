@@ -25,7 +25,10 @@ public class RabbitMQConfig {
 
   @Bean
   public Queue documentoSubidoQueue() {
-    return QueueBuilder.durable(QUEUE_NAME).build();
+    return QueueBuilder.durable(QUEUE_NAME)
+        .withArgument("x-queue-type", "quorum")
+        .withArgument("x-quorum-initial-group-size", 3)
+        .build();
   }
 
   @Bean
@@ -38,7 +41,10 @@ public class RabbitMQConfig {
 
   @Bean
   public Queue documentoAutenticadoQueue() {
-    return QueueBuilder.durable(QUEUE_AUTENTICADO).build();
+    return QueueBuilder.durable(QUEUE_AUTENTICADO)
+        .withArgument("x-queue-type", "quorum")
+        .withArgument("x-quorum-initial-group-size", 3)
+        .build();
   }
 
   @Bean
