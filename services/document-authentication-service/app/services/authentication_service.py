@@ -43,12 +43,12 @@ async def process_document_authentication(
 
     1. Check Gov Carpeta service health
     2. If unavailable, publish error event and exit
-    3. Get presigned URL from carpeta-ciudadana-service
+    3. Get presigned URL from carpeta-ciudadana-service (or use dummyURL if provided)
     4. Call Gov Carpeta authentication API
     5. Publish result event to RabbitMQ
 
     Args:
-        request: Document authentication request data
+        request: Document authentication request data (may include dummyURL)
         jwt_payload: Decoded JWT token payload
         raw_token: Raw JWT token string for service-to-service calls
 
@@ -68,7 +68,7 @@ async def process_document_authentication(
 
     logger.info(
         f"Starting authentication process for document {documento_id} "
-        f"in folder {carpeta_id}"
+        f"in folder {carpeta_id} (dummy_url={bool(request.dummy_url)})"
     )
 
     try:
@@ -89,26 +89,32 @@ async def process_document_authentication(
             await rabbitmq_client.publish_authentication_event(event)
             return
 
-        # Step 2: Get presigned URL from carpeta-ciudadana-service
-        logger.info("Retrieving presigned URL from carpeta-ciudadana-service...")
-        try:
-            presigned_url = await get_presigned_document_url(
-                carpeta_id=str(carpeta_id),
-                documento_id=documento_id,
-                jwt_token=raw_token,
+        # Step 2: Get presigned URL (or use dummy URL if provided)
+        if request.dummy_url:
+            logger.warning(
+                f"Using DUMMY URL instead of calling carpeta-ciudadana-service: {request.dummy_url}"
             )
-            logger.info(f"Presigned URL retrieved successfully")
-        except ExternalServiceError as e:
-            logger.error(f"Failed to get presigned URL: {str(e)}")
-            event = DocumentoAutenticadoEvent(
-                documento_id=documento_id,
-                carpeta_id=str(carpeta_id),
-                status_code=AuthenticationStatus.INTERNAL_ERROR.value,
-                mensaje=f"Failed to retrieve document URL: {str(e)}",
-                fecha_autenticacion=datetime.utcnow(),
-            )
-            await rabbitmq_client.publish_authentication_event(event)
-            return
+            presigned_url = request.dummy_url
+        else:
+            logger.info("Retrieving presigned URL from carpeta-ciudadana-service...")
+            try:
+                presigned_url = await get_presigned_document_url(
+                    carpeta_id=str(carpeta_id),
+                    documento_id=documento_id,
+                    jwt_token=raw_token,
+                )
+                logger.info(f"Presigned URL retrieved successfully")
+            except ExternalServiceError as e:
+                logger.error(f"Failed to get presigned URL: {str(e)}")
+                event = DocumentoAutenticadoEvent(
+                    documento_id=documento_id,
+                    carpeta_id=str(carpeta_id),
+                    status_code=AuthenticationStatus.INTERNAL_ERROR.value,
+                    mensaje=f"Failed to retrieve document URL: {str(e)}",
+                    fecha_autenticacion=datetime.utcnow(),
+                )
+                await rabbitmq_client.publish_authentication_event(event)
+                return
 
         # Step 3: Authenticate with Gov Carpeta
         logger.info("Authenticating document with Gov Carpeta...")

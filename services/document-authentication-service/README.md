@@ -164,6 +164,25 @@ Content-Type: application/json
 }
 ```
 
+#### Parámetros Opcionales para Testing
+
+El endpoint soporta dos parámetros opcionales que facilitan el testing sin dependencias externas:
+
+- **`dummyJWT`** (boolean, opcional): Si es `true`, el JWT se parsea como JSON plano sin validar la firma. Permite testing sin necesidad de `JWT_SECRET_KEY` válida.
+- **`dummyURL`** (string, opcional): Si se proporciona, se usa esta URL en lugar de llamar a carpeta-ciudadana-service para obtener la presigned URL.
+
+**Ejemplo con parámetros dummy:**
+```json
+{
+  "documentId": "550e8400-e29b-41d4-a716-446655440000",
+  "documentTitle": "Diploma Grado",
+  "dummyJWT": true,
+  "dummyURL": "https://test-bucket.s3.amazonaws.com/test-doc.pdf?signature=xyz"
+}
+```
+
+> ⚠️ **Nota**: Los parámetros dummy están diseñados SOLO para testing y desarrollo. No deben usarse en producción. Pueden ser comentados o removidos fácilmente del código si no se necesitan.
+
 ### GET /api/v1/health
 
 Verificar el estado del servicio.
@@ -209,20 +228,48 @@ El servicio publica eventos a la cola `document_authenticated_response` con la s
 
 ## Ejemplos de Uso
 
-El directorio `events/` contiene tres ejemplos de uso:
+El directorio `events/` contiene siete ejemplos de uso:
+
+### Ejemplos de Producción
 
 1. **example_1_diploma.py**: Autenticación de diploma universitario
 2. **example_2_birth_certificate.py**: Autenticación de registro civil
 3. **example_3_professional_license.py**: Autenticación de tarjeta profesional
 
-Ejecutar un ejemplo:
+### Ejemplos de Prueba (Modo Dummy)
+
+Los siguientes ejemplos utilizan las características de modo dummy para facilitar el testing sin dependencias externas:
+
+4. **example_4_dummy_jwt.py**: Autenticación usando `dummyJWT=true`
+   - Salta la validación de JWT (sin necesidad de JWT_SECRET_KEY válida)
+   - El token JWT se parsea como JSON plano
+   - Útil para testing sin auth-service
+
+5. **example_5_dummy_url.py**: Autenticación usando `dummyURL`
+   - Proporciona una URL presignada ficticia
+   - Salta la llamada a carpeta-ciudadana-service
+   - Útil para testing sin carpeta-ciudadana-service
+
+6. **example_6_full_dummy.py**: Modo de testing completo (`dummyJWT=true` + `dummyURL`)
+   - Combina ambos modos dummy
+   - Testing end-to-end sin dependencias externas
+   - Solo requiere Gov Carpeta API disponible
+
+7. **example_7_hybrid_dummy_jwt.py**: Modo híbrido (solo `dummyJWT=true`)
+   - JWT sin validación
+   - Obtiene URL real de carpeta-ciudadana-service
+   - Útil cuando carpeta-service está disponible pero no auth-service
+
+### Ejecutar Ejemplos
 
 ```bash
 cd events
-python example_1_diploma.py
+python example_1_diploma.py         # Producción: requiere JWT válido
+python example_4_dummy_jwt.py       # Testing: dummy JWT
+python example_6_full_dummy.py      # Testing: modo completo
 ```
 
-**Nota**: Debes reemplazar el JWT token de ejemplo con un token real obtenido del auth-service.
+**Nota**: Los ejemplos de producción (1-3) requieren un JWT token real obtenido del auth-service.
 
 ## Pruebas
 
@@ -249,11 +296,19 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ### Depuración con VS Code
 
-El proyecto incluye configuración de lanzamiento en `.vscode/launch.json`:
+El proyecto incluye configuración de lanzamiento en `.vscode/launch.json` (en la raíz del proyecto):
 
-1. **Python: FastAPI (Uvicorn)**: Iniciar servicio con recarga automática
-2. **Python: Current File**: Ejecutar archivo actual
-3. **Python: Run Tests**: Ejecutar suite de pruebas
+1. **Document Auth Service: FastAPI (debugpy)**: Iniciar servicio con recarga automática usando debugpy
+2. **Document Auth Service: Current File**: Ejecutar archivo actual
+3. **Document Auth Service: Run Tests**: Ejecutar suite de pruebas
+
+**Nota**: La configuración usa `debugpy` como debugger. Asegúrate de tenerlo instalado:
+
+```bash
+pip install debugpy
+```
+
+Para depurar, abre el workspace completo de `carpetaCiudadana` en VS Code y selecciona la configuración de lanzamiento correspondiente.
 
 ### Formateo de Código
 
@@ -287,17 +342,24 @@ document-authentication-service/
 │   ├── test_config.py
 │   └── test_models.py
 ├── events/
-│   ├── example_1_diploma.py
-│   ├── example_2_birth_certificate.py
-│   └── example_3_professional_license.py
+│   ├── example_1_diploma.py                 # Producción
+│   ├── example_2_birth_certificate.py       # Producción
+│   ├── example_3_professional_license.py    # Producción
+│   ├── example_4_dummy_jwt.py               # Testing: dummy JWT
+│   ├── example_5_dummy_url.py               # Testing: dummy URL
+│   ├── example_6_full_dummy.py              # Testing: modo completo
+│   └── example_7_hybrid_dummy_jwt.py        # Testing: modo híbrido
 ├── .vscode/
-│   └── launch.json            # Configuración VS Code
+│   └── launch.json            # Configuración VS Code (deprecada, usar raíz)
 ├── .env.example               # Plantilla de configuración
 ├── .env                       # Configuración local
 ├── Dockerfile                 # Imagen Docker
 ├── requirements.txt           # Dependencias Python
 ├── main.py                    # Punto de entrada
 └── README.md                  # Este archivo
+
+Nota: La configuración de depuración (launch.json) ahora está en la raíz del proyecto
+      en .vscode/launch.json para depurar desde el workspace completo.
 ```
 
 ## Patrones de Diseño Implementados

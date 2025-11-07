@@ -38,7 +38,6 @@ async def authenticate_document(
     request: AuthenticateDocumentRequest,
     background_tasks: BackgroundTasks,
     http_request: Request,
-    jwt_payload: JWTPayload = Depends(get_current_token_payload),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> AuthenticateDocumentResponse:
     """
@@ -49,34 +48,42 @@ async def authenticate_document(
     with a 202 Accepted status.
 
     The authentication flow:
-    1. Validate request and JWT token
+    1. Validate request and JWT token (or skip validation if dummyJWT=true)
     2. Return 202 Accepted immediately
     3. In background:
        - Check Gov Carpeta service health
-       - Get presigned URL from carpeta-ciudadana-service
+       - Get presigned URL from carpeta-ciudadana-service (or use dummyURL if provided)
        - Authenticate with Gov Carpeta
        - Publish result to RabbitMQ queue
 
     Args:
-        request: Document authentication request containing documentId and documentTitle
+        request: Document authentication request containing documentId, documentTitle,
+                 and optional dummyJWT and dummyURL flags
         background_tasks: FastAPI background tasks manager
         http_request: HTTP request object (to extract raw token)
-        jwt_payload: Decoded JWT token payload (from dependency)
         credentials: HTTP Authorization credentials (from dependency)
 
     Returns:
         AuthenticateDocumentResponse with status 202 and message "Accepted"
 
     Raises:
-        HTTPException: 401 if JWT token is invalid or expired
+        HTTPException: 401 if JWT token is invalid or expired (when dummyJWT=false)
     """
     logger.info(
         f"Received authentication request for document {request.document_id} "
-        f"with title '{request.document_title}'"
+        f"with title '{request.document_title}' "
+        f"(dummyJWT={request.dummy_jwt}, dummyURL={bool(request.dummy_url)})"
     )
 
-    # Extract raw token from credentials for service-to-service calls
+    # Extract raw token from credentials
     raw_token = credentials.credentials
+
+    # Decode JWT with or without validation based on dummyJWT flag
+    from app.utils.auth import decode_jwt_token
+
+    jwt_payload = decode_jwt_token(
+        raw_token, skip_validation=request.dummy_jwt or False
+    )
 
     # Add background task for processing
     background_tasks.add_task(

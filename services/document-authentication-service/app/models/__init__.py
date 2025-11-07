@@ -17,6 +17,8 @@ class AuthenticateDocumentRequest(BaseModel):
     Attributes:
         document_id: UUID of the document to authenticate
         document_title: Human-readable title of the document (e.g., "Diploma Grado")
+        dummy_jwt: If True, skip JWT validation and extract claims directly from token as JSON
+        dummy_url: If provided, use this URL instead of calling carpeta-ciudadana-service
     """
 
     document_id: str = Field(
@@ -24,6 +26,16 @@ class AuthenticateDocumentRequest(BaseModel):
     )
     document_title: str = Field(
         ..., description="Title of the document", alias="documentTitle"
+    )
+    dummy_jwt: Optional[bool] = Field(
+        default=False,
+        description="Use dummy JWT mode (skip validation, parse as JSON)",
+        alias="dummyJWT",
+    )
+    dummy_url: Optional[str] = Field(
+        default=None,
+        description="Use this presigned URL instead of fetching from carpeta-ciudadana-service",
+        alias="dummyURL",
     )
 
     model_config = {"populate_by_name": True}

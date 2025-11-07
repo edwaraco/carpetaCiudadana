@@ -2,8 +2,8 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: FastAPI (Uvicorn)",
-      "type": "python",
+      "name": "Document Auth Service: FastAPI (debugpy)",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": [
@@ -17,13 +17,13 @@
       "jinja": true,
       "justMyCode": true,
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}/services/document-authentication-service"
       },
       "cwd": "${workspaceFolder}/services/document-authentication-service"
     },
     {
-      "name": "Python: Current File",
-      "type": "python",
+      "name": "Document Auth Service: Current File",
+      "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
@@ -31,8 +31,8 @@
       "cwd": "${workspaceFolder}/services/document-authentication-service"
     },
     {
-      "name": "Python: Run Tests",
-      "type": "python",
+      "name": "Document Auth Service: Run Tests",
+      "type": "debugpy",
       "request": "launch",
       "module": "pytest",
       "args": [
