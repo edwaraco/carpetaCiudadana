@@ -36,6 +36,8 @@ env/
 *.swo
 *~
 .DS_Store
+# Allow .vscode for debugging configuration
+# .vscode/
 
 # Testing
 .pytest_cache/
