@@ -20,7 +20,7 @@ data:
       "users": [
         {
           "name": "admin",
-          "password_hash": "sQUMt64OIOZp9YFvfzTN81RzzTmgZCRHnWmFGdaMlSiQk/yx",
+          "password_hash": "va3yk4NAHK7CHDUeTPna7qm1vdP7wDcl+wGcxg8a/KzFWbcf",
           "hashing_algorithm": "rabbit_password_hashing_sha256",
           "tags": ["administrator"]
         }
@@ -45,7 +45,7 @@ data:
       "policies": [],
       "queues": [
         {
-          "name": "document_verification_request",
+          "name": "document_authentication_response",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -54,20 +54,7 @@ data:
             "x-quorum-initial-group-size": 3,
             "x-delivery-limit": 3,
             "x-dead-letter-exchange": "carpeta.dlx",
-            "x-dead-letter-routing-key": "document_verification_request.dlq"
-          }
-        },
-        {
-          "name": "document_verified_response",
-          "vhost": "/",
-          "durable": true,
-          "auto_delete": false,
-          "arguments": {
-            "x-queue-type": "quorum",
-            "x-quorum-initial-group-size": 3,
-            "x-delivery-limit": 3,
-            "x-dead-letter-exchange": "carpeta.dlx",
-            "x-dead-letter-routing-key": "document_verified_response.dlq"
+            "x-dead-letter-routing-key": "document_authentication_response.dlq"
           }
         },
         {
@@ -82,7 +69,20 @@ data:
           }
         },
         {
-          "name": "document_verification_request.dlq",
+          "name": "notifications.queue",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3,
+            "x-delivery-limit": 3,
+            "x-dead-letter-exchange": "carpeta.dlx",
+            "x-dead-letter-routing-key": "notifications.queue.dlq"
+          }
+        },
+        {
+          "name": "document_authentication_response.dlq",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -92,7 +92,7 @@ data:
           }
         },
         {
-          "name": "document_verified_response.dlq",
+          "name": "notifications.queue.dlq",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -126,17 +126,9 @@ data:
         {
           "source": "carpeta.events",
           "vhost": "/",
-          "destination": "document_verification_request",
+          "destination": "document_authentication_response",
           "destination_type": "queue",
-          "routing_key": "document.verification.request",
-          "arguments": {}
-        },
-        {
-          "source": "carpeta.events",
-          "vhost": "/",
-          "destination": "document_verified_response",
-          "destination_type": "queue",
-          "routing_key": "document.verified.response",
+          "routing_key": "document.authentication.response",
           "arguments": {}
         },
         {
@@ -148,19 +140,27 @@ data:
           "arguments": {}
         },
         {
-          "source": "carpeta.dlx",
+          "source": "carpeta.events",
           "vhost": "/",
-          "destination": "document_verification_request.dlq",
+          "destination": "notifications.queue",
           "destination_type": "queue",
-          "routing_key": "document_verification_request.dlq",
+          "routing_key": "notifications.#",
           "arguments": {}
         },
         {
           "source": "carpeta.dlx",
           "vhost": "/",
-          "destination": "document_verified_response.dlq",
+          "destination": "document_authentication_response.dlq",
           "destination_type": "queue",
-          "routing_key": "document_verified_response.dlq",
+          "routing_key": "document_authentication_response.dlq",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.dlx",
+          "vhost": "/",
+          "destination": "notifications.queue.dlq",
+          "destination_type": "queue",
+          "routing_key": "notifications.queue.dlq",
           "arguments": {}
         }
       ]
