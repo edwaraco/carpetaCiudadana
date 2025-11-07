@@ -18,7 +18,7 @@ data:
   AUTO_ACK: "false"
   CONSUMER_ENABLED: "true"
   
-  # SendGrid configuration
-  SENDGRID_API_KEY: "SG.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING"
+  # SendGrid configuration - TEMPLATE (replaced by deploy script)
+  SENDGRID_API_KEY: "${SENDGRID_API_KEY}"
   FROM_EMAIL: "carpeta.ciudadana.info@gmail.com"
   FROM_NAME: "Carpeta Ciudadana"
