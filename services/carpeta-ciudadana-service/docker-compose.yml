@@ -53,31 +53,31 @@ services:
     restart: unless-stopped
 
   # Microservicio de Carpeta Ciudadana
-  # carpeta-ciudadana-service:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: carpeta-ciudadana-service
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - AWS_DYNAMODB_ENDPOINT=http://dynamodb-local:8000
-  #     - AWS_REGION=us-east-1
-  #     - AWS_ACCESS_KEY_ID=dummy
-  #     - AWS_SECRET_ACCESS_KEY=dummy
-  #     - MINIO_ENDPOINT=http://minio:9000
-  #     - MINIO_ACCESS_KEY=admin
-  #     - MINIO_SECRET_KEY=admin123
-  #     - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
-  #   depends_on:
-  #     minio:
-  #       condition: service_healthy
-  #     dynamodb-local:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
-  #   restart: unless-stopped
+  carpeta-ciudadana-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carpeta-ciudadana-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - AWS_DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=admin123
+      - MINIO_BUCKET_NAME=carpeta-ciudadana-docs
+    depends_on:
+      minio:
+        condition: service_healthy
+      dynamodb-local:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
   minio-data:
