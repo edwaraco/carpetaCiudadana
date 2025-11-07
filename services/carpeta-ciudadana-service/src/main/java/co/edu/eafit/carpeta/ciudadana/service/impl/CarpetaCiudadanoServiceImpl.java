@@ -255,12 +255,13 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
 
     @Override
     public void actualizarEstadoDocumento(
-            String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo) {
+            String carpetaId, String documentoId, String nuevoEstado, String mensaje) {
         log.info(
-                "Actualizando estado de documento: documentoId={}, carpetaId={}, nuevoEstado={}",
+                "Actualizando estado de documento: documentoId={}, carpetaId={}, nuevoEstado={}, mensaje={}",
                 documentoId,
                 carpetaId,
-                nuevoEstado);
+                nuevoEstado,
+                mensaje);
 
         Documento documento =
                 documentoRepository
@@ -272,13 +273,17 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
 
         documentoRepository.save(documento);
 
+        String descripcionHistorial = mensaje != null 
+                ? String.format("Estado actualizado a: %s - %s", nuevoEstado, mensaje)
+                : String.format("Estado actualizado a: %s", nuevoEstado);
+
         HistorialAcceso acceso =
                 historialAccesoMapper.crearAcceso(
                         carpetaId,
                         documentoId,
                         "ACTUALIZACION_ESTADO",
                         "SISTEMA",
-                        String.format("Estado actualizado a: %s", nuevoEstado));
+                        descripcionHistorial);
         historialRepository.save(acceso);
 
         log.info("Estado del documento actualizado exitosamente: {}", documentoId);

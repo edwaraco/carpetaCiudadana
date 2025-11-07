@@ -40,7 +40,7 @@ public interface CarpetaCiudadanoService {
     String generarUrlDescarga(String carpetaId, String documentoId);
 
     void actualizarEstadoDocumento(
-            String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo);
+            String carpetaId, String documentoId, String nuevoEstado, String mensaje);
 
     /**
      * Inicia el proceso de autenticación de un documento

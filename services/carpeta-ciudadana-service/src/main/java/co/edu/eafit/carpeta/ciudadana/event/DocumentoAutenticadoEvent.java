@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class DocumentoAutenticadoEvent {
   private String documentoId;
   private String carpetaId;
-  private Boolean autenticado;
-  private String motivoRechazo;
+  private Integer statusCode;
+  private String mensaje;
   private LocalDateTime fechaAutenticacion;
 }

@@ -17,20 +17,24 @@ public class DocumentoEventConsumer {
   public void consumirDocumentoAutenticado(DocumentoAutenticadoEvent event) {
     try {
       log.info(
-          "Recibido evento de documento autenticado: documentoId={}, carpetaId={}, autenticado={}",
+          "Recibido evento de documento autenticado: documentoId={}, carpetaId={}, statusCode={}",
           event.getDocumentoId(),
           event.getCarpetaId(),
-          event.getAutenticado());
+          event.getStatusCode());
 
-      String nuevoEstado = event.getAutenticado() ? "AUTENTICADO" : "RECHAZADO";
+      // Determinar estado basado en el código HTTP
+      String nuevoEstado = (event.getStatusCode() >= 200 && event.getStatusCode() < 300) 
+          ? "AUTENTICADO" 
+          : "RECHAZADO";
 
       carpetaCiudadanoService.actualizarEstadoDocumento(
-          event.getCarpetaId(), event.getDocumentoId(), nuevoEstado, event.getMotivoRechazo());
+          event.getCarpetaId(), event.getDocumentoId(), nuevoEstado, event.getMensaje());
 
       log.info(
-          "Estado del documento actualizado exitosamente: documentoId={}, nuevoEstado={}",
+          "Estado del documento actualizado exitosamente: documentoId={}, nuevoEstado={}, mensaje={}",
           event.getDocumentoId(),
-          nuevoEstado);
+          nuevoEstado,
+          event.getMensaje());
 
     } catch (Exception e) {
       log.error(
