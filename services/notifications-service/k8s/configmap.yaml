@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-service-config
+  namespace: carpeta-ciudadana
+data:
+  # Application config
+  LISTEN_PORT: "8080"
+  FRONTEND_BASE_URL: "http://localhost:3000"
+  ENVIRONMENT: "kubernetes"
+  
+  # RabbitMQ simplified configuration
+  RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672"
+  EXCHANGE_NAME: "carpeta.events"
+  QUEUE_NAME: "notifications.queue"
+  ROUTING_KEY: "notifications.send"
+  CONSUMER_TAG: "notifications-service"
+  AUTO_ACK: "false"
+  CONSUMER_ENABLED: "true"
+  
+  # SendGrid configuration
+  SENDGRID_API_KEY: "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"
+  FROM_EMAIL: "carpeta.ciudadana.info@gmail.com"
+  FROM_NAME: "Carpeta Ciudadana"
