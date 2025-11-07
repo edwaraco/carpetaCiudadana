@@ -1,0 +1,81 @@
+name: 'Docker Build and Push'
+description: 'Build Docker image and push to Docker Hub'
+inputs:
+  dockerhub-username:
+    description: 'Docker Hub username'
+    required: true
+  dockerhub-token:
+    description: 'Docker Hub access token'
+    required: true
+  image-name:
+    description: 'Docker image name'
+    required: true
+  dockerfile-path:
+    description: 'Path to Dockerfile'
+    required: true
+  context-path:
+    description: 'Build context path'
+    required: true
+  push-as-latest:
+    description: 'Push latest tag'
+    required: false
+    default: 'true'
+  tag-version:
+    description: 'Docker tag for the image'
+    required: false
+    default: 'true'
+
+outputs:
+  image-digest:
+    description: 'Image digest'
+    value: ${{ steps.build.outputs.digest }}
+  image-tags:
+    description: 'Image tags'
+    value: ${{ steps.meta.outputs.tags }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.dockerhub-username }}
+        password: ${{ inputs.dockerhub-token }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ inputs.context-path }}
+        file: ${{ inputs.dockerfile-path }}
+        push: true
+        tags: |
+          ${{ inputs.dockerhub-username }}/${{ inputs.image-name }}:${{ inputs.tag-version }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Push Docker latest image
+      uses: docker/build-push-action@v5
+      if: ${{ inputs.push-as-latest == 'true' }}
+      with:
+        context: ${{ inputs.context-path }}
+        file: ${{ inputs.dockerfile-path }}
+        push: true
+        tags: |
+          ${{ inputs.dockerhub-username }}/${{ inputs.image-name }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    # 13. Establecer las salidas del job usadas para el despliegue
+    - name: Set Job Outputs
+      id: set_outputs
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      shell: bash
+      run: |
+        echo "image-name=${{ inputs.image-name }}" >> $GITHUB_OUTPUT
+        echo "image-tag=${{ inputs.tag-version }}" >> $GITHUB_OUTPUT

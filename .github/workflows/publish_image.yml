@@ -1,0 +1,118 @@
+name: Publish Image
+
+permissions:
+  contents: write  # Required for pushing tags in production release
+  actions: read
+  checks: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        type: choice
+        description: Servicio a construir
+        required: true
+        options:
+          - "auth-service"
+          - "carpeta-ciudadana-service"
+          - "citizen-web"
+          - "notifications-service"
+        default: "citizen-web"
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+      latest:
+        description: 'Tag as latest version'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-citizen-web:
+    runs-on: ubuntu-22.04
+    name: Build and Push citizen-web
+    if: ${{ github.event.inputs.service == 'citizen-web' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        id: docker-push
+        uses: ./.github/actions/docker-push
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: 'citizen-web'
+          tag-version: ${{ github.event.inputs.version }}
+          context-path: './services/citizen-web'
+          dockerfile-path: './Dockerfile'
+          push-as-latest: ${{ github.event.inputs.latest }}
+
+  build-auth-service:
+    runs-on: ubuntu-22.04
+    name: Build and Push auth-service
+    if: ${{ github.event.inputs.service == 'auth-service' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        id: docker-push
+        uses: ./.github/actions/docker-push
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: 'auth-service'
+          tag-version: ${{ github.event.inputs.version }}
+          context-path: './services/auth-service'
+          dockerfile-path: './Dockerfile'
+          push-as-latest: ${{ github.event.inputs.latest }}
+
+  build-notifications-service:
+    runs-on: ubuntu-22.04
+    name: Build and Push notifications-service
+    if: ${{ github.event.inputs.service == 'notifications-service' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        id: docker-push
+        uses: ./.github/actions/docker-push
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: 'notifications-service'
+          tag-version: ${{ github.event.inputs.version }}
+          context-path: './services/notifications-service'
+          dockerfile-path: './Dockerfile'
+          push-as-latest: ${{ github.event.inputs.latest }}
+
+  build-carpeta-ciudadana-service:
+    runs-on: ubuntu-22.04
+    name: Build and Push carpeta-ciudadana-service
+    if: ${{ github.event.inputs.service == 'carpeta-ciudadana-service' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        id: docker-push
+        uses: ./.github/actions/docker-push
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: 'carpeta-ciudadana-service'
+          tag-version: ${{ github.event.inputs.version }}
+          context-path: './services/carpeta-ciudadana-service'
+          dockerfile-path: './Dockerfile'
+          push-as-latest: ${{ github.event.inputs.latest }}
