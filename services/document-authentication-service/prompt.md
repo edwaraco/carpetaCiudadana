@@ -113,3 +113,8 @@ ahora mismo la queue en rabbit se llama diferente, pero el nombre está siendo c
 si le quieres meter uvicorn para poderlo testear, perfecto. habrá que agregar una launch.json en .vscode para que inicie uvicorn con el main.py
 
 si de casualidad govcarpeta no está disponible (antes de contactar a carpeta-ciudadana-service se hace un healthcheck a curl -I https://govcarpeta-apis-4905ff3c005b.herokuapp.com/apis/), se monta un evento como el de antes pero con status code 500 y mensaje "Gov Carpeta service unavailable" en la cola de rabbit
+
+
+añade unit tests hechos en unittest también, que prueben todos los pedazos de la funcionalidad
+
+también añade una carpeta events/ que sirva de ejemplo para multiples eventos que puedan llegar a este servicio, que le pegen a este endpoint que tenemos, haz tres.
