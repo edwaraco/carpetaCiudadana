@@ -8,13 +8,13 @@ metadata:
   labels:
     app: carpeta-ciudadana
     component: rabbitmq
-provisioner: kubernetes.io/no-provisioner  # Change based on your K8s environment
+provisioner: k8s.io/minikube-hostpath  # kubernetes.io/no-provisioner
 # For cloud providers, use:
 # - kubernetes.io/aws-ebs (AWS)
 # - kubernetes.io/gce-pd (GCP)
 # - kubernetes.io/azure-disk (Azure)
 # For Minikube, use: k8s.io/minikube-hostpath
-volumeBindingMode: WaitForFirstConsumer
+volumeBindingMode: Immediate # or WaitForFirstConsumer
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 
