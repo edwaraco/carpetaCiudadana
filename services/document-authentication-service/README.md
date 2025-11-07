@@ -165,6 +165,11 @@ La configuración se gestiona mediante un ConfigMap (`k8s/configmap.yaml`) con l
 - **JWT_SECRET_KEY**: Clave secreta para validación de JWT
 - **Circuit Breaker settings**: Configuración de resiliencia
 
+**Nota de Seguridad**: El ConfigMap incluye credenciales de desarrollo. Para producción, se recomienda:
+- Usar Kubernetes Secrets en lugar de ConfigMap para datos sensibles (JWT_SECRET_KEY, RABBITMQ_URL)
+- Actualizar las credenciales de RabbitMQ con valores seguros
+- Usar un JWT_SECRET_KEY único y complejo
+
 #### Servicios Expuestos
 
 El despliegue crea dos servicios:
@@ -220,6 +225,8 @@ Estos valores pueden ajustarse en `k8s/deployment.yaml` según las necesidades.
 - **Liveness Probe**: Detecta si el servicio está vivo (delay inicial: 30s, período: 10s)
 
 Ambos probes utilizan el endpoint `/api/v1/health`.
+
+**Nota**: Este servicio usa `/api/v1/health` (diferente a `/health` en notifications-service) siguiendo su diseño de API con versionado.
 
 ## Configuración
 

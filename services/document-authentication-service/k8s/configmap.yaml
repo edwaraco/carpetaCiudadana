@@ -10,6 +10,7 @@ data:
   LOG_LEVEL: "INFO"
   
   # RabbitMQ Configuration
+  # SECURITY NOTE: For production, replace credentials with Kubernetes secrets
   RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672/"
   DOCUMENT_AUTHENTICATED_QUEUE: "document_authenticated_response"
   
@@ -18,6 +19,7 @@ data:
   GOV_CARPETA_SERVICE_URL: "https://govcarpeta-apis-4905ff3c005b.herokuapp.com"
   
   # JWT Configuration (same as carpeta-ciudadana-service)
+  # SECURITY NOTE: For production, replace with actual secret key or use Kubernetes secrets
   JWT_SECRET_KEY: "your-secret-key-here"
   JWT_ALGORITHM: "HS256"
   
