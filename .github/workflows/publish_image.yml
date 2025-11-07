@@ -16,6 +16,7 @@ on:
           - "auth-service"
           - "carpeta-ciudadana-service"
           - "citizen-web"
+          - "document-authentication-service"
           - "notifications-service"
         default: "citizen-web"
       version:
@@ -114,5 +115,26 @@ jobs:
           image-name: 'carpeta-ciudadana-service'
           tag-version: ${{ github.event.inputs.version }}
           context-path: './services/carpeta-ciudadana-service'
+          dockerfile-path: './Dockerfile'
+          push-as-latest: ${{ github.event.inputs.latest }}
+
+  build-document-authentication-service:
+    runs-on: ubuntu-22.04
+    name: Build and Push document-authentication-service
+    if: ${{ github.event.inputs.service == 'document-authentication-service' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        id: docker-push
+        uses: ./.github/actions/docker-push
+        with:
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: 'document-authentication-service'
+          tag-version: ${{ github.event.inputs.version }}
+          context-path: './services/document-authentication-service'
           dockerfile-path: './Dockerfile'
           push-as-latest: ${{ github.event.inputs.latest }}
