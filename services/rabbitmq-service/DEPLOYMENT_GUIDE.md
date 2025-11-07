@@ -230,6 +230,55 @@ If queues are missing:
    kubectl logs -n carpeta-ciudadana carpeta-rabbitmq-server-0 | Select-String "definition"
    ```
 
+### Pods Stuck in Pending State
+
+If pods remain in `Pending` state and never start:
+
+1. **Check pod details to see why it can't be scheduled:**
+
+   ```powershell
+   kubectl describe pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
+   ```
+
+2. **Look for "unbound immediate PersistentVolumeClaims" error:**
+
+   If you see this error, check PVC status:
+
+   ```powershell
+   kubectl get pvc -n carpeta-ciudadana
+   ```
+
+   If PVCs are also `Pending`, the issue is with the StorageClass.
+
+3. **Verify StorageClass and provisioner:**
+
+   ```powershell
+   kubectl get storageclass
+   ```
+
+   **For Minikube**, the provisioner should be `k8s.io/minikube-hostpath`:
+   - Update `k8s/02-storage.yaml` to use `provisioner: k8s.io/minikube-hostpath`
+
+   **For Docker Desktop**, the provisioner should be `docker.io/hostpath`:
+   - Update `k8s/02-storage.yaml` to use `provisioner: docker.io/hostpath`
+
+4. **Fix the StorageClass and redeploy:**
+
+   ```powershell
+   # Delete the cluster
+   kubectl delete -f k8s/
+
+   # Wait for cleanup
+   Start-Sleep -Seconds 10
+
+   # Update 02-storage.yaml with correct provisioner
+   # Then redeploy
+   kubectl apply -f k8s/
+
+   # Monitor pods
+   kubectl get pods -n carpeta-ciudadana -w
+   ```
+
 ### Complete Reset (Nuclear Option)
 
 If things are really broken, delete everything and start fresh:

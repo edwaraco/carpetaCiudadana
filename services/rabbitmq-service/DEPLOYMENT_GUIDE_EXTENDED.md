@@ -586,7 +586,11 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    # Si no hay recursos, escala tu cluster o reduce réplicas
    ```
 
-2. **Problemas con PVC:**
+2. **Problemas con PVC (PersistentVolumeClaims):**
+
+   **Síntoma**: Pods en estado `Pending` con mensaje "unbound immediate PersistentVolumeClaims"
+
+   **Diagnóstico detallado:**
 
    ```bash
    # Ver estado de PVCs
@@ -594,6 +598,47 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    
    # Si están Pending, verificar StorageClass
    kubectl get storageclass
+   
+   # Ver detalles del pod para confirmar el problema
+   kubectl describe pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
+   ```
+
+   **Solución**:
+
+   El problema suele ser que el `provisioner` en `k8s/02-storage.yaml` no coincide con el cluster:
+
+   - **Para Minikube**: El provisioner debe ser `k8s.io/minikube-hostpath`
+     ```yaml
+     provisioner: k8s.io/minikube-hostpath
+     ```
+
+   - **Para Docker Desktop**: El provisioner debe ser `docker.io/hostpath`
+     ```yaml
+     provisioner: docker.io/hostpath
+     ```
+
+   - **Para verificar cuál usar**, revisa la StorageClass por defecto:
+     ```bash
+     kubectl get storageclass
+     # Busca la línea con "(default)" y copia su PROVISIONER
+     ```
+
+   **Aplicar el fix:**
+
+   ```bash
+   # 1. Eliminar el cluster actual
+   kubectl delete -f k8s/
+   
+   # 2. Editar k8s/02-storage.yaml con el provisioner correcto
+   
+   # 3. Esperar limpieza
+   sleep 10
+   
+   # 4. Redesplegar
+   kubectl apply -f k8s/
+   
+   # 5. Monitorear que los PVCs se creen correctamente
+   kubectl get pvc -n carpeta-ciudadana -w
    ```
 
 3. **Problemas de red:**
