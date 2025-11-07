@@ -1,9 +1,11 @@
 /**
  * Environment Variables Helper
- * Provides access to Vite environment variables with Jest compatibility
+ * Provides access to runtime config (Kubernetes) or environment variables
  *
- * In production/dev (Vite), variables come from import.meta.env
- * In tests (Jest), variables come from process.env (mocked in setupTests.ts)
+ * Priority:
+ * 1. Runtime config (window.__RUNTIME_CONFIG__ from Kubernetes ConfigMap)
+ * 2. Vite environment variables (import.meta.env from .env)
+ * 3. Process environment (tests only)
  */
 
 // Check if we're in test environment
@@ -13,9 +15,19 @@ const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 const env = isTest ? process.env : import.meta.env;
 
 /**
- * Gets environment variable value
+ * Gets environment variable value with runtime config support
  */
 export function getEnvVar(key: string): string | undefined {
+  // Try runtime config first (Kubernetes/Docker)
+  if (typeof window !== 'undefined') {
+    const config = window.__RUNTIME_CONFIG__;
+    const runtimeValue = config ? config[key as keyof typeof config] : undefined;
+    if (runtimeValue !== undefined) {
+      return runtimeValue;
+    }
+  }
+
+  // Fallback to build-time env
   return env[key] as string | undefined;
 }
 
