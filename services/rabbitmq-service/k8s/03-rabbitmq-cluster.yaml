@@ -11,7 +11,6 @@ metadata:
     app: carpeta-ciudadana
     component: messaging
 spec:
-  # 3 nodes minimum for Quorum Queues
   replicas: 3
   
   # RabbitMQ image configuration
@@ -24,7 +23,8 @@ spec:
   # Persistence configuration
   # Each pod gets its own PVC (persistence/storage per-node folder)
   persistence:
-    storageClassName: hostpath  # Docker Desktop default StorageClass
+    storageClassName: rabbitmq-storage  # Use our custom storage class - storageClassName: hostpath  for  Docker Desktop
+
     storage: 10Gi
   
   # Resource limits and requests
@@ -132,7 +132,7 @@ metadata:
     app: carpeta-ciudadana
     component: rabbitmq-amqp
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - name: amqp
       port: 5672
@@ -152,7 +152,8 @@ metadata:
     app: carpeta-ciudadana
     component: rabbitmq-management
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  #type: ClusterIP
   ports:
     - name: management
       port: 15672
