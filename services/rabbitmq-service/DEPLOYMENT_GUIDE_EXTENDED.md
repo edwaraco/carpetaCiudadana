@@ -83,15 +83,18 @@ Elige una de estas opciones según tu entorno:
 
 ```powershell
 # Instalar Minikube
-winget install -e --id Kubernetes.Minikube
+winget install -e --id Kubernetes.minikube
 
-# Iniciar cluster con recursos adecuados
-minikube start --driver=hyperv --memory=4096 --cpus=2
+# Iniciar cluster con recursos adecuados. Abre powershell como Administrador
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
+minikube start --driver=hyperv --memory=6144 --cpus=2
 
-# Si no tienes Hyper-V, usa VirtualBox o Docker
-minikube start --driver=virtualbox --memory=4096 --cpus=2
+# Si no tienes Hyper-V, usa VirtualBox o Docker o Kind
+minikube start --driver=virtualbox --memory=6144 --cpus=2
 # o
-minikube start --driver=docker --memory=4096 --cpus=2
+minikube start --driver=docker --memory=6144 --cpus=2
+# o
+minikube start --driver=kind --memory=6144 --cpus=2
 
 # Verificar que esté corriendo
 kubectl cluster-info
@@ -109,7 +112,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
 # Iniciar cluster
-minikube start --memory=4096 --cpus=2
+minikube start --memory=6144 --cpus=2
 
 # Verificar
 kubectl cluster-info

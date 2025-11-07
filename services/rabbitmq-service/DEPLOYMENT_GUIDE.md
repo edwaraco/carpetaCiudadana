@@ -14,10 +14,18 @@ kubectl version --client  # to check
 ### Option 1: Minikube (Recommended for development)
 
 ```powershell
+# Powershell:
+
 # Install Minikube
-winget install -e --id Kubernetes.Minikube
+winget install -e --id Kubernetes.minikube
+
 # Start Minikube cluster
-minikube start --driver=hyperv --memory=4096 --cpus=2
+## On an admin privileged Powershell shell (will make you restart)
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
+
+## Start cluster. Make sure you have docker service running to pull images
+minikube start --driver=hyperv --memory=6144 --cpus=2
+
 # Verify cluster is running
 kubectl cluster-info
 kubectl get nodes

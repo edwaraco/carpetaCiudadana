@@ -37,10 +37,12 @@ spec:
 
 ---
 # For local development with Minikube:
-# 1. Enable ingress addon: minikube addons enable ingress
-# 2. Add to /etc/hosts: 
+# 1. Download and apply Ingress Controller: 
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+# 2. Enable ingress addon: minikube addons enable ingress
+# 3. Add to /etc/hosts: 
 #    $(minikube ip) rabbitmq.carpeta-ciudadana.local
-# 3. Access: http://rabbitmq.carpeta-ciudadana.local
+# 4. Access: http://rabbitmq.carpeta-ciudadana.local
 #
 # For port-forward (simpler for local dev):
 # kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq-management 15672:15672
