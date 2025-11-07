@@ -41,4 +41,13 @@ public interface CarpetaCiudadanoService {
 
     void actualizarEstadoDocumento(
             String carpetaId, String documentoId, String nuevoEstado, String motivoRechazo);
+
+    /**
+     * Inicia el proceso de autenticación de un documento
+     *
+     * @param carpetaId ID de la carpeta
+     * @param documentoId ID del documento
+     * @return Documento con estado actualizado a EN_AUTENTICACION y URL de descarga
+     */
+    co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse iniciarAutenticacionDocumento(String carpetaId, String documentoId);
 }

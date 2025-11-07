@@ -284,6 +284,42 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
         log.info("Estado del documento actualizado exitosamente: {}", documentoId);
     }
 
+    @Override
+    public co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse iniciarAutenticacionDocumento(String carpetaId, String documentoId) {
+        log.info("Iniciando autenticación de documento: {} en carpeta: {}", documentoId, carpetaId);
+
+        Documento documento = documentoRepository.findById(carpetaId, documentoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Documento", "documentoId", documentoId));
+
+        // Validar que el documento esté en estado TEMPORAL
+        if (!"TEMPORAL".equals(documento.getEstadoDocumento())) {
+            throw new IllegalStateException(
+                    String.format("El documento debe estar en estado TEMPORAL para iniciar autenticación. Estado actual: %s", 
+                    documento.getEstadoDocumento()));
+        }
+
+        // Actualizar estado a EN_AUTENTICACION
+        documento.setEstadoDocumento("EN_AUTENTICACION");
+        documento.setFechaUltimaModificacion(LocalDateTime.now());
+        
+        Documento documentoActualizado = documentoRepository.save(documento);
+
+        // Generar URL de descarga
+        String urlDescarga = generarUrlDescarga(carpetaId, documentoId);
+
+        // Registrar en historial
+        HistorialAcceso acceso = historialAccesoMapper.crearAcceso(
+                carpetaId,
+                documentoId,
+                "INICIO_AUTENTICACION",
+                "SISTEMA",
+                "Proceso de autenticación iniciado");
+        historialRepository.save(acceso);
+
+        log.info("Autenticación iniciada exitosamente para documento: {}", documentoId);
+        return new co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse(documentoActualizado, urlDescarga);
+    }
+
     private void actualizarEspacioUtilizado(String carpetaId, long cambioBytes) {
         CarpetaCiudadano carpeta = carpetaRepository.findById(carpetaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Carpeta", "carpetaId", carpetaId));
