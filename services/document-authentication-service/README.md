@@ -106,127 +106,36 @@ docker build -t document-authentication-service:latest .
 docker run -p 8083:8083 --env-file .env document-authentication-service:latest
 ```
 
-### Con Kubernetes
+### Despliegue en Kubernetes (Recomendado)
 
-Este servicio puede desplegarse en Kubernetes para facilitar su integración con RabbitMQ y otros microservicios del ecosistema Carpeta Ciudadana.
+Para un despliegue completo en Kubernetes con RabbitMQ y otros servicios, consultar el **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** que incluye:
 
-#### Prerrequisitos
+- ✅ Construcción de imagen Docker con Python 3.13
+- ✅ Carga de imagen en minikube
+- ✅ Despliegue con ConfigMap y Deployment
+- ✅ Configuración de servicios (ClusterIP + NodePort)
+- ✅ Testing con port-forward (recomendado en Windows)
+- ✅ Verificación de logs y troubleshooting
+- ✅ Validación de mensajes en RabbitMQ
 
-- Kubernetes cluster (minikube, k3s, GKE, EKS, etc.)
-- kubectl configurado
-- Namespace `carpeta-ciudadana` creado
-- RabbitMQ desplegado como `carpeta-rabbitmq` en el mismo namespace
-
-#### Despliegue Automático
-
-El servicio incluye un script de despliegue automatizado:
-
-```bash
-cd services/document-authentication-service
-./k8s/deploy.sh
-```
-
-Este script realiza los siguientes pasos:
-1. Construye la imagen Docker del servicio
-2. Carga la imagen en minikube (o cluster local)
-3. Aplica los manifiestos de ConfigMap
-4. Aplica los manifiestos de Deployment y Services
-5. Espera a que el pod esté listo
-6. Muestra las URLs de acceso y comandos útiles
-
-#### Despliegue Manual
-
-Si prefieres desplegar manualmente:
+**Inicio rápido:**
 
 ```bash
-# 1. Construir la imagen Docker
+# Ver guía completa de despliegue
+cat DEPLOYMENT_GUIDE.md
+
+# Construcción y despliegue
 docker build -t document-authentication-service:latest .
-
-# 2. Cargar imagen en minikube (solo para minikube)
 minikube image load document-authentication-service:latest
-
-# 3. Aplicar manifiestos
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/deployment.yaml
 
-# 4. Verificar el despliegue
-kubectl get pods -n carpeta-ciudadana -l app=document-authentication-service
+# Port-forward para testing (más confiable que NodePort en Windows)
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+# Verificar
+curl http://localhost:8083/api/v1/health
 ```
-
-#### Configuración de Kubernetes
-
-La configuración se gestiona mediante un ConfigMap (`k8s/configmap.yaml`) con las siguientes variables:
-
-- **SERVICE_PORT**: Puerto del servicio (8083)
-- **RABBITMQ_URL**: URL de conexión a RabbitMQ (apunta a `carpeta-rabbitmq:5672`)
-- **DOCUMENT_AUTHENTICATED_QUEUE**: Cola para publicar eventos
-- **CARPETA_CIUDADANA_SERVICE_URL**: URL interna del servicio carpeta-ciudadana
-- **GOV_CARPETA_SERVICE_URL**: URL de Gov Carpeta API
-- **JWT_SECRET_KEY**: Clave secreta para validación de JWT (**DEBE ser la misma que auth-service**)
-- **Circuit Breaker settings**: Configuración de resiliencia
-
-**Nota de Seguridad**: El ConfigMap incluye credenciales de desarrollo. Para producción, se recomienda:
-- Usar Kubernetes Secrets en lugar de ConfigMap para datos sensibles (JWT_SECRET_KEY, RABBITMQ_URL)
-- Actualizar las credenciales de RabbitMQ con valores seguros
-- Usar un JWT_SECRET_KEY único y complejo
-
-#### Servicios Expuestos
-
-El despliegue crea dos servicios:
-
-1. **ClusterIP** (Interno): `document-authentication-service.carpeta-ciudadana.svc.cluster.local:8083`
-   - Para comunicación entre microservicios dentro del cluster
-
-2. **NodePort** (Externo): `<minikube-ip>:30093`
-   - Para acceso desde fuera del cluster (desarrollo/testing)
-
-#### Verificación del Despliegue
-
-```bash
-# Ver estado de pods
-kubectl get pods -n carpeta-ciudadana -l app=document-authentication-service
-
-# Ver logs
-kubectl logs -n carpeta-ciudadana -l app=document-authentication-service -f
-
-# Probar health check (desde fuera del cluster)
-curl http://$(minikube ip):30093/api/v1/health
-
-# Probar health check (desde dentro del cluster)
-kubectl run -it --rm debug --image=curlimages/curl --restart=Never -n carpeta-ciudadana -- \
-  curl http://document-authentication-service:8083/api/v1/health
-```
-
-#### Integración con RabbitMQ
-
-El servicio se conecta automáticamente a RabbitMQ usando la URL configurada en el ConfigMap:
-
-```
-amqp://admin:admin123@carpeta-rabbitmq:5672/
-```
-
-**Nota**: Asegúrate de que RabbitMQ esté desplegado antes de iniciar este servicio. El nombre del servicio debe ser `carpeta-rabbitmq` en el namespace `carpeta-ciudadana`.
-
-La cola utilizada es:
-- **document_authenticated_response**: Cola donde se publican los eventos de autenticación completados
-
-#### Recursos
-
-El servicio está configurado con los siguientes límites de recursos:
-
-- **Requests**: 128Mi RAM, 100m CPU
-- **Limits**: 512Mi RAM, 500m CPU
-
-Estos valores pueden ajustarse en `k8s/deployment.yaml` según las necesidades.
-
-#### Health Checks
-
-- **Readiness Probe**: Verifica que el servicio esté listo (delay inicial: 15s, período: 5s)
-- **Liveness Probe**: Detecta si el servicio está vivo (delay inicial: 30s, período: 10s)
-
-Ambos probes utilizan el endpoint `/api/v1/health`.
-
-**Nota**: Este servicio usa `/api/v1/health` (diferente a `/health` en notifications-service) siguiendo su diseño de API con versionado.
 
 ## Configuración
 
@@ -384,11 +293,48 @@ Los siguientes ejemplos utilizan las características de modo dummy para facilit
 
 ### Ejecutar Ejemplos
 
+#### Desarrollo Local
+
 ```bash
 cd events
 python example_1_diploma.py         # Producción: requiere JWT válido
 python example_4_dummy_jwt.py       # Testing: dummy JWT
 python example_6_full_dummy.py      # Testing: modo completo
+```
+
+#### Kubernetes (Recomendado)
+
+```bash
+# 1. Crear port-forwards para acceso local
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+
+# 2. Ejecutar test (en otra terminal)
+cd events
+python example_6_full_dummy.py
+
+# 3. Verificar logs
+kubectl logs -n carpeta-ciudadana -l app=document-authentication-service --tail=50
+
+# 4. Verificar mensaje en RabbitMQ
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
+  rabbitmqadmin -u admin -p admin123 list queues name messages
+
+# 5. Leer mensaje de la cola
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
+  rabbitmqadmin -u admin -p admin123 get queue=document_authenticated_response count=1
+```
+
+**Resultado esperado:**
+
+```json
+{
+  "documento_id": "33333333-3333-3333-3333-333333333333",
+  "carpeta_id": "test-folder-123",
+  "status_code": "200",
+  "mensaje": "El ciudadado con cedula: 1234567890 ha obtenido la autenticación exitosa del documento: Diploma Universitario - Full Dummy Mode [Code: 0001]",
+  "fecha_autenticacion": "2025-11-08T06:24:37.714254+00:00"
+}
 ```
 
 **Nota**: Los ejemplos de producción (1-3) requieren un JWT token real obtenido del auth-service.
