@@ -6,6 +6,18 @@ upstream auth_service {
     server ${AUTH_SERVICE_URL};
 }
 
+upstream notifications_service {
+    server ${NOTIFICATIONS_SERVICE_URL};
+}
+
+upstream documents_service {
+    server ${DOCUMENTS_SERVICE_URL};
+}
+
+upstream folders_service {
+    server ${FOLDERS_SERVICE_URL};
+}
+
 server {
     listen 8080;
     server_name localhost;
@@ -29,43 +41,40 @@ server {
     # API GATEWAY ROUTES
     # ========================================
 
-    # NOTE: Routes for services not yet deployed are commented out
-    # Uncomment when carpeta-ciudadana-service is available
+    # Documents API - Gestión de documentos (CRUD, upload, download)
+    # Routes: /api/v1/documents/carpetas/{carpetaId}/documentos/*
+    location /api/v1/documents/ {
+        rewrite ^/api/v1/documents/(.*)$ /api/v1/documents/$1 break;
+        proxy_pass http://documents_service;
 
-    # # Documents API - Gestión de documentos (CRUD, upload, download)
-    # # Routes: /api/documents/carpetas/{carpetaId}/documentos/*
-    # location /api/documents/ {
-    #     rewrite ^/api/documents/(.*)$ /api/v1/$1 break;
-    #     proxy_pass http://$documents_service_url;
-    #
-    #     proxy_http_version 1.1;
-    #     proxy_set_header Host $host;
-    #     proxy_set_header X-Real-IP $remote_addr;
-    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    #     proxy_set_header X-Forwarded-Proto $scheme;
-    #     proxy_set_header Upgrade $http_upgrade;
-    #     proxy_set_header Connection 'upgrade';
-    #     proxy_cache_bypass $http_upgrade;
-    #
-    #     # Timeout settings for large file uploads
-    #     proxy_connect_timeout 60s;
-    #     proxy_send_timeout 60s;
-    #     proxy_read_timeout 60s;
-    #     client_max_body_size 50M;
-    # }
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
 
-    # # Folders API - Información de carpetas ciudadanas
-    # # Routes: /api/folders/carpetas/*
-    # location /api/folders/ {
-    #     rewrite ^/api/folders/(.*)$ /api/v1/$1 break;
-    #     proxy_pass http://$folders_service_url;
-    #
-    #     proxy_http_version 1.1;
-    #     proxy_set_header Host $host;
-    #     proxy_set_header X-Real-IP $remote_addr;
-    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    #     proxy_set_header X-Forwarded-Proto $scheme;
-    # }
+        # Timeout settings for large file uploads
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        client_max_body_size 50M;
+    }
+
+    # Folders API - Información de carpetas ciudadanas
+    # Routes: /api/v1/folders/carpetas/*
+    location /api/v1/folders/ {
+        rewrite ^/api/v1/folders/(.*)$ /api/v1/folders/$1 break;
+        proxy_pass http://folders_service;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     # # Identity API - Registro y validación de ciudadanos
     # # Routes: /api/identity/ciudadanos/*

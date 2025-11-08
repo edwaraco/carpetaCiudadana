@@ -32,7 +32,7 @@ services:
   # MinIO (S3-compatible storage)
   minio:
     image: minio/minio:latest
-    container_name: documents-minio
+    container_name: carpeta-ciudadana-minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -54,7 +54,7 @@ services:
   # DynamoDB Local
   dynamodb-local:
     image: amazon/dynamodb-local:latest
-    container_name: dynamodb-local
+    container_name: dynamodb-documents-local
     ports:
       - "8000:8000"
     command: "-jar DynamoDBLocal.jar -sharedDb"
@@ -66,7 +66,7 @@ services:
   # DynamoDB Admin (Interfaz Web para DynamoDB)
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest
-    container_name: dynamodb-admin
+    container_name: dynamodb-documents-admin
     ports:
       - "8001:8001"
     environment:

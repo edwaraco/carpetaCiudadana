@@ -3,21 +3,31 @@
 # 🚀 Deploy Carpeta Ciudadana Service to Kubernetes
 set -e
 
-echo "🏗️  Building carpeta-ciudadana-service Docker image..."
 cd "$(dirname "$0")/.."
+
+echo "📤 Deleting Current infra..."
+kubectl delete -f k8s/ || echo "Infra clean"
+
+echo "🏗️  Building carpeta-ciudadana-service Docker image..."
 docker build -t carpeta-ciudadana-service:latest .
+
+echo "📤 Removing image into minikube..."
+minikube image rm carpeta-ciudadana-service:latest || echo "Image not found"
 
 echo "📤 Loading image into minikube..."
 minikube image load carpeta-ciudadana-service:latest
 
 echo "🗂️  Applying Kubernetes manifests..."
-kubectl apply -f k8s/secret.yaml
 kubectl apply -f k8s/configmap.yaml
+
+echo "🗂️  Applying Kubernetes secrets..."
+kubectl apply -f k8s/secret.yaml
+
+echo "🚀 Building carpeta-ciudadana-service OS and DB..."
+kubectl apply -f k8s/infrastructure.yaml
 
 echo "🚀 Deploying carpeta-ciudadana-service..."
 kubectl apply -f k8s/deployment.yaml
-
-echo "⏳ Waiting for carpeta-ciudadana-service to be ready..."
 kubectl wait --for=condition=ready pod -l app=carpeta-ciudadana-service -n carpeta-ciudadana --timeout=180s
 
 echo "✅ Carpeta Ciudadana service deployed successfully!"

@@ -21,9 +21,16 @@ else
     USE_TEMP_CONFIG=false
 fi
 
-echo "🏗️  Building notifications-service Docker image..."
 cd "$(dirname "$0")/.."
+
+echo "📤 Deleting Current infra..."
+kubectl delete -f k8s/ || echo "Infra clean"
+
+echo "🏗️  Building notifications-service Docker image..."
 docker build -t notifications-service:latest .
+
+echo "📤 Removing image into minikube..."
+minikube rm load notifications-service:latest || echo "Image not founddocuments"
 
 echo "📤 Loading image into minikube..."
 minikube image load notifications-service:latest
@@ -33,11 +40,11 @@ if [ "$USE_TEMP_CONFIG" = true ]; then
     kubectl apply -f /tmp/configmap-temp.yaml
     rm /tmp/configmap-temp.yaml
 else
-    kubectl apply -f configmap.yaml
+    kubectl apply -f k8s/configmap.yaml
 fi
 
 echo "🚀 Deploying notifications-service..."
-kubectl apply -f deployment.yaml
+kubectl apply -f k8s/deployment.yaml
 
 echo "⏳ Waiting for notifications-service to be ready..."
 kubectl wait --for=condition=ready pod -l app=notifications-service -n carpeta-ciudadana --timeout=120s

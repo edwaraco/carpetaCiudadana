@@ -3,12 +3,18 @@
 # 🚀 Deploy Auth Service to Kubernetes
 set -e
 
+echo "📤 Deleting Current infra..."
+kubectl delete -f k8s/ || echo "Infra clean"
+
 echo "🏗️  Building auth-service Docker image..."
 cd "$(dirname "$0")/.."
-docker build -t auth-service-auth-service:latest .
+docker build -t auth-service:latest .
+
+echo "📤 Removing image into minikube..."
+minikube image rm auth-service:latest || echo "Image not found"
 
 echo "📤 Loading image into minikube..."
-minikube image load auth-service-auth-service:latest
+minikube image load auth-service:latest
 
 echo "🗂️  Applying Kubernetes manifests..."
 kubectl apply -f k8s/secret.yaml

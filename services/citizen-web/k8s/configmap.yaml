@@ -47,11 +47,11 @@ data:
   # Mock Configuration - Granular Control
   VITE_MOCK_AUTHENTICATION: "false"
   VITE_MOCK_IDENTITY: "true"
-  VITE_MOCK_DOCUMENTS: "true"
-  VITE_MOCK_CARPETA: "true"
+  VITE_MOCK_DOCUMENTS: "false"
+  VITE_MOCK_CARPETA: "false"
   VITE_MOCK_PORTABILITY: "true"
   VITE_MOCK_REQUESTS: "true"
-  VITE_MOCK_NOTIFICATIONS: "false"
+  VITE_MOCK_NOTIFICATIONS: "true"
   VITE_MOCK_AUDIT: "true"
 
   # Nginx API Gateway - Microservices URLs
