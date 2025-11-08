@@ -88,15 +88,16 @@ class TestDocumentoAutenticadoEvent(unittest.TestCase):
         self.assertIsInstance(event.fechaAutenticacion, datetime)
 
     def test_default_timestamp(self):
-        """Test that timestamp defaults to current UTC time."""
+        """Test that timestamp defaults to current time (naive datetime)."""
         event = DocumentoAutenticadoEvent(
             documentoId="doc-123",
             carpetaId="folder-456",
             statusCode="200",
             mensaje="Success",
         )
-        # Just verify it's a datetime object
+        # Verify it's a datetime object without timezone info (naive)
         self.assertIsInstance(event.fechaAutenticacion, datetime)
+        self.assertIsNone(event.fechaAutenticacion.tzinfo)
 
 
 class TestJWTPayload(unittest.TestCase):

@@ -10,7 +10,7 @@ authentication requests, including:
 """
 
 import logging
-from datetime import datetime, UTC
+from datetime import datetime
 
 from app.models import (
     AuthenticateDocumentRequest,
@@ -84,7 +84,7 @@ async def process_document_authentication(
                 carpetaId=str(carpetaId),
                 statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=AuthenticationMessage.GOV_CARPETA_UNAVAILABLE.value,
-                fechaAutenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(),
             )
             await rabbitmq_client.publish_authentication_event(event)
             return
@@ -111,7 +111,7 @@ async def process_document_authentication(
                     carpetaId=str(carpetaId),
                     statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                     mensaje=f"Failed to retrieve document URL: {str(e)}",
-                    fechaAutenticacion=datetime.now(UTC),
+                    fechaAutenticacion=datetime.now(),
                 )
                 await rabbitmq_client.publish_authentication_event(event)
                 return
@@ -136,7 +136,7 @@ async def process_document_authentication(
                 carpetaId=str(carpetaId),
                 statusCode=result["statusCode"],
                 mensaje=result["message"],
-                fechaAutenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(),
             )
             await rabbitmq_client.publish_authentication_event(event)
             logger.info(
@@ -150,7 +150,7 @@ async def process_document_authentication(
                 carpetaId=str(carpetaId),
                 statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=f"Authentication failed: {str(e)}",
-                fechaAutenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(),
             )
             await rabbitmq_client.publish_authentication_event(event)
 
@@ -163,7 +163,7 @@ async def process_document_authentication(
                 carpetaId=str(carpetaId),
                 statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=f"Internal error: {str(e)}",
-                fechaAutenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(),
             )
             await rabbitmq_client.publish_authentication_event(event)
         except Exception as publish_error:
