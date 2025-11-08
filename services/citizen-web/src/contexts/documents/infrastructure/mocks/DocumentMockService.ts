@@ -13,6 +13,8 @@ import type {
   CursorPaginatedResponse,
   BackendDocumentoUrlResponse,
   PaginationCursor,
+  AuthenticateDocumentRequest,
+  AuthenticateDocumentResponse,
 } from '@/contexts/documents/domain/types';
 
 export class DocumentMockService implements IDocumentService {
@@ -311,6 +313,41 @@ export class DocumentMockService implements IDocumentService {
     return {
       success: true,
       data: mockResponse,
+      timestamp: new Date(),
+    };
+  }
+
+  async authenticateDocument(
+    request: AuthenticateDocumentRequest
+  ): Promise<ApiResponse<AuthenticateDocumentResponse>> {
+    await this.simulateDelay(800);
+
+    console.log(
+      `[Mock] Authenticating document ${request.documentId} (${request.documentTitle})`
+    );
+
+    const document = this.documents.get(request.documentId);
+
+    if (!document) {
+      return {
+        success: false,
+        error: {
+          code: 'DOCUMENT_NOT_FOUND',
+          message: 'Document not found',
+          statusCode: 404,
+        },
+        timestamp: new Date(),
+      };
+    }
+
+    // Simulate successful authentication response (202 Accepted)
+    return {
+      success: true,
+      data: {
+        status: 202,
+        message: 'Accepted',
+      },
+      message: 'Document authentication request accepted',
       timestamp: new Date(),
     };
   }

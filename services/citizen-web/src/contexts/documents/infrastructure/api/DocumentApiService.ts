@@ -15,6 +15,8 @@ import type {
   BackendDocumentoResponse,
   BackendDocumentoUrlResponse,
   PaginationCursor,
+  AuthenticateDocumentRequest,
+  AuthenticateDocumentResponse,
 } from '@/contexts/documents/domain/types';
 import {
   backendToFrontendDocument,
@@ -171,6 +173,28 @@ export class DocumentApiService implements IDocumentService {
       );
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Authenticate a document with Gov Carpeta service
+   * POST /api/v1/authentication/authenticateDocument
+   * Proxied through nginx to document-authentication-service
+   * Note: carpetaId is not needed - authentication uses JWT token from httpClient
+   */
+  async authenticateDocument(
+    request: AuthenticateDocumentRequest
+  ): Promise<ApiResponse<AuthenticateDocumentResponse>> {
+    try {
+      // httpClient baseURL is /api (or /api/v1)
+      // This calls: baseURL + /v1/authentication/authenticateDocument
+      return await httpClient.post<AuthenticateDocumentResponse>(
+        '/v1/authentication/authenticateDocument',
+        request
+      );
+    } catch (error) {
+      console.error('Error authenticating document:', error);
       throw error;
     }
   }

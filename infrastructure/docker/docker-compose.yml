@@ -141,13 +141,15 @@ services:
       - VITE_MOCK_AUDIT=true
 
       # Nginx API Gateway - Microservices URLs
-      - DOCUMENTS_SERVICE_URL=carpeta-ciudadana-service:8080
-      - FOLDERS_SERVICE_URL=carpeta-ciudadana-service:8080
-      - IDENTITY_SERVICE_URL=carpeta-ciudadana-service:8080
-      - AUTH_SERVICE_URL=carpeta-ciudadana-service:8080
-      - NOTIFICATIONS_SERVICE_URL=carpeta-ciudadana-service:8080
-      - PORTABILITY_SERVICE_URL=carpeta-ciudadana-service:8080
-      - REQUESTS_SERVICE_URL=carpeta-ciudadana-service:8080
+      # Using Minikube LoadBalancer IPs from Kubernetes services
+      - DOCUMENTS_SERVICE_URL=10.103.196.172:8080
+      - FOLDERS_SERVICE_URL=10.103.196.172:8080
+      - IDENTITY_SERVICE_URL=10.111.142.51:8081
+      - AUTH_SERVICE_URL=10.110.2.201:8080
+      - NOTIFICATIONS_SERVICE_URL=10.101.217.67:8080
+      - PORTABILITY_SERVICE_URL=10.103.196.172:8080
+      - REQUESTS_SERVICE_URL=10.103.196.172:8080
+      - DOCUMENT_AUTHENTICATION_SERVICE_URL=10.110.40.29:8083
     depends_on:
       - carpeta-ciudadana-service
     networks:

@@ -28,6 +28,8 @@ import {
 } from '@mui/icons-material';
 import { Document, DocumentStatus } from '@/contexts/documents/domain/types';
 import { useTranslation } from 'react-i18next';
+import { AuthenticateDocumentButton } from '@/contexts/documents/components/AuthenticateDocumentButton';
+import { DownloadDocumentButton } from '@/contexts/documents/components/DownloadDocumentButton';
 
 interface DocumentViewerProps {
   document: Document;
@@ -146,6 +148,16 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document }) => {
                 icon={statusIconMap[document.documentStatus]}
               />
             </Box>
+            <Stack direction="row" spacing={1}>
+              <DownloadDocumentButton
+                documentId={document.documentId}
+                documentTitle={document.metadata.title}
+              />
+              <AuthenticateDocumentButton
+                documentId={document.documentId}
+                documentTitle={document.metadata.title}
+              />
+            </Stack>
           </Stack>
 
           <Divider sx={{ my: 2 }} />

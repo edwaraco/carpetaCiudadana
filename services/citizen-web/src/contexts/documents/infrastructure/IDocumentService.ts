@@ -12,6 +12,8 @@ import type {
   CursorPaginatedResponse,
   BackendDocumentoUrlResponse,
   PaginationCursor,
+  AuthenticateDocumentRequest,
+  AuthenticateDocumentResponse,
 } from '@/contexts/documents/domain/types';
 
 export interface IDocumentService {
@@ -71,5 +73,15 @@ export interface IDocumentService {
     carpetaId: string,
     documentId: string
   ): Promise<ApiResponse<BackendDocumentoUrlResponse>>;
+
+  /**
+   * Authenticate a document with Gov Carpeta service
+   * @param request - Authentication request with document ID and title
+   * @returns Authentication response with status code and message
+   * Note: carpetaId is not needed - authentication uses JWT token
+   */
+  authenticateDocument(
+    request: AuthenticateDocumentRequest
+  ): Promise<ApiResponse<AuthenticateDocumentResponse>>;
 }
 

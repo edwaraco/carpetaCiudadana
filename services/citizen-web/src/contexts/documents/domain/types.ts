@@ -78,6 +78,16 @@ export interface SignDocumentResponse {
   message: string;
 }
 
+export interface AuthenticateDocumentRequest {
+  documentId: string;
+  documentTitle: string;
+}
+
+export interface AuthenticateDocumentResponse {
+  status: number;
+  message: string;
+}
+
 // Domain constants
 export const DOCUMENT_FORMAT_LABELS: Record<DocumentFormat, string> = {
   PDF: 'PDF',

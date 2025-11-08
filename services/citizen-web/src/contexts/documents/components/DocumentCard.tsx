@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { Document, DocumentStatus } from '@/contexts/documents/domain/types';
 import { DownloadDocumentButton } from '@/contexts/documents/components/DownloadDocumentButton';
+import { AuthenticateDocumentButton } from '@/contexts/documents/components/AuthenticateDocumentButton';
 
 interface DocumentCardProps {
   document: Document;
@@ -125,6 +126,11 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
             </Tooltip>
           )}
           <DownloadDocumentButton
+            documentId={document.documentId}
+            documentTitle={document.metadata.title}
+            size="small"
+          />
+          <AuthenticateDocumentButton
             documentId={document.documentId}
             documentTitle={document.metadata.title}
             size="small"

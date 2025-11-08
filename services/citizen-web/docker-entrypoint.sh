@@ -58,6 +58,7 @@ export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-auth-service:8080}"
 export NOTIFICATIONS_SERVICE_URL="${NOTIFICATIONS_SERVICE_URL:-notifications-service:8080}"
 export PORTABILITY_SERVICE_URL="${PORTABILITY_SERVICE_URL:-carpeta-ciudadana-service:8080}"
 export REQUESTS_SERVICE_URL="${REQUESTS_SERVICE_URL:-carpeta-ciudadana-service:8080}"
+export DOCUMENT_AUTHENTICATION_SERVICE_URL="${DOCUMENT_AUTHENTICATION_SERVICE_URL:-document-authentication-service:8083}"
 
 echo "📋 Microservices Configuration:"
 echo "  - Documents Service: ${DOCUMENTS_SERVICE_URL}"
@@ -67,10 +68,11 @@ echo "  - Auth Service: ${AUTH_SERVICE_URL}"
 echo "  - Notifications Service: ${NOTIFICATIONS_SERVICE_URL}"
 echo "  - Portability Service: ${PORTABILITY_SERVICE_URL}"
 echo "  - Requests Service: ${REQUESTS_SERVICE_URL}"
+echo "  - Document Authentication Service: ${DOCUMENT_AUTHENTICATION_SERVICE_URL}"
 
 # Substitute environment variables in nginx template
 echo "🔧 Generating nginx.conf from template..."
-envsubst '${DOCUMENTS_SERVICE_URL} ${FOLDERS_SERVICE_URL} ${IDENTITY_SERVICE_URL} ${AUTH_SERVICE_URL} ${NOTIFICATIONS_SERVICE_URL} ${PORTABILITY_SERVICE_URL} ${REQUESTS_SERVICE_URL}' \
+envsubst '${DOCUMENTS_SERVICE_URL} ${FOLDERS_SERVICE_URL} ${IDENTITY_SERVICE_URL} ${AUTH_SERVICE_URL} ${NOTIFICATIONS_SERVICE_URL} ${PORTABILITY_SERVICE_URL} ${REQUESTS_SERVICE_URL} ${DOCUMENT_AUTHENTICATION_SERVICE_URL}' \
     < /etc/nginx/conf.d/nginx.conf.template \
     > /etc/nginx/conf.d/default.conf
 

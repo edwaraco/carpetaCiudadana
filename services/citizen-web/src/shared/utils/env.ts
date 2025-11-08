@@ -52,3 +52,10 @@ export function isMFARequired(): boolean {
   return getEnvVar('VITE_MFA_REQUIRED') === 'true';
 }
 
+/**
+ * Get Document Authentication Service base URL
+ */
+export function getDocumentAuthServiceURL(): string {
+  return getEnvVar('VITE_DOCUMENT_AUTH_SERVICE_URL') || 'http://localhost:8083';
+}
+
