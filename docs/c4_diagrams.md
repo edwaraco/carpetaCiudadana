@@ -369,18 +369,17 @@ sequenceDiagram
     participant CENT as Centralizador MinTIC
 
     C->>OP: 1. Solicita crear perfil<br/>(cédula, datos personales)
+    OP->>C: 2. Envía correo con enlace de validación de cuenta
+    C->>OP: 3. Accede al correo y genera su contraseña
 
     Note over OP,CENT: Validación de no asociación con otros operadores
-    OP->>CENT: 2. Valida ciudadano no esté asociado con otro Operador<br/>(consulta por cédula)
+    OP->>CENT: 4. Valida ciudadano no esté asociado con otro Operador<br/>(consulta por cédula)
 
     alt Ciudadano existe en otro operador
-        CENT-->>OP: 3a. Sí, registrado con Operador X
-        OP-->>C: 4a. Error: Ya tiene cuenta en Operador X<br/>Use portabilidad para migrar
+        CENT-->>OP: 4a. Sí, registrado con Operador X
+        OP-->>C: 4b. Error: Ya tiene cuenta en Operador X<br/>
     else Ciudadano SIN operador
-        CENT-->>OP: 3b. No tiene operador
-
-        OP-->>C: 4b. Envía correo con enlace de validación de cuenta
-        C->>OP: 5. Accede al correo y genera su contraseña
+        CENT-->>OP: 5. No tiene operador
 
         Note over OP,CENT: Registro en Centralizador
         OP->>CENT: 6. Registra ciudadano<br/>(email → operador actual)
@@ -402,11 +401,11 @@ sequenceDiagram
     actor C as Ciudadano
     participant OP as Sistema Operador
 
-    C->>OP: 1. Ingresa credenciales<br/>(email, contraseña)
+    C->>OP: 1. Ingresa credenciales<br/>(número de documento de identidad, contraseña)
 
     OP->>OP: 2. Valida credenciales<br/>contra Identity DB
 
-    OP->>OP: 3. Genera JWT token<br/>(válido 15 min)
+    OP->>OP: 3. Genera JWT token<br/>
 
     OP-->>C: 4. Acceso concedido<br/>Retorna JWT token
 
