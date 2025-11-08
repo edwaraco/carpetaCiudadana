@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface CiudadanoRegistryService {
 
-
   ValidacionCiudadanoResponse validarCiudadano(Long cedula);
 
   RegistroCiudadanoResponse registrarCiudadano(RegistrarCiudadanoRequest request);
