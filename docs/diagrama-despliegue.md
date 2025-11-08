@@ -9,8 +9,11 @@ graph TB
         SendGrid["📧 SendGrid API<br/>Email Service<br/>Protocol: HTTPS"]
     end
 
-    subgraph "Kubernetes Cluster (Minikube - Docker Driver)"
-        subgraph "Frontend Layer"
+    subgraph "Local - User PC"
+        subgraph "OS (Any)"
+            subgraph "Docker Server"
+                subgraph "Kubernetes Cluster (Minikube, Docker Driver)"
+                    subgraph "Frontend Layer"
             CitizenWeb["🖥️ citizen-web<br/>React + TypeScript + Vite<br/>Nginx<br/>Port: 80 (internal: 8080)<br/>NodePort: -<br/>Service: LoadBalancer"]
         end
 
@@ -35,7 +38,10 @@ graph TB
             
             DynamoDB["📊 DynamoDB Local<br/>amazon/dynamodb-local<br/>Port: 8000<br/>Tables:<br/>- CarpetaCiudadano<br/>- Documento<br/>- HistorialAcceso<br/>Service: ClusterIP"]
             
-            MinIO["📦 MinIO<br/>minio/minio:latest<br/>API Port: 9000<br/>Console Port: 9001<br/>NodePort Console: 30901<br/>Bucket: carpeta-ciudadana-docs<br/>Storage:<br/>- Documentos PDF/JPEG/PNG<br/>- Presigned URLs (15min)<br/>Service: ClusterIP + NodePort (console)"]
+                        MinIO["📦 MinIO<br/>minio/minio:latest<br/>API Port: 9000<br/>Console Port: 9001<br/>NodePort Console: 30901<br/>Bucket: carpeta-ciudadana-docs<br/>Storage:<br/>- Documentos PDF/JPEG/PNG<br/>- Presigned URLs (15min)<br/>Service: ClusterIP + NodePort (console)"]
+                    end
+                end
+            end
         end
     end
 
@@ -211,7 +217,7 @@ graph TB
 5. **Alta Disponibilidad**:
    - RabbitMQ: 3 nodos con Quorum Queues
    - Frontend: 3 réplicas
-   - Otros servicios: 1 réplica
+   - Otros servicios: 1 réplica, pero podrían ser escalados según demanda
 
 ## Acceso desde el Host (Minikube)
 
