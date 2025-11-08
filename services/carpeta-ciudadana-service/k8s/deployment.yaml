@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carpeta-ciudadana-service
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carpeta-ciudadana-service
+  template:
+    metadata:
+      labels:
+        app: carpeta-ciudadana-service
+    spec:
+      containers:
+      - name: carpeta-ciudadana-service
+        image: carpeta-ciudadana-service:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: carpeta-ciudadana-config
+        - secretRef:
+            name: carpeta-ciudadana-secret
+        readinessProbe:
+          httpGet:
+            path: /api/v1/actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /api/v1/actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: carpeta-ciudadana-service
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: carpeta-ciudadana-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: carpeta-ciudadana-service-external
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: carpeta-ciudadana-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30081
+  type: NodePort
