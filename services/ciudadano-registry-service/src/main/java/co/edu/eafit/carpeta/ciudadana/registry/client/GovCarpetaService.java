@@ -30,7 +30,7 @@ public class GovCarpetaService {
 
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(response.getStatusCode() == HttpStatus.OK)
+          .exitoso(response.getStatusCode() == HttpStatus.NO_CONTENT)
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {

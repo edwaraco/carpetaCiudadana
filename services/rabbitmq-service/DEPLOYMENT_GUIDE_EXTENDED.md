@@ -83,19 +83,23 @@ Elige una de estas opciones según tu entorno:
 
 ```powershell
 # Instalar Minikube
-winget install -e --id Kubernetes.Minikube
+winget install -e --id Kubernetes.minikube
 
-# Iniciar cluster con recursos adecuados
-minikube start --driver=hyperv --memory=4096 --cpus=2
-
-# Si no tienes Hyper-V, usa VirtualBox o Docker
-minikube start --driver=virtualbox --memory=4096 --cpus=2
-# o
-minikube start --driver=docker --memory=4096 --cpus=2
+# Iniciar cluster con recursos adecuados. Abre powershell como Administrador
+minikube start --driver=docker --memory=16384 --cpus=2
 
 # Verificar que esté corriendo
 kubectl cluster-info
 kubectl get nodes
+```
+
+Otras opciones:
+
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
+minikube start --driver=hyperv --memory=16384 --cpus=2
+minikube start --driver=virtualbox --memory=16384 --cpus=2
+minikube start --driver=kind --memory=16384 --cpus=2
 ```
 
 **macOS/Linux:**
@@ -109,7 +113,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
 # Iniciar cluster
-minikube start --memory=4096 --cpus=2
+minikube start --memory=16384 --cpus=2
 
 # Verificar
 kubectl cluster-info
@@ -583,7 +587,11 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    # Si no hay recursos, escala tu cluster o reduce réplicas
    ```
 
-2. **Problemas con PVC:**
+2. **Problemas con PVC (PersistentVolumeClaims):**
+
+   **Síntoma**: Pods en estado `Pending` con mensaje "unbound immediate PersistentVolumeClaims"
+
+   **Diagnóstico detallado:**
 
    ```bash
    # Ver estado de PVCs
@@ -591,6 +599,50 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    
    # Si están Pending, verificar StorageClass
    kubectl get storageclass
+   
+   # Ver detalles del pod para confirmar el problema
+   kubectl describe pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
+   ```
+
+   **Solución**:
+
+   El problema suele ser que el `provisioner` en `k8s/02-storage.yaml` no coincide con el cluster:
+
+   - **Para Minikube**: El provisioner debe ser `k8s.io/minikube-hostpath`
+
+     ```yaml
+     provisioner: k8s.io/minikube-hostpath
+     ```
+
+   - **Para Docker Desktop**: El provisioner debe ser `docker.io/hostpath`
+
+     ```yaml
+     provisioner: docker.io/hostpath
+     ```
+
+   - **Para verificar cuál usar**, revisa la StorageClass por defecto:
+
+     ```bash
+     kubectl get storageclass
+     # Busca la línea con "(default)" y copia su PROVISIONER
+     ```
+
+   **Aplicar el fix:**
+
+   ```bash
+   # 1. Eliminar el cluster actual
+   kubectl delete -f k8s/
+   
+   # 2. Editar k8s/02-storage.yaml con el provisioner correcto
+   
+   # 3. Esperar limpieza
+   sleep 10
+   
+   # 4. Redesplegar
+   kubectl apply -f k8s/
+   
+   # 5. Monitorear que los PVCs se creen correctamente
+   kubectl get pvc -n carpeta-ciudadana -w
    ```
 
 3. **Problemas de red:**
@@ -656,6 +708,33 @@ kubectl apply -f services/rabbitmq-service/k8s/
 
 # Esperar a que los pods estén ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
+```
+
+### Reset minikube (si usas minikube)
+Si minikube está fallando, puedes eliminar y recrear el cluster:
+
+```powershell
+minikube delete
+
+# if doesn't work...
+# Kill process
+taskkill /F /IM vmwp.exe 2>$null
+
+# Remove minikube configuration
+Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$env:USERPROFILE\.kube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Reiniciar Docker Desktop completamente
+# (Ir a la bandeja del sistema, click derecho en Docker, "Quit Docker Desktop")
+# Esperar 10 segundos y volver a abrir Docker Desktop
+
+# if there are more problems, like <user>.minikube\machines\minikube\config.json not found
+# Then, delete minikube VM from Hyper-V Manager
+# And delete whole .minikube folder manually
+# Do everything above again
+
+# Recreate minikube cluster
+minikube start --driver=docker --memory=16384 --cpus=2
 ```
 
 ---

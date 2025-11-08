@@ -14,10 +14,14 @@ kubectl version --client  # to check
 ### Option 1: Minikube (Recommended for development)
 
 ```powershell
+# Powershell:
+
 # Install Minikube
-winget install -e --id Kubernetes.Minikube
-# Start Minikube cluster
-minikube start --driver=hyperv --memory=4096 --cpus=2
+winget install -e --id Kubernetes.minikube
+
+## Start cluster. Make sure you have docker service running to pull images
+minikube start --driver=docker --memory=16384 --cpus=2
+
 # Verify cluster is running
 kubectl cluster-info
 kubectl get nodes
@@ -222,6 +226,55 @@ If queues are missing:
    kubectl logs -n carpeta-ciudadana carpeta-rabbitmq-server-0 | Select-String "definition"
    ```
 
+### Pods Stuck in Pending State
+
+If pods remain in `Pending` state and never start:
+
+1. **Check pod details to see why it can't be scheduled:**
+
+   ```powershell
+   kubectl describe pod carpeta-rabbitmq-server-0 -n carpeta-ciudadana
+   ```
+
+2. **Look for "unbound immediate PersistentVolumeClaims" error:**
+
+   If you see this error, check PVC status:
+
+   ```powershell
+   kubectl get pvc -n carpeta-ciudadana
+   ```
+
+   If PVCs are also `Pending`, the issue is with the StorageClass.
+
+3. **Verify StorageClass and provisioner:**
+
+   ```powershell
+   kubectl get storageclass
+   ```
+
+   **For Minikube**, the provisioner should be `k8s.io/minikube-hostpath`:
+   - Update `k8s/02-storage.yaml` to use `provisioner: k8s.io/minikube-hostpath`
+
+   **For Docker Desktop**, the provisioner should be `docker.io/hostpath`:
+   - Update `k8s/02-storage.yaml` to use `provisioner: docker.io/hostpath`
+
+4. **Fix the StorageClass and redeploy:**
+
+   ```powershell
+   # Delete the cluster
+   kubectl delete -f k8s/
+
+   # Wait for cleanup
+   Start-Sleep -Seconds 10
+
+   # Update 02-storage.yaml with correct provisioner
+   # Then redeploy
+   kubectl apply -f k8s/
+
+   # Monitor pods
+   kubectl get pods -n carpeta-ciudadana -w
+   ```
+
 ### Complete Reset (Nuclear Option)
 
 If things are really broken, delete everything and start fresh:
@@ -238,4 +291,32 @@ kubectl apply -f services/rabbitmq-service/k8s/
 
 # Wait for pods to be ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
+```
+
+### Reset minikube (if using minikube)
+
+If minikube is misbehaving, you can delete and recreate the cluster:
+
+```powershell
+minikube delete
+
+# if doesn't work...
+# Kill process
+taskkill /F /IM vmwp.exe 2>$null
+
+# Remove minikube configuration
+Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$env:USERPROFILE\.kube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Reiniciar Docker Desktop completamente
+# (Ir a la bandeja del sistema, click derecho en Docker, "Quit Docker Desktop")
+# Esperar 10 segundos y volver a abrir Docker Desktop
+
+# if there are more problems, like <user>.minikube\machines\minikube\config.json not found
+# Then, delete minikube VM from Hyper-V Manager
+# And delete whole .minikube folder manually
+# Do everything above again
+
+# Recreate minikube cluster
+minikube start --driver=docker --memory=16384 --cpus=2
 ```

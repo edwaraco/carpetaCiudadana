@@ -2,11 +2,11 @@
  * Feature Flags Configuration
  *
  * Este archivo centraliza todas las feature flags del sistema.
- * Las flags se configuran mediante variables de entorno (VITE_FEATURE_*).
+ * Las flags se configuran mediante runtime config (Kubernetes) o variables de entorno (.env).
  *
  * Para habilitar/deshabilitar features:
- * 1. Actualizar .env con VITE_FEATURE_[NOMBRE]=true/false
- * 2. Reiniciar el servidor de desarrollo
+ * - En Kubernetes: Actualizar ConfigMap citizen-web-config
+ * - En desarrollo local: Actualizar .env con VITE_FEATURE_[NOMBRE]=true/false
  *
  * @example
  * // En .env
@@ -66,13 +66,19 @@ const DEFAULT_FLAGS: Record<FeatureFlag, boolean> = {
 };
 
 /**
- * Obtiene el valor de una feature flag desde las variables de entorno
+ * Obtiene el valor de una feature flag desde runtime config o variables de entorno
  * @param flag - Nombre de la feature flag
  * @returns true si la feature está habilitada, false en caso contrario
  */
 function getEnvFeatureFlag(flag: FeatureFlag): boolean {
   const envKey = `VITE_FEATURE_${flag}`;
-  const envValue = import.meta.env[envKey];
+
+  // Try runtime config first (Kubernetes/Docker)
+  const config = window.__RUNTIME_CONFIG__;
+  const runtimeValue = config ? config[envKey as keyof typeof config] : undefined;
+
+  // Fallback to build-time env (local development)
+  const envValue = runtimeValue !== undefined ? runtimeValue : import.meta.env[envKey];
 
   // Si no está definida, usar valor por defecto
   if (envValue === undefined) {
