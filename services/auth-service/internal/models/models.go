@@ -8,12 +8,10 @@ import (
 
 // User represents a user in the auth system (minimal auth data only)
 type User struct {
-	CitizenID     string    `json:"citizen_id" db:"citizen_id"` // Primary identifier
-	PasswordHash  string    `json:"-" db:"password_hash"`       // Never expose password hash in JSON
-	EmailVerified bool      `json:"email_verified" db:"email_verified"`
-	Email         string    `json:"email" db:"email"` // User email address
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	CitizenID     string `json:"citizen_id" db:"citizen_id"` // Primary identifier
+	PasswordHash  string `json:"-" db:"password_hash"`       // Never expose password hash in JSON
+	EmailVerified bool   `json:"email_verified" db:"email_verified"`
+	Email         string `json:"email" db:"email"` // User email address
 }
 
 // UserProfile represents full user profile data (stored in Identity Service)

@@ -59,16 +59,14 @@ func (d *Database) CreateUser(ctx context.Context, citizenID, passwordHash, emai
 	}
 
 	query := `
-		INSERT INTO auth.users (
-			citizen_id, password_hash, email_verified, email
-		) VALUES ($1, $2, $3, $4)
-		RETURNING created_at, updated_at
-	`
+	       INSERT INTO auth.users (
+		       citizen_id, password_hash, email_verified, email
+	       ) VALUES ($1, $2, $3, $4)
+       `
 
-	row := d.pool.QueryRow(ctx, query,
+	_, err := d.pool.Exec(ctx, query,
 		user.CitizenID, user.PasswordHash, user.EmailVerified, user.Email,
 	)
-	err := row.Scan(&user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
