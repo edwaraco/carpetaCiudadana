@@ -86,18 +86,18 @@ class DocumentoAutenticadoEvent(BaseModel):
     after processing the authentication request.
 
     Attributes:
-        documento_id: Document UUID
-        carpeta_id: Folder UUID (from JWT token)
-        status_code: Result status code (200, 204, 500, 501)
+        documentoId: Document UUID
+        carpetaId: Folder UUID (from JWT token)
+        statusCode: Result status code (200, 204, 500, 501)
         mensaje: Response message from Gov Carpeta or error message
-        fecha_autenticacion: Timestamp when authentication was processed
+        fechaAutenticacion: Timestamp when authentication was processed
     """
 
-    documento_id: str = Field(..., description="Document UUID")
-    carpeta_id: str = Field(..., description="Folder UUID from JWT token")
-    status_code: str = Field(..., description="Authentication status code")
+    documentoId: str = Field(..., description="Document UUID")
+    carpetaId: str = Field(..., description="Folder UUID from JWT token")
+    statusCode: str = Field(..., description="Authentication status code")
     mensaje: str = Field(..., description="Authentication result message")
-    fecha_autenticacion: datetime = Field(
+    fechaAutenticacion: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="Authentication timestamp",
     )
@@ -119,7 +119,7 @@ class JWTPayload(BaseModel):
 
     folder_id: Optional[str] = Field(None, alias="folderId")
     citizen_id: Optional[int] = Field(None, alias="citizenId")
-    carpeta_id: Optional[str] = Field(None, alias="carpetaId")
+    carpetaId: Optional[str] = Field(None, alias="carpetaId")
     id_citizen: Optional[int] = Field(None, alias="idCitizen")
     sub: Optional[str] = None
     exp: Optional[int] = None

@@ -39,14 +39,14 @@ async def check_gov_carpeta_health() -> bool:
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.head(f"{settings.gov_carpeta_service_url}/apis/")
-            return response.status_code < 500
+            return response.statusCode < 500
     except Exception as e:
         logger.error(f"Gov Carpeta health check failed: {str(e)}")
         return False
 
 
 async def get_presigned_document_url(
-    carpeta_id: str, documento_id: str, jwt_token: str
+    carpetaId: str, documentoId: str, jwt_token: str
 ) -> str:
     """
     Get presigned URL for document download from carpeta-ciudadana-service.
@@ -55,8 +55,8 @@ async def get_presigned_document_url(
     obtain a temporary presigned URL for downloading the document.
 
     Args:
-        carpeta_id: UUID of the citizen's folder
-        documento_id: UUID of the document
+        carpetaId: UUID of the citizen's folder
+        documentoId: UUID of the document
         jwt_token: JWT bearer token for authentication
 
     Returns:
@@ -67,7 +67,7 @@ async def get_presigned_document_url(
     """
     url = (
         f"{settings.carpeta_ciudadana_service_url}/api/v1/carpetas/"
-        f"{carpeta_id}/documentos/{documento_id}/descargar"
+        f"{carpetaId}/documentos/{documentoId}/descargar"
     )
 
     headers = {"Authorization": f"Bearer {jwt_token}"}
@@ -94,7 +94,7 @@ async def get_presigned_document_url(
                     )
 
         presigned_url = carpeta_service_circuit_breaker.call(_make_request)
-        logger.info(f"Retrieved presigned URL for document {documento_id}")
+        logger.info(f"Retrieved presigned URL for document {documentoId}")
         return presigned_url
 
     except Exception as e:
@@ -135,50 +135,50 @@ async def authenticate_document_with_gov_carpeta(
                 )
 
                 # Handle different response status codes
-                if response.status_code == 200:
+                if response.statusCode == 200:
                     # Success - extract message
                     try:
                         message = response.json()
                         if isinstance(message, str):
-                            return {"status_code": "200", "message": message}
+                            return {"statusCode": "200", "message": message}
                         else:
                             return {
-                                "status_code": "200",
+                                "statusCode": "200",
                                 "message": str(message),
                             }
                     except Exception:
                         return {
-                            "status_code": "200",
+                            "statusCode": "200",
                             "message": response.text,
                         }
 
-                elif response.status_code == 204:
+                elif response.statusCode == 204:
                     return {
-                        "status_code": "204",
+                        "statusCode": "204",
                         "message": "No Content",
                     }
 
-                elif response.status_code == 500:
+                elif response.statusCode == 500:
                     return {
-                        "status_code": "500",
+                        "statusCode": "500",
                         "message": "Application Error",
                     }
 
-                elif response.status_code == 501:
+                elif response.statusCode == 501:
                     return {
-                        "status_code": "501",
+                        "statusCode": "501",
                         "message": "Wrong Parameters",
                     }
 
                 else:
                     return {
-                        "status_code": str(response.status_code),
+                        "statusCode": str(response.statusCode),
                         "message": response.text or "Unknown error",
                     }
 
         result = gov_carpeta_circuit_breaker.call(_make_request)
         logger.info(
-            f"Gov Carpeta authentication result: {result['status_code']} - {result['message']}"
+            f"Gov Carpeta authentication result: {result['statusCode']} - {result['message']}"
         )
         return result
 

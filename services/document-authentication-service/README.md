@@ -30,9 +30,9 @@ sequenceDiagram
         DAS->>GC: PUT /apis/authenticateDocument<br/>{idCitizen, UrlDocument, documentTitle}
         GC-->>DAS: 200 OK / 204 / 500 / 501
         
-        DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code, mensaje
+        DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>statusCode, mensaje
     else Gov Carpeta No Disponible
-        DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code: 500<br/>mensaje: "Gov Carpeta service unavailable"
+        DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>statusCode: 500<br/>mensaje: "Gov Carpeta service unavailable"
     end
 ```
 
@@ -243,11 +243,11 @@ El servicio publica eventos a la cola `document_authenticated_response` con la s
 
 ```json
 {
-  "documento_id": "550e8400-e29b-41d4-a716-446655440000",
-  "carpeta_id": "folder-123-456",
-  "status_code": "200",
+  "documentoId": "550e8400-e29b-41d4-a716-446655440000",
+  "carpetaId": "folder-123-456",
+  "statusCode": "200",
   "mensaje": "El documento: Diploma Grado del ciudadano 1234567890 ha sido autenticado exitosamente",
-  "fecha_autenticacion": "2024-11-07T10:30:45.123456"
+  "fechaAutenticacion": "2024-11-07T10:30:45.123456"
 }
 ```
 
@@ -329,11 +329,11 @@ kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
 
 ```json
 {
-  "documento_id": "33333333-3333-3333-3333-333333333333",
-  "carpeta_id": "test-folder-123",
-  "status_code": "200",
+  "documentoId": "33333333-3333-3333-3333-333333333333",
+  "carpetaId": "test-folder-123",
+  "statusCode": "200",
   "mensaje": "El ciudadado con cedula: 1234567890 ha obtenido la autenticación exitosa del documento: Diploma Universitario - Full Dummy Mode [Code: 0001]",
-  "fecha_autenticacion": "2025-11-08T06:24:37.714254+00:00"
+  "fechaAutenticacion": "2025-11-08T06:24:37.714254+00:00"
 }
 ```
 

@@ -56,19 +56,19 @@ async def process_document_authentication(
         This function handles all errors internally and always publishes
         an event to RabbitMQ, even in case of failures.
     """
-    documento_id = request.document_id
+    documentoId = request.document_id
     document_title = request.document_title
 
     # Extract folder_id and citizen_id from JWT payload
     # Handle different possible field names
-    carpeta_id = (
-        jwt_payload.folder_id or jwt_payload.carpeta_id or jwt_payload.sub or "unknown"
+    carpetaId = (
+        jwt_payload.folder_id or jwt_payload.carpetaId or jwt_payload.sub or "unknown"
     )
     citizen_id = jwt_payload.citizen_id or jwt_payload.id_citizen or 0
 
     logger.info(
-        f"Starting authentication process for document {documento_id} "
-        f"in folder {carpeta_id} (dummy_url={bool(request.dummy_url)})"
+        f"Starting authentication process for document {documentoId} "
+        f"in folder {carpetaId} (dummy_url={bool(request.dummy_url)})"
     )
 
     try:
@@ -80,11 +80,11 @@ async def process_document_authentication(
             logger.warning("Gov Carpeta service is unavailable")
             # Publish failure event
             event = DocumentoAutenticadoEvent(
-                documento_id=documento_id,
-                carpeta_id=str(carpeta_id),
-                status_code=AuthenticationStatus.INTERNAL_ERROR.value,
+                documentoId=documentoId,
+                carpetaId=str(carpetaId),
+                statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=AuthenticationMessage.GOV_CARPETA_UNAVAILABLE.value,
-                fecha_autenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(UTC),
             )
             await rabbitmq_client.publish_authentication_event(event)
             return
@@ -99,19 +99,19 @@ async def process_document_authentication(
             logger.info("Retrieving presigned URL from carpeta-ciudadana-service...")
             try:
                 presigned_url = await get_presigned_document_url(
-                    carpeta_id=str(carpeta_id),
-                    documento_id=documento_id,
+                    carpetaId=str(carpetaId),
+                    documentoId=documentoId,
                     jwt_token=raw_token,
                 )
                 logger.info(f"Presigned URL retrieved successfully")
             except ExternalServiceError as e:
                 logger.error(f"Failed to get presigned URL: {str(e)}")
                 event = DocumentoAutenticadoEvent(
-                    documento_id=documento_id,
-                    carpeta_id=str(carpeta_id),
-                    status_code=AuthenticationStatus.INTERNAL_ERROR.value,
+                    documentoId=documentoId,
+                    carpetaId=str(carpetaId),
+                    statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                     mensaje=f"Failed to retrieve document URL: {str(e)}",
-                    fecha_autenticacion=datetime.now(UTC),
+                    fechaAutenticacion=datetime.now(UTC),
                 )
                 await rabbitmq_client.publish_authentication_event(event)
                 return
@@ -127,30 +127,30 @@ async def process_document_authentication(
         try:
             result = await authenticate_document_with_gov_carpeta(gov_carpeta_request)
             logger.info(
-                f"Gov Carpeta authentication completed with status {result['status_code']}"
+                f"Gov Carpeta authentication completed with status {result['statusCode']}"
             )
 
             # Step 4: Publish success event
             event = DocumentoAutenticadoEvent(
-                documento_id=documento_id,
-                carpeta_id=str(carpeta_id),
-                status_code=result["status_code"],
+                documentoId=documentoId,
+                carpetaId=str(carpetaId),
+                statusCode=result["statusCode"],
                 mensaje=result["message"],
-                fecha_autenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(UTC),
             )
             await rabbitmq_client.publish_authentication_event(event)
             logger.info(
-                f"Authentication event published successfully for document {documento_id}"
+                f"Authentication event published successfully for document {documentoId}"
             )
 
         except ExternalServiceError as e:
             logger.error(f"Failed to authenticate with Gov Carpeta: {str(e)}")
             event = DocumentoAutenticadoEvent(
-                documento_id=documento_id,
-                carpeta_id=str(carpeta_id),
-                status_code=AuthenticationStatus.INTERNAL_ERROR.value,
+                documentoId=documentoId,
+                carpetaId=str(carpetaId),
+                statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=f"Authentication failed: {str(e)}",
-                fecha_autenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(UTC),
             )
             await rabbitmq_client.publish_authentication_event(event)
 
@@ -159,11 +159,11 @@ async def process_document_authentication(
         logger.error(f"Unexpected error in authentication process: {str(e)}")
         try:
             event = DocumentoAutenticadoEvent(
-                documento_id=documento_id,
-                carpeta_id=str(carpeta_id),
-                status_code=AuthenticationStatus.INTERNAL_ERROR.value,
+                documentoId=documentoId,
+                carpetaId=str(carpetaId),
+                statusCode=AuthenticationStatus.INTERNAL_ERROR.value,
                 mensaje=f"Internal error: {str(e)}",
-                fecha_autenticacion=datetime.now(UTC),
+                fechaAutenticacion=datetime.now(UTC),
             )
             await rabbitmq_client.publish_authentication_event(event)
         except Exception as publish_error:

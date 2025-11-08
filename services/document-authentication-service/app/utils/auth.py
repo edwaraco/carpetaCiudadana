@@ -64,14 +64,14 @@ def decode_jwt_token(token: str, skip_validation: bool = False) -> JWTPayload:
     except JWTError as e:
         logger.error(f"JWT validation error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            statusCode=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception as e:
         logger.error(f"JWT parsing error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            statusCode=status.HTTP_401_UNAUTHORIZED,
             detail=f"Could not parse JWT token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )

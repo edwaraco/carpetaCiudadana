@@ -57,7 +57,7 @@ class TestDummyJWT(unittest.TestCase):
         with self.assertRaises(HTTPException) as context:
             decode_jwt_token(fake_jwt, skip_validation=False)
 
-        self.assertEqual(context.exception.status_code, 401)
+        self.assertEqual(context.exception.statusCode, 401)
 
     def test_decode_jwt_invalid_format_with_skip_validation(self):
         """Test that invalid JWT format raises error even with skip_validation=True."""

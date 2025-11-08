@@ -76,27 +76,27 @@ class TestDocumentoAutenticadoEvent(unittest.TestCase):
     def test_valid_event(self):
         """Test creation of valid event."""
         event = DocumentoAutenticadoEvent(
-            documento_id="doc-123",
-            carpeta_id="folder-456",
-            status_code="200",
+            documentoId="doc-123",
+            carpetaId="folder-456",
+            statusCode="200",
             mensaje="Success",
         )
-        self.assertEqual(event.documento_id, "doc-123")
-        self.assertEqual(event.carpeta_id, "folder-456")
-        self.assertEqual(event.status_code, "200")
+        self.assertEqual(event.documentoId, "doc-123")
+        self.assertEqual(event.carpetaId, "folder-456")
+        self.assertEqual(event.statusCode, "200")
         self.assertEqual(event.mensaje, "Success")
-        self.assertIsInstance(event.fecha_autenticacion, datetime)
+        self.assertIsInstance(event.fechaAutenticacion, datetime)
 
     def test_default_timestamp(self):
         """Test that timestamp defaults to current UTC time."""
         event = DocumentoAutenticadoEvent(
-            documento_id="doc-123",
-            carpeta_id="folder-456",
-            status_code="200",
+            documentoId="doc-123",
+            carpetaId="folder-456",
+            statusCode="200",
             mensaje="Success",
         )
         # Just verify it's a datetime object
-        self.assertIsInstance(event.fecha_autenticacion, datetime)
+        self.assertIsInstance(event.fechaAutenticacion, datetime)
 
 
 class TestJWTPayload(unittest.TestCase):
@@ -116,7 +116,7 @@ class TestJWTPayload(unittest.TestCase):
         """Test alternative field name support."""
         # Test with alternative names
         payload = JWTPayload(carpetaId="folder-123", idCitizen=1234567890)
-        self.assertEqual(payload.carpeta_id, "folder-123")
+        self.assertEqual(payload.carpetaId, "folder-123")
         self.assertEqual(payload.id_citizen, 1234567890)
 
     def test_optional_fields(self):
