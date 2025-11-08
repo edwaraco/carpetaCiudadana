@@ -98,18 +98,18 @@ func (h *Handlers) Register(c echo.Context) error {
 	}
 
 	// Basic validation
-	if req.DocumentID == "" || req.Email == "" || req.FullName == "" {
+	if req.CitizenID == "" || req.Email == "" || req.FullName == "" {
 		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{
 			Success: false,
 			Error:   "Missing required fields",
-			Message: "DocumentID, Email, and FullName are required",
+			Message: "CitizenID, Email, and FullName are required",
 		})
 	}
 
-	log.Printf("INFO: Registration request received for: %s (%s)", req.Email, req.DocumentID)
+	log.Printf("INFO: Registration request received for: %s (%s)", req.Email, req.CitizenID)
 
 	// Check if user already exists (check database for completed registrations only)
-	existingUser, err := h.db.GetUserByDocumentID(ctx, req.DocumentID)
+	existingUser, err := h.db.GetUserByCitizenID(ctx, req.CitizenID)
 	if err == nil && existingUser != nil {
 		return c.JSON(http.StatusConflict, &models.ErrorResponse{
 			Success: false,
@@ -121,11 +121,14 @@ func (h *Handlers) Register(c echo.Context) error {
 	// Generate verification token with user data (DO NOT store user in DB yet)
 	tokenExpiresAt := time.Now().Add(24 * time.Hour)
 
-	// Create temporary user profile data for token
+	// Create temporary user profile data for token - INCLUDE ALL USER-SUBMITTED DATA
 	tempUserProfile := &models.UserProfile{
-		DocumentID: req.DocumentID,
-		Email:      req.Email,
-		FullName:   req.FullName,
+		CitizenID: req.CitizenID,
+		Email:     req.Email,
+		FullName:  req.FullName,
+		Phone:     req.Phone,   // Include phone from registration form
+		Address:   req.Address, // Include address from registration form
+		// FolderID will be populated later from identity service
 	}
 
 	// Generate JWT verification token with user profile data embedded (user not stored anywhere yet)
@@ -148,7 +151,7 @@ func (h *Handlers) Register(c echo.Context) error {
 		EventID:         uuid.New(),
 		EventType:       models.EventUserRegistrationEmail,
 		Timestamp:       time.Now(),
-		UserDocumentID:  req.DocumentID,
+		UserCitizenID:   req.CitizenID,
 		UserData:        *tempUserProfile,
 		Token:           jwtToken,
 		VerificationURL: verificationURL,
@@ -161,19 +164,19 @@ func (h *Handlers) Register(c echo.Context) error {
 			log.Printf("ERROR: Failed to publish registration event: %v", err)
 			// Don't fail the request if RabbitMQ is down, but log the error
 		} else {
-			log.Printf("INFO: Registration event published successfully for user: %s", req.DocumentID)
+			log.Printf("INFO: Registration event published successfully for user: %s", req.CitizenID)
 		}
 	} else {
-		log.Printf("WARN: RabbitMQ publisher not available, skipping registration event for user: %s", req.DocumentID)
+		log.Printf("WARN: RabbitMQ publisher not available, skipping registration event for user: %s", req.CitizenID)
 	}
 
 	response := &models.RegistrationResponse{
-		Success:    true,
-		Message:    "Registration initiated. Please check your email for verification link.",
-		DocumentID: req.DocumentID,
+		Success:   true,
+		Message:   "Registration initiated. Please check your email for verification link.",
+		CitizenID: req.CitizenID,
 	}
 
-	log.Printf("INFO: User registration initiated successfully (user NOT stored anywhere yet): %s", req.DocumentID)
+	log.Printf("INFO: User registration initiated successfully (user NOT stored anywhere yet): %s", req.CitizenID)
 	return c.JSON(http.StatusCreated, response)
 }
 
@@ -223,12 +226,16 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		})
 	}
 
-	log.Printf("INFO: Valid verification token received for user: %s (%s)", userProfile.Email, userProfile.DocumentID)
+	log.Printf("INFO: Valid verification token received for user: %s (%s)", userProfile.Email, userProfile.CitizenID)
+
+	// CRITICAL: Identity Service MUST succeed first before creating auth user
+	// This ensures transactional consistency between services
+	log.Printf("INFO: Attempting identity service registration for user: %s", userProfile.CitizenID)
 
 	// Step 1: Call Identity Service to store user profile data
-	_, err = h.callIdentityService(userProfile.DocumentID, userProfile.FullName, userProfile.Address)
+	identityResponse, err := h.callIdentityService(userProfile.CitizenID, userProfile.FullName, userProfile.Address)
 	if err != nil {
-		log.Printf("ERROR: Identity service registration failed: %v", err)
+		log.Printf("ERROR: Identity service registration failed for %s: %v", userProfile.CitizenID, err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
 			Success: false,
 			Error:   "Identity registration failed",
@@ -236,9 +243,14 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		})
 	}
 
-	log.Printf("INFO: Identity service registered user profile: %s", userProfile.DocumentID)
+	log.Printf("SUCCESS: Identity service registered user profile: %s", userProfile.CitizenID)
 
-	// Step 2: Hash the password
+	// Extract folderID from identity service response
+	folderID := identityResponse.Data.CarpetaID
+	log.Printf("SUCCESS: Identity service assigned folderID: %s to user: %s", folderID, userProfile.CitizenID)
+
+	// Step 2: Hash the password (only reached if identity service succeeded)
+	log.Printf("INFO: Identity service succeeded, proceeding with auth user creation for: %s", userProfile.CitizenID)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("ERROR: Failed to hash password: %v", err)
@@ -249,10 +261,15 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		})
 	}
 
-	// Step 3: Create auth record with only document_id + password_hash
-	authUser, err := h.db.CreateUser(ctx, userProfile.DocumentID, string(hashedPassword))
+	// Step 3: Create auth record ONLY after identity service success
+	// This ensures transactional consistency - auth user exists only if identity exists
+	log.Printf("INFO: Creating auth user record for: %s", userProfile.CitizenID)
+	authUser, err := h.db.CreateUser(ctx, userProfile.CitizenID, string(hashedPassword))
 	if err != nil {
-		log.Printf("ERROR: Failed to create auth user: %v", err)
+		log.Printf("ERROR: Failed to create auth user after successful identity registration for %s: %v", userProfile.CitizenID, err)
+		// NOTE: At this point, identity service succeeded but auth failed
+		// This could leave identity service with orphaned record
+		// Future enhancement: Consider implementing compensating transaction
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
 			Success: false,
 			Error:   "Failed to create auth user",
@@ -260,14 +277,14 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		})
 	}
 
-	log.Printf("INFO: Auth user created successfully: %s", authUser.DocumentID)
+	log.Printf("SUCCESS: Auth user created successfully after identity service validation: %s", authUser.CitizenID)
 
 	// Step 4: Create session for immediate login
 	sessionID := uuid.New()
 	tokenHash := h.jwtService.HashToken(req.Token)
 	expiresAt := time.Now().Add(24 * time.Hour)
 
-	session, err := h.db.CreateSession(ctx, authUser.DocumentID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
+	session, err := h.db.CreateSession(ctx, authUser.CitizenID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
 	if err != nil {
 		log.Printf("WARN: Failed to create session: %v", err)
 	} else {
@@ -275,7 +292,7 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 	}
 
 	// Step 5: Generate JWT session token
-	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(authUser, sessionID)
+	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(authUser, sessionID, userProfile.Email, folderID)
 	if err != nil {
 		log.Printf("ERROR: Failed to generate JWT token: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
@@ -287,34 +304,40 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 
 	// Step 6: Publish user registration complete event
 	completeEvent := &models.UserRegistrationCompleteEvent{
-		EventID:        uuid.New(),
-		EventType:      models.EventUserRegistrationComplete,
-		Timestamp:      time.Now(),
-		UserDocumentID: authUser.DocumentID,
-		UserData:       *userProfile, // Send full profile data
-		RoutingKey:     models.RoutingKeyNotifications,
+		EventID:       uuid.New(),
+		EventType:     models.EventUserRegistrationComplete,
+		Timestamp:     time.Now(),
+		UserCitizenID: authUser.CitizenID,
+		UserData:      *userProfile, // Send full profile data
+		RoutingKey:    models.RoutingKeyNotifications,
 	}
 
 	if h.publisher != nil {
 		if err := h.publisher.PublishUserRegistrationCompleteEvent(completeEvent); err != nil {
 			log.Printf("ERROR: Failed to publish registration complete event: %v", err)
 		} else {
-			log.Printf("INFO: Registration complete event published successfully for user: %s", authUser.DocumentID)
+			log.Printf("INFO: Registration complete event published successfully for user: %s", authUser.CitizenID)
 		}
 	} else {
-		log.Printf("WARN: RabbitMQ publisher not available, skipping registration complete event for user: %s", authUser.DocumentID)
+		log.Printf("WARN: RabbitMQ publisher not available, skipping registration complete event for user: %s", authUser.CitizenID)
 	}
 
-	// Return success response with full user profile
+	// Return success response with user information
+	userInfo := &models.UserInfo{
+		UserID:   authUser.CitizenID, // citizenID becomes userID
+		FolderID: folderID,           // carpetaID from identity service
+		Email:    userProfile.Email,  // email from user profile
+	}
+
 	response := &models.SetPasswordResponse{
 		Success:   true,
 		Message:   "Registration completed successfully! Welcome to the system.",
 		Token:     jwtToken,
 		ExpiresAt: jwtExpiresAt,
-		User:      userProfile, // Return full user profile from token
+		User:      userInfo, // Contains userId (citizenID), folderId, email
 	}
 
-	log.Printf("INFO: User registration completed successfully: %s", authUser.DocumentID)
+	log.Printf("INFO: User registration completed successfully: %s", authUser.CitizenID)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -333,20 +356,20 @@ func (h *Handlers) Login(c echo.Context) error {
 		})
 	}
 
-	if req.DocumentID == "" || req.Password == "" {
+	if req.CitizenID == "" || req.Password == "" {
 		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{
 			Success: false,
 			Error:   "Missing credentials",
-			Message: "DocumentID and Password are required",
+			Message: "CitizenID and Password are required",
 		})
 	}
 
-	log.Printf("INFO: Login attempt for document ID: %s", req.DocumentID)
+	log.Printf("INFO: Login attempt for citizen ID: %s", req.CitizenID)
 
-	// Get user by document ID
-	user, err := h.db.GetUserByDocumentID(ctx, req.DocumentID)
+	// Get user by citizen ID
+	user, err := h.db.GetUserByCitizenID(ctx, req.CitizenID)
 	if err != nil {
-		log.Printf("WARN: User not found for document ID: %s", req.DocumentID)
+		log.Printf("WARN: User not found for citizen ID: %s", req.CitizenID)
 		return c.JSON(http.StatusUnauthorized, &models.ErrorResponse{
 			Success: false,
 			Error:   "Invalid credentials",
@@ -356,11 +379,11 @@ func (h *Handlers) Login(c echo.Context) error {
 
 	// Validate password
 	if err := h.db.ValidatePassword(ctx, user, req.Password); err != nil {
-		log.Printf("WARN: Invalid password for user: %s", user.DocumentID)
+		log.Printf("WARN: Invalid password for user: %s", user.CitizenID)
 		return c.JSON(http.StatusUnauthorized, &models.ErrorResponse{
 			Success: false,
 			Error:   "Invalid credentials",
-			Message: "Document ID or password is incorrect",
+			Message: "Citizen ID or password is incorrect",
 		})
 	}
 
@@ -379,7 +402,7 @@ func (h *Handlers) Login(c echo.Context) error {
 	tokenHash := h.jwtService.HashToken(dummyToken)
 	expiresAt := time.Now().Add(24 * time.Hour)
 
-	session, err := h.db.CreateSession(ctx, user.DocumentID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
+	session, err := h.db.CreateSession(ctx, user.CitizenID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
 	if err != nil {
 		log.Printf("ERROR: Failed to create session: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
@@ -389,8 +412,8 @@ func (h *Handlers) Login(c echo.Context) error {
 		})
 	}
 
-	// Generate JWT token
-	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(user, session.ID)
+	// Generate JWT token - for login, we use empty email and folderID since we only have basic auth data
+	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(user, session.ID, "", "")
 	if err != nil {
 		log.Printf("ERROR: Failed to generate JWT token: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
@@ -400,18 +423,23 @@ func (h *Handlers) Login(c echo.Context) error {
 		})
 	}
 
-	// For login, we would need to call Identity Service to get full user profile
-	// For now, return minimal user info since we don't have full profile in auth service
-	// Return minimal login response with only essential auth data
-	response := &models.LoginResponse{
-		Success:    true,
-		Message:    "Login successful",
-		Token:      jwtToken,
-		ExpiresAt:  jwtExpiresAt,
-		DocumentID: user.DocumentID, // Only return document ID for session context
+	// Create UserInfo for response - minimal info for login
+	userInfo := &models.UserInfo{
+		UserID:   user.CitizenID, // citizenID becomes userID
+		FolderID: "",             // Not available in auth service
+		Email:    "",             // Not available in auth service
 	}
 
-	log.Printf("INFO: User logged in successfully: %s", user.DocumentID)
+	// Return login response with basic user info
+	response := &models.LoginResponse{
+		Success:   true,
+		Message:   "Login successful",
+		Token:     jwtToken,
+		ExpiresAt: jwtExpiresAt,
+		User:      userInfo,
+	}
+
+	log.Printf("INFO: User logged in successfully: %s", user.CitizenID)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -425,6 +453,50 @@ func (h *Handlers) callIdentityService(documentID, fullName, address string) (*m
 		return nil, fmt.Errorf("invalid document ID format: %w", err)
 	}
 
+	// Build the base URL
+	identityServiceURL := h.config.IdentityServiceURL
+	if identityServiceURL == "" {
+		// Default to localhost for development, but in Docker/K8s this should be the service name
+		identityServiceURL = "http://ciudadano-registry-service:8080"
+	}
+
+	// Step 1: Validate citizen availability
+	validationURL := fmt.Sprintf("%s/api/v1/ciudadanos/validar/%d", identityServiceURL, cedula)
+	log.Printf("INFO: Validating citizen availability at: %s", validationURL)
+
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	validationResp, err := client.Get(validationURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate citizen: %w", err)
+	}
+	defer validationResp.Body.Close()
+
+	validationBody, err := io.ReadAll(validationResp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read validation response: %w", err)
+	}
+
+	log.Printf("INFO: Validation response status: %d", validationResp.StatusCode)
+
+	if validationResp.StatusCode != http.StatusOK && validationResp.StatusCode != http.StatusNoContent {
+		return nil, fmt.Errorf("citizen validation failed with status %d: %s", validationResp.StatusCode, string(validationBody))
+	}
+
+	// Parse validation response
+	var validationResponse models.IdentityValidationResponse
+	if err := json.Unmarshal(validationBody, &validationResponse); err != nil {
+		return nil, fmt.Errorf("failed to parse validation response: %w", err)
+	}
+
+	// Check if citizen is available for registration
+	if !validationResponse.Data.Disponible {
+		return nil, fmt.Errorf("citizen is not available for registration: %s", validationResponse.Data.Mensaje)
+	}
+
+	log.Printf("INFO: Citizen validation successful, proceeding with registration")
+
+	// Step 2: Register citizen
 	// Prepare request payload
 	requestPayload := &models.IdentityRegistrationRequest{
 		Cedula:         cedula,
@@ -438,29 +510,17 @@ func (h *Handlers) callIdentityService(documentID, fullName, address string) (*m
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// Build the URL - using ciudadano-registry-service as the service name
-	identityServiceURL := h.config.IdentityServiceURL
-	if identityServiceURL == "" {
-		// Default to localhost for development, but in Docker/K8s this should be the service name
-		identityServiceURL = "http://ciudadano-registry-service:8080"
-	}
-
-	url := fmt.Sprintf("%s/api/v1/ciudadanos/registrar", identityServiceURL)
-	log.Printf("INFO: Making request to: %s", url)
+	registrationURL := fmt.Sprintf("%s/api/v1/ciudadanos/registrar", identityServiceURL)
+	log.Printf("INFO: Making registration request to: %s", registrationURL)
 
 	// Create HTTP request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", registrationURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-
-	// Create HTTP client with timeout
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 
 	// Make the request
 	resp, err := client.Do(req)
@@ -475,11 +535,11 @@ func (h *Handlers) callIdentityService(documentID, fullName, address string) (*m
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	log.Printf("INFO: Ciudadano-registry-service response status: %d", resp.StatusCode)
-	log.Printf("DEBUG: Response body: %s", string(body))
+	log.Printf("INFO: Ciudadano-registry-service registration response status: %d", resp.StatusCode)
+	log.Printf("DEBUG: Registration response body: %s", string(body))
 
-	// Check HTTP status
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+	// Check HTTP status (ciudadano-registry-service returns 201 for success)
+	if resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("ciudadano-registry-service returned error status %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -500,7 +560,67 @@ func (h *Handlers) callIdentityService(documentID, fullName, address string) (*m
 	return &response, nil
 }
 
+// validateCitizenAvailability checks if a citizen is available for registration
+func (h *Handlers) validateCitizenAvailability(documentID string) (*models.IdentityValidationResponse, error) {
+	log.Printf("INFO: Validating citizen availability for document ID: %s", documentID)
+
+	// Convert document ID to integer
+	cedula, err := strconv.ParseInt(documentID, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid document ID format: %w", err)
+	}
+
+	// Build the URL
+	identityServiceURL := h.config.IdentityServiceURL
+	if identityServiceURL == "" {
+		identityServiceURL = "http://ciudadano-registry-service:8080"
+	}
+
+	url := fmt.Sprintf("%s/api/v1/ciudadanos/validar/%d", identityServiceURL, cedula)
+	log.Printf("INFO: Making validation request to: %s", url)
+
+	// Create HTTP client with timeout
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	// Make the request
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make validation request to ciudadano-registry-service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	log.Printf("INFO: Validation response status: %d", resp.StatusCode)
+	log.Printf("DEBUG: Validation response body: %s", string(body))
+
+	// Check HTTP status (200 = available, 204 = already registered)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return nil, fmt.Errorf("ciudadano-registry-service validation returned error status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var response models.IdentityValidationResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse validation response: %w", err)
+	}
+
+	log.Printf("INFO: Citizen validation result - Available: %t, Message: %s",
+		response.Data.Disponible, response.Data.Mensaje)
+
+	return &response, nil
+}
+
 // TestIdentityService allows testing the identity service integration
 func (h *Handlers) TestIdentityService(documentID, fullName, address string) (*models.IdentityRegistrationResponse, error) {
 	return h.callIdentityService(documentID, fullName, address)
+}
+
+// TestCitizenValidation allows testing the citizen validation
+func (h *Handlers) TestCitizenValidation(documentID string) (*models.IdentityValidationResponse, error) {
+	return h.validateCitizenAvailability(documentID)
 }

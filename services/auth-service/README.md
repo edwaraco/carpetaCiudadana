@@ -90,8 +90,7 @@ Content-Type: application/json
   "cedula": 1234567890,
   "nombre_completo": "Juan Pérez",
   "direccion": "Calle 123 #45-67",
-  "email": "juan.perez@email.com",
-  "password": "contraseña_segura"
+  "email": "juan.perez@email.com"
 }
 ```
 
@@ -243,6 +242,85 @@ GET /health
 - `RABBITMQ_URL`: URL de conexión a RabbitMQ
 - `IDENTITY_SERVICE_URL`: URL del ciudadano-registry-service
 - `ENVIRONMENT`: Entorno de ejecución (development/production)
+
+## Integraciones de Servicios
+
+### Ciudadano Registry Service
+
+El auth-service integra con el **ciudadano-registry-service** durante el proceso de registro para:
+
+1. **Validar disponibilidad del ciudadano**
+2. **Registrar identidad ciudadana**
+3. **Crear carpeta ciudadana asociada**
+
+#### Validación de Ciudadano
+
+**Endpoint**: `GET /api/v1/ciudadanos/validar/{cedula}`
+
+Verifica si un ciudadano está disponible para registro en el sistema.
+
+**Respuestas**:
+- `200 OK`: Ciudadano disponible para registro
+- `204 No Content`: Ciudadano ya registrado
+
+**Estructura de Respuesta**:
+```json
+{
+  "success": true,
+  "message": "Ciudadano disponible para registro",
+  "data": {
+    "cedula": 1234567890,
+    "disponible": true,
+    "mensaje": "Ciudadano disponible para registro",
+    "codigoRespuesta": 200
+  },
+  "timestamp": "2025-11-07T10:30:00"
+}
+```
+
+#### Registro de Ciudadano
+
+**Endpoint**: `POST /api/v1/ciudadanos/registrar`
+
+Registra un nuevo ciudadano en el sistema y crea su carpeta ciudadana.
+
+**Estructura de Request**:
+```json
+{
+  "cedula": 1234567890,
+  "nombreCompleto": "Juan Pérez García",
+  "direccion": "Calle 123 #45-67"
+}
+```
+
+**Estructura de Respuesta** (`201 Created`):
+```json
+{
+  "success": true,
+  "message": "Ciudadano registrado exitosamente",
+  "data": {
+    "id": "1234567890",
+    "cedula": 1234567890,
+    "nombreCompleto": "Juan Pérez García",
+    "direccion": "Calle 123 #45-67",
+    "email": "juan.perez.garcia.1234567890@carpetacolombia.co",
+    "carpetaId": "550e8400-e29b-41d4-a716-446655440000",
+    "estado": "REGISTRADO",
+    "fechaRegistroGovCarpeta": "2025-11-07T10:30:00",
+    "fechaCreacion": "2025-11-07T10:30:00",
+    "activo": true
+  },
+  "timestamp": "2025-11-07T10:30:00"
+}
+```
+
+#### Configuración de Integración
+
+**Variables de Entorno**:
+- `IDENTITY_SERVICE_URL`: URL base del ciudadano-registry-service (ej: `http://ciudadano-registry-service:8080`)
+
+**En Docker/Kubernetes**: Usar el nombre del servicio (`ciudadano-registry-service`)
+**En desarrollo local**: Usar localhost con el puerto correspondiente
 
 ### Configuración de Base de Datos
 

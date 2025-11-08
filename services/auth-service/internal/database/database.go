@@ -53,9 +53,9 @@ func (d *Database) Health(ctx context.Context) error {
 }
 
 // CreateUser creates a new user in the database with only auth data
-func (d *Database) CreateUser(ctx context.Context, documentID, passwordHash string) (*models.User, error) {
+func (d *Database) CreateUser(ctx context.Context, citizenID, passwordHash string) (*models.User, error) {
 	user := &models.User{
-		DocumentID:    documentID,
+		CitizenID:     citizenID,
 		PasswordHash:  passwordHash,
 		EmailVerified: true, // Set to true since user completed email verification
 		IsActive:      true,
@@ -65,13 +65,13 @@ func (d *Database) CreateUser(ctx context.Context, documentID, passwordHash stri
 
 	query := `
 		INSERT INTO auth.users (
-			document_id, password_hash, email_verified, is_active, created_at, updated_at
+			citizen_id, password_hash, email_verified, is_active, created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING created_at, updated_at
 	`
 
 	err := d.pool.QueryRow(ctx, query,
-		user.DocumentID, user.PasswordHash, user.EmailVerified, user.IsActive,
+		user.CitizenID, user.PasswordHash, user.EmailVerified, user.IsActive,
 		user.CreatedAt, user.UpdatedAt,
 	).Scan(&user.CreatedAt, &user.UpdatedAt)
 
@@ -79,23 +79,23 @@ func (d *Database) CreateUser(ctx context.Context, documentID, passwordHash stri
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	log.Printf("INFO: Auth user created successfully: %s", user.DocumentID)
+	log.Printf("INFO: Auth user created successfully: %s", user.CitizenID)
 	return user, nil
 }
 
 // GetUserByDocumentID retrieves a user by document ID (auth data only)
-func (d *Database) GetUserByDocumentID(ctx context.Context, documentID string) (*models.User, error) {
+func (d *Database) GetUserByCitizenID(ctx context.Context, citizenID string) (*models.User, error) {
 	user := &models.User{}
 
 	query := `
-		SELECT document_id, password_hash, email_verified, is_active, 
+		SELECT citizen_id, password_hash, email_verified, is_active, 
 			   created_at, updated_at, last_login
 		FROM auth.users 
-		WHERE document_id = $1 AND is_active = true
+		WHERE citizen_id = $1 AND is_active = true
 	`
 
-	err := d.pool.QueryRow(ctx, query, documentID).Scan(
-		&user.DocumentID, &user.PasswordHash, &user.EmailVerified, &user.IsActive,
+	err := d.pool.QueryRow(ctx, query, citizenID).Scan(
+		&user.CitizenID, &user.PasswordHash, &user.EmailVerified, &user.IsActive,
 		&user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
 	)
 
@@ -126,10 +126,10 @@ func (d *Database) ValidatePassword(ctx context.Context, user *models.User, pass
 	}
 
 	// Update last login
-	query := `UPDATE auth.users SET last_login = NOW() WHERE document_id = $1`
-	_, err = d.pool.Exec(ctx, query, user.DocumentID)
+	query := `UPDATE auth.users SET last_login = NOW() WHERE citizen_id = $1`
+	_, err = d.pool.Exec(ctx, query, user.CitizenID)
 	if err != nil {
-		log.Printf("WARN: Failed to update last login for user %s: %v", user.DocumentID, err)
+		log.Printf("WARN: Failed to update last login for user %s: %v", user.CitizenID, err)
 	}
 
 	return nil
@@ -152,23 +152,23 @@ func (d *Database) CreateVerificationToken(ctx context.Context, documentID strin
 
 	// Create verification token record
 	verificationToken := &models.VerificationToken{
-		ID:             uuid.New(),
-		UserDocumentID: documentID,
-		TokenHash:      string(hashedToken),
-		TokenType:      tokenType,
-		ExpiresAt:      time.Now().Add(24 * time.Hour), // 24 hours expiration
-		CreatedAt:      time.Now(),
+		ID:            uuid.New(),
+		UserCitizenID: documentID,
+		TokenHash:     string(hashedToken),
+		TokenType:     tokenType,
+		ExpiresAt:     time.Now().Add(24 * time.Hour), // 24 hours expiration
+		CreatedAt:     time.Now(),
 	}
 
 	query := `
 		INSERT INTO auth.verification_tokens (
-			id, user_document_id, token_hash, token_type, expires_at, created_at
+			id, user_citizen_id, token_hash, token_type, expires_at, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
 	`
 
 	err = d.pool.QueryRow(ctx, query,
-		verificationToken.ID, verificationToken.UserDocumentID, verificationToken.TokenHash,
+		verificationToken.ID, verificationToken.UserCitizenID, verificationToken.TokenHash,
 		verificationToken.TokenType, verificationToken.ExpiresAt, verificationToken.CreatedAt,
 	).Scan(&verificationToken.ID, &verificationToken.CreatedAt)
 
@@ -199,7 +199,7 @@ func (d *Database) ValidateVerificationToken(ctx context.Context, token string, 
 	for rows.Next() {
 		var verificationToken models.VerificationToken
 		err := rows.Scan(
-			&verificationToken.ID, &verificationToken.UserDocumentID, &verificationToken.TokenHash,
+			&verificationToken.ID, &verificationToken.UserCitizenID, &verificationToken.TokenHash,
 			&verificationToken.TokenType, &verificationToken.ExpiresAt, &verificationToken.UsedAt,
 			&verificationToken.CreatedAt,
 		)
@@ -217,7 +217,7 @@ func (d *Database) ValidateVerificationToken(ctx context.Context, token string, 
 				log.Printf("WARN: Failed to mark token as used: %v", err)
 			}
 
-			log.Printf("INFO: Verification token validated for user: %s", verificationToken.UserDocumentID)
+			log.Printf("INFO: Verification token validated for user: %s", verificationToken.UserCitizenID)
 			return &verificationToken, nil
 		}
 	}
@@ -226,29 +226,29 @@ func (d *Database) ValidateVerificationToken(ctx context.Context, token string, 
 }
 
 // CreateSession creates a new user session
-func (d *Database) CreateSession(ctx context.Context, documentID string, tokenHash, userAgent, ipAddress string, expiresAt time.Time) (*models.Session, error) {
+func (d *Database) CreateSession(ctx context.Context, citizenID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) (*models.Session, error) {
 	session := &models.Session{
-		ID:             uuid.New(),
-		UserDocumentID: documentID,
-		TokenHash:      tokenHash,
-		ExpiresAt:      expiresAt,
-		CreatedAt:      time.Now(),
-		LastUsed:       time.Now(),
-		IsRevoked:      false,
-		UserAgent:      userAgent,
-		IPAddress:      ipAddress,
+		ID:            uuid.New(),
+		UserCitizenID: citizenID,
+		TokenHash:     tokenHash,
+		ExpiresAt:     expiresAt,
+		CreatedAt:     time.Now(),
+		LastUsed:      time.Now(),
+		IsRevoked:     false,
+		UserAgent:     userAgent,
+		IPAddress:     ipAddress,
 	}
 
 	query := `
 		INSERT INTO auth.sessions (
-			id, user_document_id, token_hash, expires_at, created_at, last_used, 
+			id, user_citizen_id, token_hash, expires_at, created_at, last_used, 
 			is_revoked, user_agent, ip_address
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at, last_used
 	`
 
 	err := d.pool.QueryRow(ctx, query,
-		session.ID, session.UserDocumentID, session.TokenHash, session.ExpiresAt,
+		session.ID, session.UserCitizenID, session.TokenHash, session.ExpiresAt,
 		session.CreatedAt, session.LastUsed, session.IsRevoked,
 		session.UserAgent, session.IPAddress,
 	).Scan(&session.ID, &session.CreatedAt, &session.LastUsed)
@@ -257,7 +257,7 @@ func (d *Database) CreateSession(ctx context.Context, documentID string, tokenHa
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	log.Printf("INFO: Session created for user: %s", documentID)
+	log.Printf("INFO: Session created for user: %s", citizenID)
 	return session, nil
 }
 
@@ -266,14 +266,14 @@ func (d *Database) ValidateSession(ctx context.Context, sessionID uuid.UUID) (*m
 	session := &models.Session{}
 
 	query := `
-		SELECT id, user_document_id, token_hash, expires_at, created_at, last_used,
+		SELECT id, user_citizen_id, token_hash, expires_at, created_at, last_used,
 			   is_revoked, user_agent, ip_address
 		FROM auth.sessions
 		WHERE id = $1 AND expires_at > NOW() AND is_revoked = false
 	`
 
 	err := d.pool.QueryRow(ctx, query, sessionID).Scan(
-		&session.ID, &session.UserDocumentID, &session.TokenHash, &session.ExpiresAt,
+		&session.ID, &session.UserCitizenID, &session.TokenHash, &session.ExpiresAt,
 		&session.CreatedAt, &session.LastUsed, &session.IsRevoked,
 		&session.UserAgent, &session.IPAddress,
 	)
