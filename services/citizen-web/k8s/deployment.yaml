@@ -18,52 +18,35 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: carpeta-ciudadana-frontend:latest
+        image: citizen-web:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           name: http
-        env:
-        - name: VITE_API_BASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: frontend-config
-              key: api-base-url
-        - name: VITE_USE_MOCK_API
-          valueFrom:
-            configMapKeyRef:
-              name: frontend-config
-              key: use-mock-api
-        - name: VITE_OPERATOR_ID
-          valueFrom:
-            configMapKeyRef:
-              name: frontend-config
-              key: operator-id
-        - name: VITE_OPERATOR_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: frontend-config
-              key: operator-name
+        # Inject all environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: citizen-web-config
         resources:
           requests:
-            memory: "128Mi"
+            memory: "256Mi"
             cpu: "100m"
           limits:
-            memory: "256Mi"
-            cpu: "200m"
+            memory: "512Mi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /health
-            port: 80
-          initialDelaySeconds: 10
+            port: 8080
+          initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health
-            port: 80
-          initialDelaySeconds: 5
+            port: 8080
+          initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 3
           failureThreshold: 3
