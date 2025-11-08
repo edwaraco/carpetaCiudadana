@@ -100,7 +100,7 @@ func (p *Publisher) PublishUserRegistrationEvent(event *models.UserRegistrationE
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	log.Printf("INFO: Published user registration event: %s (User: %s)", event.EventID, event.UserDocumentID)
+	log.Printf("INFO: Published user registration event: %s (User: %s)", event.EventID, event.UserCitizenID)
 	return nil
 }
 
@@ -140,7 +140,7 @@ func (p *Publisher) PublishUserRegistrationCompleteEvent(event *models.UserRegis
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	log.Printf("INFO: Published user registration complete event: %s (User: %s)", event.EventID, event.UserDocumentID)
+	log.Printf("INFO: Published user registration complete event: %s (User: %s)", event.EventID, event.UserCitizenID)
 	return nil
 }
 

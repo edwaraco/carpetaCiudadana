@@ -9,6 +9,6 @@ data:
   JWT_SECRET: "super-secret-jwt-key-for-microservices-2024"
   LISTEN_PORT: "8080"
   EXCHANGE_NAME: "carpeta.events"
-  IDENTITY_SERVICE_URL: "http://identity-service:8080"
+  IDENTITY_SERVICE_URL: "http://ciudadano-registry-service:8081"
   FRONTEND_BASE_URL: "http://localhost:3000"
   ENVIRONMENT: "kubernetes"

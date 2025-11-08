@@ -43,7 +43,7 @@ services:
     network_mode: host
     environment:
       - DATABASE_URL=postgres://auth_service_user:auth_service_password123@localhost:5432/auth_service_db?sslmode=disable
-      - RABBITMQ_URL=amqp://admin:microservices2024@127.0.0.1:5672
+      - RABBITMQ_URL=amqp://admin:admin123@127.0.0.1:5672
       - JWT_SECRET=super-secret-jwt-key-for-microservices-2024
       - LISTEN_PORT=8085
       - EXCHANGE_NAME=carpeta.events

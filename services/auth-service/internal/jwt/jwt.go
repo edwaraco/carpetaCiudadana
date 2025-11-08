@@ -27,18 +27,20 @@ func NewJWTService(secret, issuer string) *JWTService {
 }
 
 // GenerateToken generates a JWT token for a user (session token)
-func (j *JWTService) GenerateToken(user *models.User, sessionID uuid.UUID) (string, time.Time, error) {
+func (j *JWTService) GenerateToken(user *models.User, sessionID uuid.UUID, email, folderID string) (string, time.Time, error) {
 	now := time.Now()
 	expiresAt := now.Add(24 * time.Hour) // 24 hours expiration
 
 	// Create JWT claims for session token (minimal auth data only)
 	claims := jwt.MapClaims{
-		"document_id": user.DocumentID,
-		"session_id":  sessionID.String(),
-		"iat":         now.Unix(),
-		"exp":         expiresAt.Unix(),
-		"nbf":         now.Unix(),
-		"iss":         j.issuer,
+		"citizen_id": user.CitizenID,
+		"folder_id":  folderID,
+		"email":      email,
+		"session_id": sessionID.String(),
+		"iat":        now.Unix(),
+		"exp":        expiresAt.Unix(),
+		"nbf":        now.Unix(),
+		"iss":        j.issuer,
 	}
 
 	// Create token
@@ -88,10 +90,12 @@ func (j *JWTService) ValidateToken(tokenString string) (*models.JWTClaims, error
 	}
 
 	// Extract other claims
-	documentID, ok := claims["document_id"].(string)
+	citizenID, ok := claims["citizen_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid document_id in token")
+		return nil, fmt.Errorf("invalid citizen_id in token")
 	}
+	folderID, _ := claims["folder_id"].(string)
+	email, _ := claims["email"].(string)
 	issuer, _ := claims["iss"].(string)
 
 	// Extract timestamps
@@ -100,12 +104,14 @@ func (j *JWTService) ValidateToken(tokenString string) (*models.JWTClaims, error
 	nbf, _ := claims["nbf"].(float64)
 
 	jwtClaims := &models.JWTClaims{
-		DocumentID: documentID,
-		SessionID:  sessionID,
-		IssuedAt:   int64(iat),
-		ExpiresAt:  int64(exp),
-		NotBefore:  int64(nbf),
-		Issuer:     issuer,
+		CitizenID: citizenID,
+		FolderID:  folderID,
+		Email:     email,
+		SessionID: sessionID,
+		IssuedAt:  int64(iat),
+		ExpiresAt: int64(exp),
+		NotBefore: int64(nbf),
+		Issuer:    issuer,
 	}
 
 	return jwtClaims, nil
@@ -123,11 +129,12 @@ func (j *JWTService) GenerateVerificationToken(userProfile *models.UserProfile, 
 
 	// Create JWT claims for verification
 	claims := jwt.MapClaims{
-		"document_id":        userProfile.DocumentID,
+		"citizen_id":         userProfile.CitizenID,
 		"email":              userProfile.Email,
 		"full_name":          userProfile.FullName,
 		"phone":              userProfile.Phone,
 		"address":            userProfile.Address,
+		"folder_id":          userProfile.FolderID,
 		"verification_token": verificationToken,
 		"iat":                now.Unix(),
 		"exp":                expiresAt.Unix(),
@@ -177,22 +184,24 @@ func (j *JWTService) ValidateVerificationToken(tokenString string) (*models.User
 	}
 
 	// Extract user data
-	documentID, ok := claims["document_id"].(string)
+	citizenID, ok := claims["citizen_id"].(string)
 	if !ok {
-		return nil, "", fmt.Errorf("invalid document_id in verification token")
+		return nil, "", fmt.Errorf("invalid citizen_id in verification token")
 	}
 	email, _ := claims["email"].(string)
 	fullName, _ := claims["full_name"].(string)
 	phone, _ := claims["phone"].(string)
 	address, _ := claims["address"].(string)
+	folderID, _ := claims["folder_id"].(string)
 	verificationToken, _ := claims["verification_token"].(string)
 
 	userProfile := &models.UserProfile{
-		DocumentID: documentID,
-		Email:      email,
-		FullName:   fullName,
-		Phone:      phone,
-		Address:    address,
+		CitizenID: citizenID,
+		Email:     email,
+		FullName:  fullName,
+		Phone:     phone,
+		Address:   address,
+		FolderID:  folderID,
 	}
 
 	return userProfile, verificationToken, nil
