@@ -189,10 +189,22 @@ export class DocumentApiService implements IDocumentService {
     try {
       // httpClient baseURL is /api (or /api/v1)
       // This calls: baseURL + /v1/authentication/authenticateDocument
-      return await httpClient.post<AuthenticateDocumentResponse>(
-        '/v1/authentication/authenticateDocument',
+      const backendResponse = await httpClient.post<AuthenticateDocumentResponse>(
+        '/authentication/authenticateDocument',
         request
       );
+
+      // Backend returns: { status: 202, message: "Accepted" }
+      // httpClient.post returns this object directly (not wrapped in ApiResponse)
+      const apiData = backendResponse as unknown as AuthenticateDocumentResponse;
+
+      // Return properly formatted ApiResponse
+      return {
+        success: apiData.status === 202,
+        data: apiData,
+        message: apiData.message,
+        timestamp: new Date(),
+      };
     } catch (error) {
       console.error('Error authenticating document:', error);
       throw error;
