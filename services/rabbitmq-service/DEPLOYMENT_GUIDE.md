@@ -299,11 +299,17 @@ If minikube is misbehaving, you can delete and recreate the cluster:
 ```powershell
 minikube delete
 
+# if doesn't work...
 # Kill process
 taskkill /F /IM vmwp.exe 2>$null
 
 # Remove minikube configuration
 Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$env:USERPROFILE\.kube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Reiniciar Docker Desktop completamente
+# (Ir a la bandeja del sistema, click derecho en Docker, "Quit Docker Desktop")
+# Esperar 10 segundos y volver a abrir Docker Desktop
 
 # Recreate minikube cluster
 minikube start --driver=docker --memory=16384 --cpus=2
