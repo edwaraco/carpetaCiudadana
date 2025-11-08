@@ -12,7 +12,7 @@ data:
   # RabbitMQ Configuration
   # SECURITY NOTE: For production, replace credentials with Kubernetes secrets
   RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672/"
-  DOCUMENT_AUTHENTICATED_QUEUE: "document_authenticated_response"
+  DOCUMENT_AUTHENTICATED_QUEUE: "documento.autenticado.queue"
   
   # External Services
   CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service:8080"

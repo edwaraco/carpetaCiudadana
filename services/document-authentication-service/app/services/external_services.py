@@ -83,8 +83,8 @@ async def get_presigned_document_url(
                 # The response should contain the presigned URL
                 # Assuming the API returns JSON with a 'url' field
                 data = response.json()
-                if isinstance(data, dict) and "url" in data:
-                    return data["url"]
+                if isinstance(data, dict) and "urlDescarga" in data:
+                    return data["urlDescarga"]
                 elif isinstance(data, str):
                     # If response is directly the URL string
                     return data
