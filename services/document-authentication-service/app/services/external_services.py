@@ -39,7 +39,7 @@ async def check_gov_carpeta_health() -> bool:
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.head(f"{settings.gov_carpeta_service_url}/apis/")
-            return response.statusCode < 500
+            return response.status_code < 500
     except Exception as e:
         logger.error(f"Gov Carpeta health check failed: {str(e)}")
         return False
@@ -80,17 +80,34 @@ async def get_presigned_document_url(
                 response = client.get(url, headers=headers)
                 response.raise_for_status()
 
-                # The response should contain the presigned URL
-                # Assuming the API returns JSON with a 'url' field
-                data = response.json()
-                if isinstance(data, dict) and "urlDescarga" in data:
-                    return data["urlDescarga"]
-                elif isinstance(data, str):
+                # The response is wrapped in ApiResponse format:
+                # {"success": true, "message": "...", "data": {...}, "timestamp": "..."}
+                json_response = response.json()
+                
+                # Extract data from ApiResponse wrapper
+                if isinstance(json_response, dict):
+                    # Check if it's wrapped in ApiResponse
+                    if "data" in json_response and json_response.get("success", False):
+                        data = json_response["data"]
+                        if isinstance(data, dict) and "urlDescarga" in data:
+                            return data["urlDescarga"]
+                        else:
+                            raise ExternalServiceError(
+                                f"'data' object missing 'urlDescarga' field: {data}"
+                            )
+                    # Legacy: direct response with urlDescarga
+                    elif "urlDescarga" in json_response:
+                        return json_response["urlDescarga"]
+                    else:
+                        raise ExternalServiceError(
+                            f"Unexpected response format from carpeta service: {json_response}"
+                        )
+                elif isinstance(json_response, str):
                     # If response is directly the URL string
-                    return data
+                    return json_response
                 else:
                     raise ExternalServiceError(
-                        f"Unexpected response format from carpeta service: {data}"
+                        f"Unexpected response type from carpeta service: {type(json_response)}"
                     )
 
         presigned_url = carpeta_service_circuit_breaker.call(_make_request)
@@ -135,7 +152,7 @@ async def authenticate_document_with_gov_carpeta(
                 )
 
                 # Handle different response status codes
-                if response.statusCode == 200:
+                if response.status_code == 200:
                     # Success - extract message
                     try:
                         message = response.json()
@@ -152,19 +169,19 @@ async def authenticate_document_with_gov_carpeta(
                             "message": response.text,
                         }
 
-                elif response.statusCode == 204:
+                elif response.status_code == 204:
                     return {
                         "statusCode": "204",
                         "message": "No Content",
                     }
 
-                elif response.statusCode == 500:
+                elif response.status_code == 500:
                     return {
                         "statusCode": "500",
                         "message": "Application Error",
                     }
 
-                elif response.statusCode == 501:
+                elif response.status_code == 501:
                     return {
                         "statusCode": "501",
                         "message": "Wrong Parameters",
@@ -172,7 +189,7 @@ async def authenticate_document_with_gov_carpeta(
 
                 else:
                     return {
-                        "statusCode": str(response.statusCode),
+                        "statusCode": str(response.status_code),
                         "message": response.text or "Unknown error",
                     }
 
