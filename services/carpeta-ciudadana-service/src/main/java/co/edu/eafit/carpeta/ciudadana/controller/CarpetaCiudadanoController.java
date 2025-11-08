@@ -34,10 +34,9 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/carpetas")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(
-    name = "Carpeta Ciudadana", 
+    name = "Carpeta Ciudadana",
     description = "API para gestión de carpetas ciudadanas y documentos. " +
                   "Permite crear carpetas únicas, almacenar documentos (firmados o no), " +
                   "visualizar documentos y gestionar el ciclo de vida de la carpeta ciudadana."
@@ -724,5 +723,119 @@ public class CarpetaCiudadanoController {
         );
         
         return ResponseUtil.ok(response, "URL de descarga generada exitosamente");
+    }
+
+    @Operation(
+        summary = "Iniciar autenticación de documento",
+        description = "Inicia el proceso de autenticación de un documento. " +
+                      "El documento debe estar en estado TEMPORAL para poder iniciar la autenticación. " +
+                      "Una vez iniciado, el estado cambia a EN_AUTENTICACION.",
+        tags = {"Carpeta Ciudadana"}
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Autenticación iniciada exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiResponse.class),
+                examples = @ExampleObject(
+                    name = "Autenticación iniciada",
+                    value = """
+                        {
+                            "success": true,
+                            "message": "Proceso de autenticación iniciado exitosamente",
+                            "data": {
+                                "documentoId": "660e8400-e29b-41d4-a716-446655440001",
+                                "titulo": "Diploma Universitario",
+                                "estadoDocumento": "EN_AUTENTICACION",
+                                "fechaInicioAutenticacion": "2025-11-07T10:30:00",
+                                "urlDescarga": "http://localhost:9000/carpeta-ciudadana-docs/550e8400-e29b-41d4-a716-446655440000/660e8400-e29b-41d4-a716-446655440001/diploma.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+                                "minutosValidez": 15,
+                                "mensaje": "Proceso de autenticación iniciado exitosamente"
+                            },
+                            "timestamp": "2025-11-07T10:30:00"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "El documento no está en estado válido para iniciar autenticación",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "Estado inválido",
+                    value = """
+                        {
+                            "success": false,
+                            "message": "El documento debe estar en estado TEMPORAL para iniciar autenticación. Estado actual: PROCESADO",
+                            "error": {
+                                "code": "INVALID_STATE",
+                                "message": "El documento debe estar en estado TEMPORAL para iniciar autenticación. Estado actual: PROCESADO"
+                            },
+                            "timestamp": "2025-11-07T10:30:00"
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "Carpeta o documento no encontrado",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "Documento no encontrado",
+                    value = """
+                        {
+                            "success": false,
+                            "message": "Documento no encontrado con documentoId: '660e8400-e29b-41d4-a716-446655440001'",
+                            "error": {
+                                "code": "RESOURCE_NOT_FOUND",
+                                "message": "Documento no encontrado con documentoId: '660e8400-e29b-41d4-a716-446655440001'",
+                                "field": "documentoId",
+                                "rejectedValue": "660e8400-e29b-41d4-a716-446655440001"
+                            },
+                            "timestamp": "2025-11-07T10:30:00"
+                        }
+                        """
+                )
+            )
+        )
+    })
+    @PostMapping("/{carpetaId}/documentos/{documentoId}/iniciar-autenticacion")
+    public ResponseEntity<ApiResponse<co.edu.eafit.carpeta.ciudadana.dto.response.IniciarAutenticacionResponse>> iniciarAutenticacionDocumento(
+            @Parameter(
+                description = "ID de la carpeta que contiene el documento",
+                required = true,
+                example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            @PathVariable String carpetaId,
+            @Parameter(
+                description = "ID del documento a autenticar",
+                required = true,
+                example = "660e8400-e29b-41d4-a716-446655440001"
+            )
+            @PathVariable String documentoId) {
+        
+        log.info("Iniciando autenticación de documento: {} en carpeta: {}", documentoId, carpetaId);
+
+        co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse resultado = 
+            carpetaService.iniciarAutenticacionDocumento(carpetaId, documentoId);
+        
+        co.edu.eafit.carpeta.ciudadana.dto.response.IniciarAutenticacionResponse response = 
+            co.edu.eafit.carpeta.ciudadana.dto.response.IniciarAutenticacionResponse.of(
+                resultado.documento().getDocumentoId(),
+                resultado.documento().getTitulo(),
+                resultado.documento().getEstadoDocumento(),
+                resultado.documento().getFechaUltimaModificacion(),
+                resultado.urlDescarga(),
+                15,
+                "Proceso de autenticación iniciado exitosamente"
+            );
+        
+        return ResponseUtil.ok(response, "Proceso de autenticación iniciado exitosamente");
     }
 }

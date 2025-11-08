@@ -1,7 +1,6 @@
 package co.edu.eafit.carpeta.ciudadana.repository;
 
 import co.edu.eafit.carpeta.ciudadana.entity.HistorialAcceso;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

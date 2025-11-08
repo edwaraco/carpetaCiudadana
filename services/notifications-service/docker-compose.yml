@@ -1,0 +1,47 @@
+# 📧 Notifications Service - Connects to External RabbitMQ
+# This service connects to an existing RabbitMQ broker (not included)
+# Configure RABBITMQ_URL to point to your existing RabbitMQ instance
+
+version: '3.8'
+
+networks:
+  notifications-network:
+    driver: bridge
+  # External network for connecting to existing infrastructure
+  external-network:
+    external: true
+    name: ${EXTERNAL_NETWORK:-default}
+
+services:
+  # 📧 Notifications Service
+  notifications-service:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: notifications-service
+    ports:
+      - "${NOTIFICATIONS_SERVICE_PORT:-8082}:8080"  # Configurable port
+    environment:
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_TEST_MODE=${SENDGRID_TEST_MODE:-false}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://admin:microservices2024@your-rabbitmq-host:5672/}
+      - LISTEN_PORT=8080
+      - EXCHANGE_NAME=${EXCHANGE_NAME:-microservices.topic}
+      - QUEUE_NAME=${QUEUE_NAME:-notifications.email.queue}
+      - ROUTING_KEYS=${ROUTING_KEYS:-user.registration.email,user.registration.complete,notifications.email.send}
+      - CONSUMER_ENABLED=${CONSUMER_ENABLED:-true}
+      - CONSUMER_TAG=${CONSUMER_TAG:-notifications-service}
+      - CONSUMER_WORKERS=${CONSUMER_WORKERS:-3}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-http://localhost:8081}
+      - FROM_EMAIL=${FROM_EMAIL:-carpetacarpeta.ciudadana.info@gmail.com}
+      - FROM_NAME=${FROM_NAME:-Carpeta Ciudadana}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    networks:
+      - notifications-network
+      - external-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

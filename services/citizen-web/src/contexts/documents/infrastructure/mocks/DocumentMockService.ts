@@ -3,14 +3,17 @@
  * Simulates document management for development/testing
  */
 
-import { ApiResponse, PaginatedResponse } from '../../../../shared/utils/api.types';
-import { IDocumentService } from '../IDocumentService';
-import {
+import type { ApiResponse } from '@/shared/utils/api.types';
+import type { IDocumentService } from '@/contexts/documents/infrastructure/IDocumentService';
+import type {
   Document,
   UploadDocumentRequest,
   SignDocumentRequest,
   SignDocumentResponse,
-} from '../../domain/types';
+  CursorPaginatedResponse,
+  BackendDocumentoUrlResponse,
+  PaginationCursor,
+} from '@/contexts/documents/domain/types';
 
 export class DocumentMockService implements IDocumentService {
   private documents: Map<string, Document> = new Map();
@@ -30,7 +33,6 @@ export class DocumentMockService implements IDocumentService {
           type: 'DIPLOMA',
           context: 'EDUCATION',
           issueDate: new Date('2020-12-15'),
-          tags: ['education', 'high-school'],
           issuingEntity: 'Ministerio de Educación',
         },
         content: {
@@ -57,7 +59,6 @@ export class DocumentMockService implements IDocumentService {
           type: 'CEDULA',
           context: 'CIVIL_REGISTRY',
           issueDate: new Date('2018-06-20'),
-          tags: ['identity', 'citizenship'],
           issuingEntity: 'Registraduría Nacional',
         },
         content: {
@@ -83,7 +84,6 @@ export class DocumentMockService implements IDocumentService {
           title: 'Factura de Servicios',
           type: 'OTHER',
           context: 'OTHER',
-          tags: ['temporary', 'utility'],
         },
         content: {
           format: 'PDF',
@@ -100,8 +100,13 @@ export class DocumentMockService implements IDocumentService {
     this.nextId = samples.length + 1;
   }
 
-  async uploadDocument(request: UploadDocumentRequest): Promise<ApiResponse<Document>> {
+  async uploadDocument(
+    carpetaId: string,
+    request: UploadDocumentRequest
+  ): Promise<ApiResponse<Document>> {
     await this.simulateDelay();
+
+    console.log(`[Mock] Uploading document to carpeta: ${carpetaId}`);
 
     const docId = `doc-${String(this.nextId++).padStart(3, '0')}`;
 
@@ -114,7 +119,7 @@ export class DocumentMockService implements IDocumentService {
         hash: `hash-${Date.now()}`,
         storageUrl: `https://storage.example.com/${docId}.${this.getFileExtension(request.file.name)}`,
       },
-      documentStatus: request.isCertified ? 'CERTIFIED' : 'TEMPORARY',
+      documentStatus: 'TEMPORARY',
       receptionDate: new Date(),
     };
 
@@ -128,31 +133,41 @@ export class DocumentMockService implements IDocumentService {
     };
   }
 
-  async getDocuments(page = 1, pageSize = 20): Promise<ApiResponse<PaginatedResponse<Document>>> {
+  async getDocuments(
+    carpetaId: string,
+    cursor?: PaginationCursor
+  ): Promise<ApiResponse<CursorPaginatedResponse<Document>>> {
     await this.simulateDelay(500);
 
-    const allDocs = Array.from(this.documents.values());
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    const paginatedDocs = allDocs.slice(start, end);
+    console.log(`[Mock] Getting documents for carpeta: ${carpetaId}, cursor: ${cursor}`);
+
+    const allDocs = Array.from(this.documents.values()).sort(
+      (a, b) => b.receptionDate.getTime() - a.receptionDate.getTime()
+    );
+
+    const pageSize = 20;
+    const startIndex = cursor ? parseInt(cursor, 10) : 0;
+    const endIndex = startIndex + pageSize;
+    const paginatedDocs = allDocs.slice(startIndex, endIndex);
+
+    const hasMore = endIndex < allDocs.length;
+    const nextCursor = hasMore ? String(endIndex) : undefined;
 
     return {
       success: true,
       data: {
         items: paginatedDocs,
-        total: allDocs.length,
-        page,
-        pageSize,
-        totalPages: Math.ceil(allDocs.length / pageSize),
-        hasNext: end < allDocs.length,
-        hasPrevious: page > 1,
+        nextCursor,
+        hasMore,
       },
       timestamp: new Date(),
     };
   }
 
-  async getDocument(documentId: string): Promise<ApiResponse<Document>> {
+  async getDocument(carpetaId: string, documentId: string): Promise<ApiResponse<Document>> {
     await this.simulateDelay(400);
+
+    console.log(`[Mock] Getting document ${documentId} from carpeta: ${carpetaId}`);
 
     const document = this.documents.get(documentId);
 
@@ -175,8 +190,10 @@ export class DocumentMockService implements IDocumentService {
     };
   }
 
-  async deleteDocument(documentId: string): Promise<ApiResponse<void>> {
+  async deleteDocument(carpetaId: string, documentId: string): Promise<ApiResponse<void>> {
     await this.simulateDelay(600);
+
+    console.log(`[Mock] Deleting document ${documentId} from carpeta: ${carpetaId}`);
 
     const document = this.documents.get(documentId);
 
@@ -213,8 +230,13 @@ export class DocumentMockService implements IDocumentService {
     };
   }
 
-  async signDocument(request: SignDocumentRequest): Promise<ApiResponse<SignDocumentResponse>> {
+  async signDocument(
+    carpetaId: string,
+    request: SignDocumentRequest
+  ): Promise<ApiResponse<SignDocumentResponse>> {
     await this.simulateDelay(1000);
+
+    console.log(`[Mock] Signing document ${request.documentId} in carpeta: ${carpetaId}`);
 
     const document = this.documents.get(request.documentId);
 
@@ -253,36 +275,14 @@ export class DocumentMockService implements IDocumentService {
     };
   }
 
-  async downloadDocument(documentId: string): Promise<ApiResponse<Blob>> {
-    await this.simulateDelay(800);
-
-    const document = this.documents.get(documentId);
-
-    if (!document) {
-      return {
-        success: false,
-        error: {
-          code: 'DOCUMENT_NOT_FOUND',
-          message: 'Document not found',
-          statusCode: 404,
-        },
-        timestamp: new Date(),
-      };
-    }
-
-    // Create a mock blob
-    const blob = new Blob(['Mock document content'], { type: 'application/pdf' });
-
-    return {
-      success: true,
-      data: blob,
-      timestamp: new Date(),
-    };
-  }
-
-  async getPresignedUrl(documentId: string): Promise<ApiResponse<string>> {
+  async getPresignedUrl(
+    carpetaId: string,
+    documentId: string
+  ): Promise<ApiResponse<BackendDocumentoUrlResponse>> {
     await this.simulateDelay(300);
 
+    console.log(`[Mock] Getting presigned URL for document ${documentId} in carpeta: ${carpetaId}`);
+
     const document = this.documents.get(documentId);
 
     if (!document) {
@@ -297,12 +297,20 @@ export class DocumentMockService implements IDocumentService {
       };
     }
 
-    // Generate mock presigned URL
-    const presignedUrl = `${document.content.storageUrl}?token=mock-token-${Date.now()}&expires=3600`;
+    // Generate mock presigned URL response matching backend format
+    const expirationTime = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+    const mockResponse: BackendDocumentoUrlResponse = {
+      documentoId: documentId,
+      titulo: document.metadata.title,
+      urlDescarga: `${document.content.storageUrl}?token=mock-token-${Date.now()}&expires=900`,
+      expiraEn: expirationTime.toISOString(),
+      minutosValidez: 15,
+      mensaje: 'URL de descarga generada exitosamente',
+    };
 
     return {
       success: true,
-      data: presignedUrl,
+      data: mockResponse,
       timestamp: new Date(),
     };
   }

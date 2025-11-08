@@ -3,6 +3,9 @@
     "title": "Mis Documentos",
     "subtitle": "Gestione sus documentos certificados y temporales",
     "empty": "No tiene documentos almacenados",
+    "emptyDescription": "Cargue su primer documento para comenzar",
+    "loadMore": "Cargar Más",
+    "loading": "Cargando...",
     "filters": {
       "all": "Todos",
       "certified": "Certificados",
@@ -13,35 +16,54 @@
   "upload": {
     "title": "Cargar Documento",
     "subtitle": "Almacene un nuevo documento en su carpeta",
+    "dragDrop": {
+      "active": "Suelte el archivo aquí",
+      "inactive": "Arrastre y suelte un archivo aquí, o haga clic para seleccionar",
+      "browse": "Examinar"
+    },
     "form": {
       "file": {
         "label": "Archivo",
         "placeholder": "Seleccione un archivo",
-        "helperText": "Tamaño máximo: 10MB. Formatos permitidos: PDF, JPG, PNG"
+        "helperText": "Tamaño máximo: 10MB. Formatos permitidos: PDF, JPG, PNG",
+        "selected": "Archivo seleccionado"
       },
-      "name": {
-        "label": "Nombre del Documento",
-        "placeholder": "Ej: Certificado de Estudios 2024"
+      "title": {
+        "label": "Título del Documento",
+        "placeholder": "Ej: Diploma Universitario 2024",
+        "required": "El título es requerido"
       },
-      "description": {
-        "label": "Descripción",
-        "placeholder": "Descripción opcional del documento"
+      "type": {
+        "label": "Tipo de Documento",
+        "placeholder": "Seleccione el tipo",
+        "required": "El tipo es requerido"
       },
-      "category": {
-        "label": "Categoría",
-        "placeholder": "Seleccione una categoría"
+      "context": {
+        "label": "Contexto del Documento",
+        "placeholder": "Seleccione el contexto",
+        "required": "El contexto es requerido"
+      },
+      "issueDate": {
+        "label": "Fecha de Emisión (Opcional)",
+        "helperText": "Fecha en que fue emitido el documento"
+      },
+      "issuingEntity": {
+        "label": "Entidad Emisora (Opcional)",
+        "helperText": "Nombre de la entidad que emitió este documento"
       }
     },
     "actions": {
       "upload": "Cargar Documento",
       "uploading": "Cargando...",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "uploadAnother": "Cargar Otro Documento"
     },
     "success": "Documento cargado exitosamente",
     "errors": {
       "fileTooLarge": "El archivo es demasiado grande",
       "invalidFormat": "Formato de archivo no permitido",
-      "uploadFailed": "Error al cargar el documento"
+      "uploadFailed": "Error al cargar el documento",
+      "noFile": "Debe seleccionar un archivo"
     }
   },
   "detail": {
@@ -63,10 +85,33 @@
     },
     "actions": {
       "download": "Descargar",
+      "downloading": "Descargando...",
       "share": "Compartir",
       "delete": "Eliminar",
-      "viewSignature": "Ver Firma"
+      "viewSignature": "Ver Firma",
+      "view": "Ver Documento"
     }
+  },
+  "documentTypes": {
+    "CEDULA": "Cédula",
+    "DIPLOMA": "Diploma",
+    "GRADUATION_CERTIFICATE": "Acta de Grado",
+    "MEDICAL_CERTIFICATE": "Certificado Médico",
+    "DEED": "Escritura",
+    "TAX_RETURN": "Declaración de Impuestos",
+    "PASSPORT": "Pasaporte",
+    "BACKGROUND_CHECK": "Certificado de Antecedentes",
+    "OTHER": "Otro"
+  },
+  "documentContexts": {
+    "EDUCATION": "Educación",
+    "HEALTH": "Salud",
+    "NOTARY": "Notaría",
+    "CIVIL_REGISTRY": "Registraduría",
+    "TAXES": "Impuestos",
+    "EMPLOYMENT": "Laboral",
+    "IMMIGRATION": "Inmigración",
+    "OTHER": "Otro"
   },
   "categories": {
     "identification": "Identificación",
@@ -101,6 +146,39 @@
     "warning": "Esta acción no se puede deshacer",
     "success": "Documento eliminado exitosamente",
     "error": "Error al eliminar el documento"
-  }
+  },
+  "errors": {
+    "carpetaIdNotFound": "No se pudo obtener la información de su carpeta. Por favor, cierre sesión e inicie sesión nuevamente.",
+    "carpetaIdLoading": "Cargando información de su carpeta...",
+    "fetchFailed": "Error al cargar los documentos",
+    "downloadFailed": "Error al descargar el documento",
+    "deleteFailed": "Error al eliminar el documento"
+  },
+  "viewer": {
+    "certifiedTitle": "Documento Certificado",
+    "certifiedMessage": "Este documento ha sido certificado digitalmente y cuenta con validez legal.",
+    "temporaryTitle": "Documento Temporal",
+    "temporaryMessage": "Este documento no ha sido certificado aún. Para obtener validez legal, debe ser certificado por la entidad emisora.",
+    "revokedTitle": "Documento Revocado",
+    "revokedMessage": "Este documento ha sido revocado y ya no tiene validez legal.",
+    "type": "Tipo",
+    "context": "Contexto",
+    "receptionDate": "Fecha de Recepción",
+    "issueDate": "Fecha de Emisión",
+    "issuingEntity": "Entidad Emisora",
+    "format": "Formato",
+    "size": "Tamaño",
+    "certificationDetails": "Detalles de Certificación",
+    "signedBy": "Firmado Por",
+    "algorithm": "Algoritmo",
+    "hashAlgorithm": "Algoritmo de Hash",
+    "signatureDate": "Fecha de Firma",
+    "digitalSignature": "Firma Digital",
+    "preview": "Vista Previa del Documento",
+    "noPreview": "Vista previa no disponible para este documento",
+    "documentNotFound": "Documento no encontrado"
+  },
+  "download": "Descargar",
+  "downloading": "Descargando..."
 }
 

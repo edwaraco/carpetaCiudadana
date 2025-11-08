@@ -18,7 +18,6 @@ import {
 import {
   Person as PersonIcon,
   Email as EmailIcon,
-  Phone as PhoneIcon,
   LocationOn as LocationIcon,
   Folder as FolderIcon,
   CheckCircle as ActiveIcon,
@@ -138,22 +137,9 @@ export const FolderInfo: React.FC = () => {
               <Typography variant="caption" color="text.secondary">
                 Personal Email
               </Typography>
-              <Typography variant="body2">{owner.emailPersonal}</Typography>
+              <Typography variant="body2">{owner.personalEmail}</Typography>
             </Box>
           </Box>
-
-          {/* Phone */}
-          {owner.phoneNumber && (
-            <Box display="flex" alignItems="center" gap={1}>
-              <PhoneIcon fontSize="small" color="action" />
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Phone Number
-                </Typography>
-                <Typography variant="body2">{owner.phoneNumber}</Typography>
-              </Box>
-            </Box>
-          )}
 
           {/* Address */}
           <Box display="flex" alignItems="center" gap={1}>
@@ -163,10 +149,7 @@ export const FolderInfo: React.FC = () => {
                 Address
               </Typography>
               <Typography variant="body2">
-                {owner.address.street}, {owner.address.city}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {owner.address.department}, {owner.address.country}
+                {owner.address}
               </Typography>
             </Box>
           </Box>

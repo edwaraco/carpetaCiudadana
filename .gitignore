@@ -13,12 +13,13 @@ build/
 dist/
 
 # IDEs
-.vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+.kiro
+.vscode
 
 # Environment variables
 .env

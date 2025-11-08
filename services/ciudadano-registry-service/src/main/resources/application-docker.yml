@@ -1,0 +1,132 @@
+spring:
+  application:
+    name: ciudadano-registry-service
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# Configuración de AWS DynamoDB
+aws:
+  region: us-east-1
+  access-key-id: dummy
+  secret-access-key: dummy
+  dynamodb:
+    endpoint: http://dynamodb-local:8000
+
+# Configuración de GovCarpeta API
+govcarpeta:
+  api:
+    base-url: https://govcarpeta-apis-4905ff3c005b.herokuapp.com
+    timeout-seconds: 30
+
+# Configuración de Carpeta Ciudadana API
+carpeta-ciudadana:
+  api:
+    base-url: http://carpeta-ciudadana-service:8080
+    timeout-seconds: 30
+
+    # Configuración de Resilience4j
+    resilience4j:
+      circuitbreaker:
+        instances:
+          govcarpeta-api:
+            failure-rate-threshold: 50
+            wait-duration-in-open-state: 30s
+            sliding-window-size: 10
+            minimum-number-of-calls: 5
+            permitted-number-of-calls-in-half-open-state: 3
+            automatic-transition-from-open-to-half-open-enabled: true
+            record-exceptions:
+              - feign.FeignException
+              - java.util.concurrent.TimeoutException
+              - java.net.ConnectException
+              - java.net.SocketTimeoutException
+            ignore-exceptions:
+              - co.edu.eafit.carpeta.ciudadana.registry.exception.BusinessException
+
+          carpeta-ciudadana-api:
+            failure-rate-threshold: 50
+            wait-duration-in-open-state: 30s
+            sliding-window-size: 10
+            minimum-number-of-calls: 5
+            permitted-number-of-calls-in-half-open-state: 3
+            automatic-transition-from-open-to-half-open-enabled: true
+            record-exceptions:
+              - feign.FeignException
+              - java.util.concurrent.TimeoutException
+              - java.net.ConnectException
+              - java.net.SocketTimeoutException
+            ignore-exceptions:
+              - co.edu.eafit.carpeta.ciudadana.registry.exception.BusinessException
+
+      retry:
+        instances:
+          govcarpeta-api:
+            max-attempts: 3
+            wait-duration: 2s
+            exponential-backoff-multiplier: 2
+            retry-exceptions:
+              - feign.FeignException
+              - java.util.concurrent.TimeoutException
+              - java.net.ConnectException
+              - java.net.SocketTimeoutException
+            ignore-exceptions:
+              - co.edu.eafit.carpeta.ciudadana.registry.exception.BusinessException
+
+          carpeta-ciudadana-api:
+            max-attempts: 3
+            wait-duration: 2s
+            exponential-backoff-multiplier: 2
+            retry-exceptions:
+              - feign.FeignException
+              - java.util.concurrent.TimeoutException
+              - java.net.ConnectException
+              - java.net.SocketTimeoutException
+            ignore-exceptions:
+              - co.edu.eafit.carpeta.ciudadana.registry.exception.BusinessException
+
+# Configuración de OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Configuración de logging
+logging:
+  level:
+    co.edu.eafit.carpeta.ciudadana.registry: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configuración del servidor
+server:
+  port: 8081
+  servlet:
+    context-path: /ciudadano-registry
+
+# Configuración de Actuator para monitoreo
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,retries
+  endpoint:
+    health:
+      show-details: always
+    circuitbreakers:
+      enabled: true
+    retries:
+      enabled: true
+  metrics:
+    export:
+      simple:
+        enabled: true

@@ -1,10 +1,64 @@
+---
+# ConfigMap for citizen-web runtime configuration
+# These environment variables are injected into the container at startup
+# and used by docker-entrypoint.sh to generate config.js dynamically
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: frontend-config
+  name: citizen-web-config
+  labels:
+    app: citizen-web
+    component: frontend
 data:
-  api-base-url: "http://backend-api-service:8080/api"
-  use-mock-api: "false"
-  operator-id: "micarpeta"
-  operator-name: "MiCarpeta"
+  # API Configuration
+  VITE_API_BASE_URL: "/api/v1"
+
+  # Operator Configuration
+  VITE_OPERATOR_ID: "micarpeta"
+  VITE_OPERATOR_NAME: "MiCarpeta"
+
+  # MFA Configuration
+  VITE_MFA_REQUIRED: "false"
+
+  # Feature Flags - Main Features
+  VITE_FEATURE_PORTABILITY: "false"
+  VITE_FEATURE_DOCUMENT_REQUESTS: "false"
+  VITE_FEATURE_DOCUMENTS: "true"
+  VITE_FEATURE_UPLOAD_DOCUMENTS: "true"
+  VITE_FEATURE_DOWNLOAD_DOCUMENTS: "true"
+  VITE_FEATURE_DELETE_DOCUMENTS: "false"
+  VITE_FEATURE_NOTIFICATIONS: "true"
+
+  # Feature Flags - Dashboard
+  VITE_FEATURE_STORAGE_STATS: "true"
+  VITE_FEATURE_RECENT_ACTIVITY: "false"
+
+  # Feature Flags - Authentication
+  VITE_FEATURE_MFA: "false"
+  VITE_FEATURE_REGISTRATION: "true"
+
+  # Feature Flags - Audit
+  VITE_FEATURE_AUDIT_LOGS: "true"
+
+  # Mock Configuration - Master Switch
+  VITE_USE_MOCKS: "true"
+
+  # Mock Configuration - Granular Control
+  VITE_MOCK_AUTHENTICATION: "true"
+  VITE_MOCK_IDENTITY: "true"
+  VITE_MOCK_DOCUMENTS: "false"
+  VITE_MOCK_CARPETA: "false"
+  VITE_MOCK_PORTABILITY: "true"
+  VITE_MOCK_REQUESTS: "true"
+  VITE_MOCK_NOTIFICATIONS: "true"
+  VITE_MOCK_AUDIT: "true"
+
+  # Nginx API Gateway - Microservices URLs
+  DOCUMENTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  FOLDERS_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  IDENTITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  AUTH_SERVICE_URL: "auth-service:8080"
+  NOTIFICATIONS_SERVICE_URL: "notifications-service:8080"
+  PORTABILITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  REQUESTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
 

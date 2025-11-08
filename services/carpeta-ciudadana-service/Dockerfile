@@ -28,12 +28,22 @@ FROM eclipse-temurin:21-jre-alpine
 # Set the working directory
 WORKDIR /app
 
+# Create a non-root user and group (using UID/GID 1001 to avoid conflicts)
+RUN addgroup -g 1001 -S spring-app && \
+    adduser -S -D -H -u 1001 -h /app -s /sbin/nologin -G spring-app -g spring-app spring-app
+
 # Copy the built .jar file from the 'builder' stage
 # We rename it to app.jar for a consistent entrypoint
 COPY --from=builder /app/target/*.jar app.jar
 
+# Set proper ownership for the application directory
+RUN chown -R spring-app:spring-app /app
+
 # (Optional) Expose the port your application runs on
 EXPOSE 8080
+
+# Switch to non-root user
+USER spring-app
 
 # Define the command to run your application
 ENTRYPOINT ["java", "-jar", "app.jar"]

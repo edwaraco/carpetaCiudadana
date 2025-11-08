@@ -8,8 +8,8 @@ import { IFolderService } from '../IFolderService';
 import { CitizenFolder, FolderStatistics } from '../../domain/types';
 
 export class FolderApiService implements IFolderService {
-  async getFolder(): Promise<ApiResponse<CitizenFolder>> {
-    return httpClient.get<CitizenFolder>('/folder');
+  async getFolder(cedula: string): Promise<ApiResponse<CitizenFolder>> {
+    return httpClient.get<CitizenFolder>(`/documents/carpetas/cedula/${cedula}`);
   }
 
   async getStatistics(): Promise<ApiResponse<FolderStatistics>> {

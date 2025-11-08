@@ -1,0 +1,18 @@
+# Environment files
+.env
+sendgrid.env
+
+# Local secrets (never commit these)
+k8s/secret.local.yaml
+k8s/*.local.yaml
+
+# Compiled binaries
+notifications-service
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

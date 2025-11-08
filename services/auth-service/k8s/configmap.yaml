@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: carpeta-ciudadana
+data:
+  DATABASE_URL: "postgres://auth_service_user:auth_service_password123@auth-postgres-service:5432/auth_service_db?sslmode=disable"
+  RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672"
+  JWT_SECRET: "super-secret-jwt-key-for-microservices-2024"
+  LISTEN_PORT: "8080"
+  EXCHANGE_NAME: "carpeta.events"
+  IDENTITY_SERVICE_URL: "http://ciudadano-registry-service:8081"
+  FRONTEND_BASE_URL: "http://localhost:3000"
+  ENVIRONMENT: "kubernetes"

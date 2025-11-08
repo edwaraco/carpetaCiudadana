@@ -1,0 +1,167 @@
+---
+# ConfigMap with RabbitMQ definitions for queues, exchanges, and bindings
+# These definitions are applied automatically when the cluster starts
+# Reference: https://www.rabbitmq.com/docs/definitions
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-definitions
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq
+data:
+  definitions.json: |
+    {
+      "rabbit_version": "3.13.0",
+      "rabbitmq_version": "3.13.0",
+      "product_name": "RabbitMQ",
+      "product_version": "3.13.0",
+      "users": [
+        {
+          "name": "admin",
+          "password_hash": "va3yk4NAHK7CHDUeTPna7qm1vdP7wDcl+wGcxg8a/KzFWbcf",
+          "hashing_algorithm": "rabbit_password_hashing_sha256",
+          "tags": ["administrator"]
+        }
+      ],
+      "vhosts": [
+        {
+          "name": "/"
+        }
+      ],
+      "permissions": [
+        {
+          "user": "admin",
+          "vhost": "/",
+          "configure": ".*",
+          "write": ".*",
+          "read": ".*"
+        }
+      ],
+      "topic_permissions": [],
+      "parameters": [],
+      "global_parameters": [],
+      "policies": [],
+      "queues": [
+        {
+          "name": "document_authentication_response",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3,
+            "x-delivery-limit": 3,
+            "x-dead-letter-exchange": "carpeta.dlx",
+            "x-dead-letter-routing-key": "document_authentication_response.dlq"
+          }
+        },
+        {
+          "name": "test_queue",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3,
+            "x-delivery-limit": 3
+          }
+        },
+        {
+          "name": "notifications.queue",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3,
+            "x-delivery-limit": 3,
+            "x-dead-letter-exchange": "carpeta.dlx",
+            "x-dead-letter-routing-key": "notifications.queue.dlq"
+          }
+        },
+        {
+          "name": "document_authentication_response.dlq",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3
+          }
+        },
+        {
+          "name": "notifications.queue.dlq",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "name": "carpeta.events",
+          "vhost": "/",
+          "type": "topic",
+          "durable": true,
+          "auto_delete": false,
+          "internal": false,
+          "arguments": {}
+        },
+        {
+          "name": "carpeta.dlx",
+          "vhost": "/",
+          "type": "topic",
+          "durable": true,
+          "auto_delete": false,
+          "internal": false,
+          "arguments": {}
+        }
+      ],
+      "bindings": [
+        {
+          "source": "carpeta.events",
+          "vhost": "/",
+          "destination": "document_authentication_response",
+          "destination_type": "queue",
+          "routing_key": "document.authentication.response",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.events",
+          "vhost": "/",
+          "destination": "test_queue",
+          "destination_type": "queue",
+          "routing_key": "test.#",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.events",
+          "vhost": "/",
+          "destination": "notifications.queue",
+          "destination_type": "queue",
+          "routing_key": "notifications.#",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.dlx",
+          "vhost": "/",
+          "destination": "document_authentication_response.dlq",
+          "destination_type": "queue",
+          "routing_key": "document_authentication_response.dlq",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.dlx",
+          "vhost": "/",
+          "destination": "notifications.queue.dlq",
+          "destination_type": "queue",
+          "routing_key": "notifications.queue.dlq",
+          "arguments": {}
+        }
+      ]
+    }

@@ -19,19 +19,13 @@ export class FolderMockService implements IFolderService {
     owner: {
       cedula: '1234567890',
       fullName: 'Juan Pérez González',
-      emailPersonal: 'juan.perez@gmail.com',
+      personalEmail: 'juan.perez@gmail.com',
       folderEmail: 'juan.perez@carpetacolombia.co',
-      phoneNumber: '+57 300 123 4567',
-      birthDate: new Date('1990-05-15'),
-      address: {
-        street: 'Calle 50 #45-67',
-        city: 'Medellín',
-        department: 'Antioquia',
-        country: 'Colombia',
-        postalCode: '050012',
-      },
+      address: 'Calle 50 #45-67, Medellín, Antioquia, Colombia',
+      currentOperator: 'MiCarpeta',
       registrationDate: new Date('2024-01-15'),
-      isActive: true,
+      status: 'ACTIVE',
+      carpetaId: 'folder-001',
     },
     documents: [],
     usedStorage: {
@@ -50,8 +44,12 @@ export class FolderMockService implements IFolderService {
     creationDate: new Date('2024-01-15'),
   };
 
-  async getFolder(): Promise<ApiResponse<CitizenFolder>> {
+  async getFolder(cedula: string): Promise<ApiResponse<CitizenFolder>> {
     await this.simulateDelay();
+
+    // For mock, return the folder regardless of cedula
+    // In real implementation, this would filter by cedula
+    console.info(`Mock: Fetching folder for cedula ${cedula}`);
 
     return {
       success: true,

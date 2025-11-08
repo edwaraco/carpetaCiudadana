@@ -1,0 +1,49 @@
+---
+# Ingress for RabbitMQ Management UI
+# Requires an Ingress Controller (nginx, traefik, etc.)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: carpeta-rabbitmq-management
+  namespace: carpeta-ciudadana
+  labels:
+    app: carpeta-ciudadana
+    component: rabbitmq
+  annotations:
+    # nginx ingress controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # For production, enable TLS:
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx  # Change based on your ingress controller
+  rules:
+    - host: rabbitmq.carpeta-ciudadana.local  # Change to your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: carpeta-rabbitmq-management
+                port:
+                  number: 15672
+  # For production with TLS:
+  # tls:
+  #   - hosts:
+  #       - rabbitmq.carpeta-ciudadana.local
+  #     secretName: rabbitmq-tls-secret
+
+---
+# For local development with Minikube:
+# 1. Download and apply Ingress Controller: 
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+# 2. Enable ingress addon: minikube addons enable ingress
+# 3. Add to /etc/hosts: 
+#    $(minikube ip) rabbitmq.carpeta-ciudadana.local
+# 4. Access: http://rabbitmq.carpeta-ciudadana.local
+#
+# For port-forward (simpler for local dev):
+# kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq-management 15672:15672
+# Access: http://localhost:15672

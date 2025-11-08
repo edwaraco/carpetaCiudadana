@@ -1,0 +1,41 @@
+# .dockerignore - Archivos a excluir del build de Docker
+
+# Binarios compilados
+notificaciones
+*.exe
+
+# Archivos de desarrollo
+.env
+.env.local
+.env.docker
+*.log
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentación
+*.md
+DOCS/
+
+# Tests
+test/
+*_test.go
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/

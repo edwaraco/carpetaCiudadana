@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Container, Box, Tabs, Tab } from '@mui/material';
 import { DocumentList, UploadDocumentForm } from '../contexts/documents/components';
@@ -11,6 +12,7 @@ import { isFeatureEnabled } from '@/shared/config/featureFlags';
 
 export const DocumentsPage: React.FC = () => {
   const { t } = useTranslation('common');
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
 
   const canUpload = isFeatureEnabled('UPLOAD_DOCUMENTS');
@@ -22,6 +24,10 @@ export const DocumentsPage: React.FC = () => {
   const handleUploadSuccess = (documentId: string) => {
     console.log('Document uploaded:', documentId);
     setActiveTab(0); // Switch to list view
+  };
+
+  const handleViewDocument = (documentId: string) => {
+    navigate(`/documents/${documentId}`);
   };
 
   return (
@@ -36,7 +42,7 @@ export const DocumentsPage: React.FC = () => {
         {activeTab === 0 && (
           <DocumentList
             onUploadClick={canUpload ? () => setActiveTab(1) : undefined}
-            onViewDocument={(documentId) => console.log('View document:', documentId)}
+            onViewDocument={handleViewDocument}
           />
         )}
 
