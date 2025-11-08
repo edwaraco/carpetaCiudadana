@@ -81,10 +81,10 @@ const CONTEXT_MAP_BE_TO_FE: Record<string, DocumentContext> = {
  * Document Status mapping: Backend → Frontend
  */
 const STATUS_MAP_BE_TO_FE: Record<string, DocumentStatus> = {
-  TEMPORAL: 'TEMPORARY',
-  PROCESADO: 'CERTIFIED', // Processed documents are considered certified in frontend
-  CERTIFICADO: 'CERTIFIED',
-  REVOCADO: 'REVOKED',
+  TEMPORAL: 'TEMPORAL',
+  PROCESADO: 'AUTENTICADO', // Processed documents are considered certified in frontend
+  CERTIFICADO: 'AUTENTICADO',
+  REVOCADO: 'RECHAZADO',
 };
 
 // ============================================================================
@@ -142,14 +142,14 @@ export const mapFrontendToBackendContext = (frontendContext: DocumentContext): s
 /**
  * Maps backend document status (Spanish) to frontend status (English)
  * @param backendStatus - Backend status (e.g., "TEMPORAL", "PROCESADO")
- * @returns Frontend status (e.g., "TEMPORARY", "CERTIFIED")
+ * @returns Frontend status (e.g., "TEMPORARY", "AUTENTICADO")
  * @fallback Returns 'TEMPORARY' if status is unknown
  */
 export const mapBackendToFrontendStatus = (backendStatus: string): DocumentStatus => {
   const mappedStatus = STATUS_MAP_BE_TO_FE[backendStatus];
   if (!mappedStatus) {
-    console.warn(`Unknown backend document status: ${backendStatus}. Falling back to TEMPORARY.`);
-    return 'TEMPORARY';
+    console.warn(`Unknown backend document status: ${backendStatus}. Falling back to TEMPORAL.`);
+    return 'TEMPORAL';
   }
   return mappedStatus;
 };

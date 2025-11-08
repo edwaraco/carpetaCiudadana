@@ -47,19 +47,19 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document }) => {
 
   // Status configuration map
   const statusAlertConfig: Record<DocumentStatus, StatusAlertConfig> = {
-    CERTIFIED: {
+    AUTENTICADO: {
       severity: 'success',
       icon: <CertifiedIcon />,
       titleKey: 'viewer.certifiedTitle',
       messageKey: 'viewer.certifiedMessage',
     },
-    TEMPORARY: {
+    TEMPORAL: {
       severity: 'warning',
       icon: <TemporaryIcon />,
       titleKey: 'viewer.temporaryTitle',
       messageKey: 'viewer.temporaryMessage',
     },
-    REVOKED: {
+    RECHAZADO: {
       severity: 'error',
       icon: <RevokedIcon />,
       titleKey: 'viewer.revokedTitle',
@@ -68,15 +68,15 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document }) => {
   };
 
   const statusIconMap: Record<DocumentStatus, React.ReactElement> = {
-    CERTIFIED: <CertifiedIcon />,
-    TEMPORARY: <TemporaryIcon />,
-    REVOKED: <RevokedIcon />,
+    AUTENTICADO: <CertifiedIcon />,
+    TEMPORAL: <TemporaryIcon />,
+    RECHAZADO: <RevokedIcon />,
   };
 
   const statusColorMap: Record<DocumentStatus, 'success' | 'warning' | 'error'> = {
-    CERTIFIED: 'success',
-    TEMPORARY: 'warning',
-    REVOKED: 'error',
+    AUTENTICADO: 'success',
+    TEMPORAL: 'warning',
+    RECHAZADO: 'error',
   };
 
   const formatBytes = (bytes: number): string => {
@@ -100,17 +100,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document }) => {
   // Helper function to get translated status messages
   const getStatusMessage = (status: DocumentStatus) => {
     switch (status) {
-      case 'CERTIFIED':
+      case 'AUTENTICADO':
         return {
           title: t('viewer.certifiedTitle'),
           message: t('viewer.certifiedMessage'),
         };
-      case 'TEMPORARY':
+      case 'TEMPORAL':
         return {
           title: t('viewer.temporaryTitle'),
           message: t('viewer.temporaryMessage'),
         };
-      case 'REVOKED':
+      case 'RECHAZADO':
         return {
           title: t('viewer.revokedTitle'),
           message: t('viewer.revokedMessage'),
