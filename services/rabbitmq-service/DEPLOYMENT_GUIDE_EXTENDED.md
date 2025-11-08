@@ -86,19 +86,20 @@ Elige una de estas opciones según tu entorno:
 winget install -e --id Kubernetes.minikube
 
 # Iniciar cluster con recursos adecuados. Abre powershell como Administrador
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
-minikube start --driver=hyperv --memory=6144 --cpus=2
-
-# Si no tienes Hyper-V, usa VirtualBox o Docker o Kind
-minikube start --driver=virtualbox --memory=6144 --cpus=2
-# o
-minikube start --driver=docker --memory=6144 --cpus=2
-# o
-minikube start --driver=kind --memory=6144 --cpus=2
+minikube start --driver=docker --memory=16384 --cpus=2
 
 # Verificar que esté corriendo
 kubectl cluster-info
 kubectl get nodes
+```
+
+Otras opciones:
+
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
+minikube start --driver=hyperv --memory=16384 --cpus=2
+minikube start --driver=virtualbox --memory=16384 --cpus=2
+minikube start --driver=kind --memory=16384 --cpus=2
 ```
 
 **macOS/Linux:**
@@ -112,7 +113,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
 # Iniciar cluster
-minikube start --memory=6144 --cpus=2
+minikube start --memory=16384 --cpus=2
 
 # Verificar
 kubectl cluster-info
@@ -608,16 +609,19 @@ kubectl logs -n rabbitmq-system -l app.kubernetes.io/name=rabbitmq-cluster-opera
    El problema suele ser que el `provisioner` en `k8s/02-storage.yaml` no coincide con el cluster:
 
    - **Para Minikube**: El provisioner debe ser `k8s.io/minikube-hostpath`
+
      ```yaml
      provisioner: k8s.io/minikube-hostpath
      ```
 
    - **Para Docker Desktop**: El provisioner debe ser `docker.io/hostpath`
+
      ```yaml
      provisioner: docker.io/hostpath
      ```
 
    - **Para verificar cuál usar**, revisa la StorageClass por defecto:
+
      ```bash
      kubectl get storageclass
      # Busca la línea con "(default)" y copia su PROVISIONER
@@ -704,6 +708,20 @@ kubectl apply -f services/rabbitmq-service/k8s/
 
 # Esperar a que los pods estén ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
+```
+
+### Reset minikube (si usas minikube)
+Si minikube está fallando, puedes eliminar y recrear el cluster:
+
+```bash
+minikube delete
+# Si falla, entonces:
+
+taskkill /F /IM vmwp.exe 2>$null
+Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Y finalmente
+minikube start --driver=docker --memory=16384 --cpus=2
 ```
 
 ---

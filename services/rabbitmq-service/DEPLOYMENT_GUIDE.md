@@ -19,12 +19,8 @@ kubectl version --client  # to check
 # Install Minikube
 winget install -e --id Kubernetes.minikube
 
-# Start Minikube cluster
-## On an admin privileged Powershell shell (will make you restart)
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
-
 ## Start cluster. Make sure you have docker service running to pull images
-minikube start --driver=hyperv --memory=6144 --cpus=2
+minikube start --driver=docker --memory=16384 --cpus=2
 
 # Verify cluster is running
 kubectl cluster-info
@@ -295,4 +291,20 @@ kubectl apply -f services/rabbitmq-service/k8s/
 
 # Wait for pods to be ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitmq -n carpeta-ciudadana --timeout=300s
+```
+
+### Reset minikube (if using minikube)
+If minikube is misbehaving, you can delete and recreate the cluster:
+
+```powershell
+minikube delete
+
+# Kill process
+taskkill /F /IM vmwp.exe 2>$null
+
+# Remove minikube configuration
+Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Recreate minikube cluster
+minikube start --driver=docker --memory=16384 --cpus=2
 ```

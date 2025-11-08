@@ -8,8 +8,8 @@ metadata:
   labels:
     app: carpeta-ciudadana
     component: rabbitmq
-provisioner: docker.io/hostpath  # for Docker Desktop only
-#provisioner: k8s.io/minikube-hostpath  # for minikube only
+provisioner: k8s.io/minikube-hostpath  # for minikube only
+#provisioner: docker.io/hostpath  # for Docker Desktop only
 #provisioner: kubernetes.io/host-path  # generic, works on both (in theory, but didn't work)
 #provisioner: kubernetes.io/no-provisioner # for manual PVs
 # For cloud providers, use:
