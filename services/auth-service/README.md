@@ -504,14 +504,14 @@ El auth-service publica dos tipos de eventos durante el registro:
 ### Test de Registro
 
 ```bash
-curl -X POST http://localhost:8081/api/v1/auth/register \
+curl -X POST http://192.168.49.2:30080/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "cedula": 1234567890,
-    "nombre_completo": "Test User",
-    "direccion": "Test Address",
-    "email": "test@email.com",
-    "password": "test_password_123"
+    "citizen_id": "1234567890",
+    "email": "juan.perez@test.com",
+    "full_name": "Juan Pérez García",
+    "phone": "+57111111111",
+    "address": "Calle 123 #45-67, Medellín"
   }'
 ```
 
@@ -531,6 +531,14 @@ curl -X POST http://localhost:8081/api/v1/auth/login \
 ```bash
 curl -X GET http://localhost:8081/api/v1/auth/profile \
   -H "Authorization: Bearer {jwt_token}"
+```
+### Test confirmación de Cuenta
+```bash
+curl -X POST 'http://192.168.49.2:30080/auth/set-password' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Content-Type: application/json' \
+  --data-raw '{"token":"<token>","password":"Password123"}' \
+  --insecure'
 ```
 
 ## Monitoreo y Logs

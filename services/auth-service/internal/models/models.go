@@ -8,13 +8,12 @@ import (
 
 // User represents a user in the auth system (minimal auth data only)
 type User struct {
-	CitizenID     string     `json:"citizen_id" db:"citizen_id"` // Primary identifier
-	PasswordHash  string     `json:"-" db:"password_hash"`       // Never expose password hash in JSON
-	EmailVerified bool       `json:"email_verified" db:"email_verified"`
-	IsActive      bool       `json:"is_active" db:"is_active"`
-	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
-	LastLogin     *time.Time `json:"last_login" db:"last_login"`
+	CitizenID     string    `json:"citizen_id" db:"citizen_id"` // Primary identifier
+	PasswordHash  string    `json:"-" db:"password_hash"`       // Never expose password hash in JSON
+	EmailVerified bool      `json:"email_verified" db:"email_verified"`
+	Email         string    `json:"email" db:"email"` // User email address
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // UserProfile represents full user profile data (stored in Identity Service)
@@ -214,6 +213,7 @@ type UserInfo struct {
 	UserID   string `json:"userId"`   // citizenID
 	FolderID string `json:"folderId"` // carpetaID from identity service
 	Email    string `json:"email"`    // user email
+	FullName string `json:"fullName"` // nombreCompleto
 }
 
 // VerifyEmailResponse represents the response from email verification

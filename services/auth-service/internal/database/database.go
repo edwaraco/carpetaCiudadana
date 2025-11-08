@@ -2,15 +2,12 @@ package database
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
 
 	"auth-service/internal/models"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -52,29 +49,26 @@ func (d *Database) Health(ctx context.Context) error {
 	return d.pool.Ping(ctx)
 }
 
-// CreateUser creates a new user in the database with only auth data
-func (d *Database) CreateUser(ctx context.Context, citizenID, passwordHash string) (*models.User, error) {
+// CreateUser creates a new user in the database with auth data and email
+func (d *Database) CreateUser(ctx context.Context, citizenID, passwordHash, email string) (*models.User, error) {
 	user := &models.User{
 		CitizenID:     citizenID,
 		PasswordHash:  passwordHash,
-		EmailVerified: true, // Set to true since user completed email verification
-		IsActive:      true,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		EmailVerified: true,
+		Email:         email,
 	}
 
 	query := `
 		INSERT INTO auth.users (
-			citizen_id, password_hash, email_verified, is_active, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6)
+			citizen_id, password_hash, email_verified, email
+		) VALUES ($1, $2, $3, $4)
 		RETURNING created_at, updated_at
 	`
 
-	err := d.pool.QueryRow(ctx, query,
-		user.CitizenID, user.PasswordHash, user.EmailVerified, user.IsActive,
-		user.CreatedAt, user.UpdatedAt,
-	).Scan(&user.CreatedAt, &user.UpdatedAt)
-
+	row := d.pool.QueryRow(ctx, query,
+		user.CitizenID, user.PasswordHash, user.EmailVerified, user.Email,
+	)
+	err := row.Scan(&user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -86,33 +80,29 @@ func (d *Database) CreateUser(ctx context.Context, citizenID, passwordHash strin
 // GetUserByDocumentID retrieves a user by document ID (auth data only)
 func (d *Database) GetUserByCitizenID(ctx context.Context, citizenID string) (*models.User, error) {
 	user := &models.User{}
+	log.Printf("DEBUG: GetUserByCitizenID called with citizenID='%s'", citizenID)
 
 	query := `
-		SELECT citizen_id, password_hash, email_verified, is_active, 
-			   created_at, updated_at, last_login
-		FROM auth.users 
-		WHERE citizen_id = $1 AND is_active = true
+		SELECT citizen_id, password_hash, email_verified, email
+		FROM auth.users
+		WHERE citizen_id = $1
 	`
 
 	err := d.pool.QueryRow(ctx, query, citizenID).Scan(
-		&user.CitizenID, &user.PasswordHash, &user.EmailVerified, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
+		&user.CitizenID, &user.PasswordHash, &user.EmailVerified, &user.Email,
 	)
 
 	if err != nil {
+		log.Printf("DEBUG: GetUserByCitizenID query failed for citizenID='%s': %v", citizenID, err)
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	log.Printf("DEBUG: GetUserByCitizenID found user: citizenID='%s', email='%s'", user.CitizenID, user.Email)
 	return user, nil
 }
-
-// GetUserByEmail is no longer needed - auth service doesn't store email
-// Email lookups should be handled by Identity Service
-
-// SetUserPassword is no longer needed - password is set during user creation
 
 // ValidatePassword validates a user's password
 func (d *Database) ValidatePassword(ctx context.Context, user *models.User, password string) error {
@@ -120,197 +110,10 @@ func (d *Database) ValidatePassword(ctx context.Context, user *models.User, pass
 		return fmt.Errorf("user password not set")
 	}
 
+	log.Printf("DEBUG: Comparing password for user %s: password='%s', hash='%s'", user.CitizenID, password, user.PasswordHash)
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return fmt.Errorf("invalid password")
-	}
-
-	// Update last login
-	query := `UPDATE auth.users SET last_login = NOW() WHERE citizen_id = $1`
-	_, err = d.pool.Exec(ctx, query, user.CitizenID)
-	if err != nil {
-		log.Printf("WARN: Failed to update last login for user %s: %v", user.CitizenID, err)
-	}
-
-	return nil
-}
-
-// CreateVerificationToken creates a new verification token
-func (d *Database) CreateVerificationToken(ctx context.Context, documentID string, tokenType string) (*models.VerificationToken, string, error) {
-	// Generate random token
-	tokenBytes := make([]byte, 32)
-	if _, err := rand.Read(tokenBytes); err != nil {
-		return nil, "", fmt.Errorf("failed to generate token: %w", err)
-	}
-	token := hex.EncodeToString(tokenBytes)
-
-	// Hash the token for storage
-	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to hash token: %w", err)
-	}
-
-	// Create verification token record
-	verificationToken := &models.VerificationToken{
-		ID:            uuid.New(),
-		UserCitizenID: documentID,
-		TokenHash:     string(hashedToken),
-		TokenType:     tokenType,
-		ExpiresAt:     time.Now().Add(24 * time.Hour), // 24 hours expiration
-		CreatedAt:     time.Now(),
-	}
-
-	query := `
-		INSERT INTO auth.verification_tokens (
-			id, user_citizen_id, token_hash, token_type, expires_at, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, created_at
-	`
-
-	err = d.pool.QueryRow(ctx, query,
-		verificationToken.ID, verificationToken.UserCitizenID, verificationToken.TokenHash,
-		verificationToken.TokenType, verificationToken.ExpiresAt, verificationToken.CreatedAt,
-	).Scan(&verificationToken.ID, &verificationToken.CreatedAt)
-
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to create verification token: %w", err)
-	}
-
-	log.Printf("INFO: Verification token created for user: %s", documentID)
-	return verificationToken, token, nil
-}
-
-// ValidateVerificationToken validates and uses a verification token
-func (d *Database) ValidateVerificationToken(ctx context.Context, token string, tokenType string) (*models.VerificationToken, error) {
-	// First get all unexpired tokens of the specified type
-	query := `
-		SELECT id, user_document_id, token_hash, token_type, expires_at, used_at, created_at
-		FROM auth.verification_tokens
-		WHERE token_type = $1 AND expires_at > NOW() AND used_at IS NULL
-	`
-
-	rows, err := d.pool.Query(ctx, query, tokenType)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query verification tokens: %w", err)
-	}
-	defer rows.Close()
-
-	// Check each token hash
-	for rows.Next() {
-		var verificationToken models.VerificationToken
-		err := rows.Scan(
-			&verificationToken.ID, &verificationToken.UserCitizenID, &verificationToken.TokenHash,
-			&verificationToken.TokenType, &verificationToken.ExpiresAt, &verificationToken.UsedAt,
-			&verificationToken.CreatedAt,
-		)
-		if err != nil {
-			continue
-		}
-
-		// Check if this token matches
-		err = bcrypt.CompareHashAndPassword([]byte(verificationToken.TokenHash), []byte(token))
-		if err == nil {
-			// Token matches, mark as used
-			updateQuery := `UPDATE auth.verification_tokens SET used_at = NOW() WHERE id = $1`
-			_, err = d.pool.Exec(ctx, updateQuery, verificationToken.ID)
-			if err != nil {
-				log.Printf("WARN: Failed to mark token as used: %v", err)
-			}
-
-			log.Printf("INFO: Verification token validated for user: %s", verificationToken.UserCitizenID)
-			return &verificationToken, nil
-		}
-	}
-
-	return nil, fmt.Errorf("invalid or expired token")
-}
-
-// CreateSession creates a new user session
-func (d *Database) CreateSession(ctx context.Context, citizenID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) (*models.Session, error) {
-	session := &models.Session{
-		ID:            uuid.New(),
-		UserCitizenID: citizenID,
-		TokenHash:     tokenHash,
-		ExpiresAt:     expiresAt,
-		CreatedAt:     time.Now(),
-		LastUsed:      time.Now(),
-		IsRevoked:     false,
-		UserAgent:     userAgent,
-		IPAddress:     ipAddress,
-	}
-
-	query := `
-		INSERT INTO auth.sessions (
-			id, user_citizen_id, token_hash, expires_at, created_at, last_used, 
-			is_revoked, user_agent, ip_address
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, created_at, last_used
-	`
-
-	err := d.pool.QueryRow(ctx, query,
-		session.ID, session.UserCitizenID, session.TokenHash, session.ExpiresAt,
-		session.CreatedAt, session.LastUsed, session.IsRevoked,
-		session.UserAgent, session.IPAddress,
-	).Scan(&session.ID, &session.CreatedAt, &session.LastUsed)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %w", err)
-	}
-
-	log.Printf("INFO: Session created for user: %s", citizenID)
-	return session, nil
-}
-
-// ValidateSession validates if a session is still valid
-func (d *Database) ValidateSession(ctx context.Context, sessionID uuid.UUID) (*models.Session, error) {
-	session := &models.Session{}
-
-	query := `
-		SELECT id, user_citizen_id, token_hash, expires_at, created_at, last_used,
-			   is_revoked, user_agent, ip_address
-		FROM auth.sessions
-		WHERE id = $1 AND expires_at > NOW() AND is_revoked = false
-	`
-
-	err := d.pool.QueryRow(ctx, query, sessionID).Scan(
-		&session.ID, &session.UserCitizenID, &session.TokenHash, &session.ExpiresAt,
-		&session.CreatedAt, &session.LastUsed, &session.IsRevoked,
-		&session.UserAgent, &session.IPAddress,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, fmt.Errorf("session not found or expired")
-		}
-		return nil, fmt.Errorf("failed to validate session: %w", err)
-	}
-
-	// Update last used timestamp
-	updateQuery := `UPDATE auth.sessions SET last_used = NOW() WHERE id = $1`
-	_, err = d.pool.Exec(ctx, updateQuery, sessionID)
-	if err != nil {
-		log.Printf("WARN: Failed to update session last_used: %v", err)
-	}
-
-	return session, nil
-}
-
-// CleanupExpiredTokens removes expired tokens and sessions
-func (d *Database) CleanupExpiredTokens(ctx context.Context) error {
-	queries := []string{
-		`DELETE FROM auth.verification_tokens WHERE expires_at < NOW() AND used_at IS NULL`,
-		`DELETE FROM auth.sessions WHERE expires_at < NOW() OR is_revoked = true`,
-	}
-
-	for _, query := range queries {
-		cmdTag, err := d.pool.Exec(ctx, query)
-		if err != nil {
-			log.Printf("WARN: Failed to cleanup expired records: %v", err)
-			continue
-		}
-		if cmdTag.RowsAffected() > 0 {
-			log.Printf("INFO: Cleaned up %d expired records", cmdTag.RowsAffected())
-		}
 	}
 
 	return nil
