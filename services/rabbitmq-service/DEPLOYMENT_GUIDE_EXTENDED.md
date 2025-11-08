@@ -713,14 +713,27 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=carpeta-rabbitm
 ### Reset minikube (si usas minikube)
 Si minikube está fallando, puedes eliminar y recrear el cluster:
 
-```bash
+```powershell
 minikube delete
-# Si falla, entonces:
 
+# if doesn't work...
+# Kill process
 taskkill /F /IM vmwp.exe 2>$null
-Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
 
-# Y finalmente
+# Remove minikube configuration
+Remove-Item -Path "$env:USERPROFILE\.minikube" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$env:USERPROFILE\.kube" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Reiniciar Docker Desktop completamente
+# (Ir a la bandeja del sistema, click derecho en Docker, "Quit Docker Desktop")
+# Esperar 10 segundos y volver a abrir Docker Desktop
+
+# if there are more problems, like <user>.minikube\machines\minikube\config.json not found
+# Then, delete minikube VM from Hyper-V Manager
+# And delete whole .minikube folder manually
+# Do everything above again
+
+# Recreate minikube cluster
 minikube start --driver=docker --memory=16384 --cpus=2
 ```
 
