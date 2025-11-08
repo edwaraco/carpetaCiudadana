@@ -10,6 +10,9 @@ COPY checkstyle.xml .
 # Download dependencies
 RUN mvn dependency:go-offline -B
 
+# Linter
+RUN mvn spotless:apply
+
 # Copy source and build
 COPY src ./src
 RUN mvn clean package -DskipTests -B

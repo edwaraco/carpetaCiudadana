@@ -5,7 +5,6 @@ import co.edu.eafit.carpeta.ciudadana.registry.dto.request.RegistrarCiudadanoReq
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 

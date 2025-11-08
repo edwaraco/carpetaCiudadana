@@ -27,7 +27,7 @@ echo "🚀 Deploying ciudadano-registry-service..."
 kubectl apply -f k8s/deployment.yaml
 
 echo "🚀 Enabling the Load balancer..."
-kubectl apply -f k8s/services.yml
+kubectl apply -f k8s/service.yaml
 
 
 echo "⏳ Waiting for ciudadano-registry-service to be ready..."

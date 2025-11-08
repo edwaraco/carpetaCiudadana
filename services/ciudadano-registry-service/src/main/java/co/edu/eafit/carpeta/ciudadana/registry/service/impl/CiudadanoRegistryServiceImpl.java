@@ -76,10 +76,10 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
       // 200 = OK = Ciudadano YA registrado = NO disponible
       boolean disponible = response.getCodigoRespuesta() == 204;
       String mensaje =
-          disponible 
-              ? "Ciudadano disponible para registro" 
-              : (response.getCodigoRespuesta() == 200 
-                  ? "Ciudadano ya registrado en GovCarpeta" 
+          disponible
+              ? "Ciudadano disponible para registro"
+              : (response.getCodigoRespuesta() == 200
+                  ? "Ciudadano ya registrado en GovCarpeta"
                   : "Error validando ciudadano");
 
       registrarAuditoria(

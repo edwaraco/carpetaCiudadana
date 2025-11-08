@@ -8,9 +8,11 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE TABLE IF NOT EXISTS auth.users (
     citizen_id VARCHAR(50) PRIMARY KEY,      -- User's citizen ID (primary identifier)
     password_hash VARCHAR(255) NOT NULL,     -- bcrypt hashed password
-    email_verified BOOLEAN DEFAULT TRUE, 
+    email_verified BOOLEAN DEFAULT TRUE,
     email VARCHAR(255) NOT NULL,               -- User email address
-    
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT valid_citizen_id CHECK (LENGTH(citizen_id) >= 6)
 );
 
