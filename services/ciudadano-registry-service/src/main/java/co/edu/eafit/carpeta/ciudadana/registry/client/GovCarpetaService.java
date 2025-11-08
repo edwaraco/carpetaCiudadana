@@ -28,9 +28,14 @@ public class GovCarpetaService {
       ResponseEntity<String> response = govCarpetaClient.validarCiudadano(cedula);
       log.info("Respuesta validación ciudadano {}: {}", cedula, response.getStatusCode());
 
+      // 204 = No Content = Ciudadano NO registrado (disponible)
+      // 200 = OK = Ciudadano YA registrado
+      boolean exitoso = response.getStatusCode() == HttpStatus.NO_CONTENT 
+                     || response.getStatusCode() == HttpStatus.OK;
+
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(response.getStatusCode() == HttpStatus.NO_CONTENT)
+          .exitoso(exitoso)
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
