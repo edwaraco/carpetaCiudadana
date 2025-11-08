@@ -42,7 +42,7 @@ def main():
             print("   - Will fetch presigned URL from carpeta-ciudadana-service")
             print("   - Will call Gov Carpeta API")
             print(
-                "\nCheck RabbitMQ queue 'document_authenticated_response' for results."
+                "\nCheck RabbitMQ queue 'documento.autenticado.queue' for results."
             )
     except Exception as e:
         print(f"❌ Error: {str(e)}")

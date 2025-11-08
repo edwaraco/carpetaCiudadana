@@ -88,7 +88,7 @@ reference: https://govcarpeta-apis-4905ff3c005b.herokuapp.com/api-docs/#/default
 
 
 
-su respuesta, la montaremos a una cola de rabbit que ya existe. llamada document_authenticated_response (quiero que reciba este nombre desde un .env que NO estará en gitignore porque no tiene nada de credenciales. allí tmb estará el puerto en el que iniciamos esto), en este formato (pero estos fields en un json, obvio):
+su respuesta, la montaremos a una cola de rabbit que ya existe. llamada documento.autenticado.queue (quiero que reciba este nombre desde un .env que NO estará en gitignore porque no tiene nada de credenciales. allí tmb estará el puerto en el que iniciamos esto), en este formato (pero estos fields en un json, obvio):
 
 public class DocumentoAutenticadoEvent {
   private String documentoId;

@@ -43,7 +43,7 @@ def main():
             print("   - Presigned URL fetch SKIPPED (dummyURL provided)")
             print("   - Only Gov Carpeta API call will be made")
             print(
-                "\nCheck RabbitMQ queue 'document_authenticated_response' for results."
+                "\nCheck RabbitMQ queue 'documento.autenticado.queue' for results."
             )
     except Exception as e:
         print(f"❌ Error: {str(e)}")

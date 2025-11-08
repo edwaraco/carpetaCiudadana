@@ -82,7 +82,7 @@ class DocumentoAutenticadoEvent(BaseModel):
     """
     Event model for RabbitMQ message publication.
 
-    This event is published to the document_authenticated_response queue
+    This event is published to the documento.autenticado.queue queue
     after processing the authentication request.
 
     Attributes:

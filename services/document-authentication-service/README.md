@@ -149,7 +149,7 @@ LOG_LEVEL=INFO
 
 # RabbitMQ
 RABBITMQ_URL=amqp://guest:guest@localhost:5672/
-DOCUMENT_AUTHENTICATED_QUEUE=document_authenticated_response
+DOCUMENT_AUTHENTICATED_QUEUE=documento.autenticado.queue
 
 # Servicios Externos
 CARPETA_CIUDADANA_SERVICE_URL=http://localhost:8082
@@ -239,7 +239,7 @@ Una vez iniciado el servicio, la documentación interactiva está disponible en:
 
 ### DocumentoAutenticadoEvent
 
-El servicio publica eventos a la cola `document_authenticated_response` con la siguiente estructura:
+El servicio publica eventos a la cola `documento.autenticado.queue` con la siguiente estructura:
 
 ```json
 {
@@ -322,7 +322,7 @@ kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
 
 # 5. Leer mensaje de la cola
 kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- \
-  rabbitmqadmin -u admin -p admin123 get queue=document_authenticated_response count=1
+  rabbitmqadmin -u admin -p admin123 get queue=documento.autenticado.queue count=1
 ```
 
 **Resultado esperado:**

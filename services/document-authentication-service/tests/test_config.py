@@ -29,7 +29,7 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(settings.log_level, "INFO")
             self.assertEqual(
                 settings.document_authenticated_queue,
-                "document_authenticated_response",
+                "documento.autenticado.queue",
             )
 
     def test_custom_values(self):

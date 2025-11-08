@@ -32,7 +32,7 @@ def main():
 
         if response.statusCode == 202:
             print("\n✅ Request accepted! Authentication processing in background.")
-            print("Check RabbitMQ queue 'document_authenticated_response' for results.")
+            print("Check RabbitMQ queue 'documento.autenticado.queue' for results.")
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 

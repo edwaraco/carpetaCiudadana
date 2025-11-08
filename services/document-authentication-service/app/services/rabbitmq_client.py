@@ -2,7 +2,7 @@
 RabbitMQ client for publishing document authentication events.
 
 This module handles connection to RabbitMQ and publishing events
-to the document_authenticated_response queue.
+to the documento.autenticado.queue queue.
 """
 
 import json

@@ -126,7 +126,7 @@ data:
         {
           "source": "carpeta.events",
           "vhost": "/",
-          "destination": "document_authentication_response",
+          "destination": "documento.autenticado.queue",
           "destination_type": "queue",
           "routing_key": "document.authentication.response",
           "arguments": {}
@@ -150,9 +150,9 @@ data:
         {
           "source": "carpeta.dlx",
           "vhost": "/",
-          "destination": "document_authentication_response.dlq",
+          "destination": "documento.autenticado.queue.dlq",
           "destination_type": "queue",
-          "routing_key": "document_authentication_response.dlq",
+          "routing_key": "documento.autenticado.queue.dlq",
           "arguments": {}
         },
         {
