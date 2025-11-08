@@ -1,0 +1,47 @@
+---
+# DynamoDB Local Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: citizen-dynamodb-local
+  namespace: carpeta-ciudadana
+  labels:
+    app: citizen-dynamodb-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: citizen-dynamodb-local
+  template:
+    metadata:
+      labels:
+        app: citizen-dynamodb-local
+    spec:
+      containers:
+      - name: citizen-dynamodb-local
+        image: amazon/dynamodb-local:latest
+        ports:
+        - containerPort: 8000
+        args: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+        workingDir: /home/dynamodblocal
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+# DynamoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: citizen-dynamodb-local
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: citizen-dynamodb-local
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP

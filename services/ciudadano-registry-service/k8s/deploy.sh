@@ -20,6 +20,9 @@ minikube image load ciudadano-registry-service:latest
 echo "🗂️  Applying Kubernetes manifests..."
 kubectl apply -f k8s/configmap.yaml
 
+echo "🚀 Building ciudadano-registry-service DB..."
+kubectl apply -f k8s/infrastructure.yaml
+
 echo "🚀 Deploying ciudadano-registry-service..."
 kubectl apply -f k8s/deployment.yaml
 

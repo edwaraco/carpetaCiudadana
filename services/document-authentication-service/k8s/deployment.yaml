@@ -6,7 +6,7 @@ metadata:
   labels:
     app: document-authentication-service
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: document-authentication-service
@@ -55,18 +55,4 @@ spec:
   ports:
   - port: 8083
     targetPort: 8083
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: document-authentication-service-external
-  namespace: carpeta-ciudadana
-spec:
-  selector:
-    app: document-authentication-service
-  ports:
-  - port: 8083
-    targetPort: 8083
-    nodePort: 30093
-  type: NodePort
+  type: LoadBalancer
