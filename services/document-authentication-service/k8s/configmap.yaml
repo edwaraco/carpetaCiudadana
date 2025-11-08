@@ -15,12 +15,11 @@ data:
   DOCUMENT_AUTHENTICATED_QUEUE: "document_authenticated_response"
   
   # External Services
-  CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service.carpeta-ciudadana.svc.cluster.local:8082"
+  CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service.carpeta-ciudadana.svc.cluster.local:8080/api/v1"
   GOV_CARPETA_SERVICE_URL: "https://govcarpeta-apis-4905ff3c005b.herokuapp.com"
   
-  # JWT Configuration (same as carpeta-ciudadana-service)
-  # SECURITY NOTE: For production, replace with actual secret key or use Kubernetes secrets
-  JWT_SECRET_KEY: "your-secret-key-here"
+  # JWT Configuration (same as auth-service)
+  JWT_SECRET_KEY: "super-secret-jwt-key-for-microservices-2024"
   JWT_ALGORITHM: "HS256"
   
   # Circuit Breaker Configuration

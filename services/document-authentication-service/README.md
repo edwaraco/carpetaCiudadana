@@ -162,7 +162,7 @@ La configuración se gestiona mediante un ConfigMap (`k8s/configmap.yaml`) con l
 - **DOCUMENT_AUTHENTICATED_QUEUE**: Cola para publicar eventos
 - **CARPETA_CIUDADANA_SERVICE_URL**: URL interna del servicio carpeta-ciudadana
 - **GOV_CARPETA_SERVICE_URL**: URL de Gov Carpeta API
-- **JWT_SECRET_KEY**: Clave secreta para validación de JWT
+- **JWT_SECRET_KEY**: Clave secreta para validación de JWT (**DEBE ser la misma que auth-service**)
 - **Circuit Breaker settings**: Configuración de resiliencia
 
 **Nota de Seguridad**: El ConfigMap incluye credenciales de desarrollo. Para producción, se recomienda:
