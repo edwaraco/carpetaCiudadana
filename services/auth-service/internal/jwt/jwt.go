@@ -27,7 +27,7 @@ func NewJWTService(secret, issuer string) *JWTService {
 }
 
 // GenerateToken generates a JWT token for a user (session token)
-func (j *JWTService) GenerateToken(user *models.User, sessionID uuid.UUID, email, folderID string) (string, time.Time, error) {
+func (j *JWTService) GenerateToken(user *models.User, sessionID uuid.UUID, email, folderID, fullName string) (string, time.Time, error) {
 	now := time.Now()
 	expiresAt := now.Add(24 * time.Hour) // 24 hours expiration
 
@@ -36,6 +36,7 @@ func (j *JWTService) GenerateToken(user *models.User, sessionID uuid.UUID, email
 		"citizen_id": user.CitizenID,
 		"folder_id":  folderID,
 		"email":      email,
+		"full_name":  fullName,
 		"session_id": sessionID.String(),
 		"iat":        now.Unix(),
 		"exp":        expiresAt.Unix(),

@@ -264,7 +264,7 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 	// Step 3: Create auth record ONLY after identity service success
 	// This ensures transactional consistency - auth user exists only if identity exists
 	log.Printf("INFO: Creating auth user record for: %s", userProfile.CitizenID)
-	authUser, err := h.db.CreateUser(ctx, userProfile.CitizenID, string(hashedPassword))
+	authUser, err := h.db.CreateUser(ctx, userProfile.CitizenID, string(hashedPassword), userProfile.Email)
 	if err != nil {
 		log.Printf("ERROR: Failed to create auth user after successful identity registration for %s: %v", userProfile.CitizenID, err)
 		// NOTE: At this point, identity service succeeded but auth failed
@@ -279,20 +279,11 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 
 	log.Printf("SUCCESS: Auth user created successfully after identity service validation: %s", authUser.CitizenID)
 
-	// Step 4: Create session for immediate login
+	// Step 4: Create session ID in memory (not persisted)
 	sessionID := uuid.New()
-	tokenHash := h.jwtService.HashToken(req.Token)
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	session, err := h.db.CreateSession(ctx, authUser.CitizenID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
-	if err != nil {
-		log.Printf("WARN: Failed to create session: %v", err)
-	} else {
-		log.Printf("INFO: Session created successfully: %s", session.ID)
-	}
 
 	// Step 5: Generate JWT session token
-	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(authUser, sessionID, userProfile.Email, folderID)
+	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(authUser, sessionID, userProfile.Email, folderID, userProfile.FullName)
 	if err != nil {
 		log.Printf("ERROR: Failed to generate JWT token: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
@@ -327,6 +318,7 @@ func (h *Handlers) SetPassword(c echo.Context) error {
 		UserID:   authUser.CitizenID, // citizenID becomes userID
 		FolderID: folderID,           // carpetaID from identity service
 		Email:    userProfile.Email,  // email from user profile
+		FullName: userProfile.FullName,
 	}
 
 	response := &models.SetPasswordResponse{
@@ -346,9 +338,11 @@ func (h *Handlers) Login(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	log.Printf("DEBUG: Login handler called, about to bind request body")
 	// Parse request
 	var req models.LoginRequest
 	if err := c.Bind(&req); err != nil {
+		log.Printf("DEBUG: Bind failed: %v", err)
 		return c.JSON(http.StatusBadRequest, &models.ErrorResponse{
 			Success: false,
 			Error:   "Invalid request body",
@@ -363,8 +357,6 @@ func (h *Handlers) Login(c echo.Context) error {
 			Message: "CitizenID and Password are required",
 		})
 	}
-
-	log.Printf("INFO: Login attempt for citizen ID: %s", req.CitizenID)
 
 	// Get user by citizen ID
 	user, err := h.db.GetUserByCitizenID(ctx, req.CitizenID)
@@ -383,7 +375,7 @@ func (h *Handlers) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, &models.ErrorResponse{
 			Success: false,
 			Error:   "Invalid credentials",
-			Message: "Citizen ID or password is incorrect",
+			Message: "Citizen ID or password is incorrect" + err.Error(),
 		})
 	}
 
@@ -396,24 +388,67 @@ func (h *Handlers) Login(c echo.Context) error {
 		})
 	}
 
-	// Create session
+	// Create session ID in memory (not persisted)
 	sessionID := uuid.New()
-	dummyToken := "login-session-" + sessionID.String()
-	tokenHash := h.jwtService.HashToken(dummyToken)
-	expiresAt := time.Now().Add(24 * time.Hour)
 
-	session, err := h.db.CreateSession(ctx, user.CitizenID, tokenHash, c.Request().UserAgent(), c.RealIP(), expiresAt)
+	// Llamar a ciudadano-registry-service para obtener folderId y email
+	identityServiceURL := h.config.IdentityServiceURL
+	if identityServiceURL == "" {
+		identityServiceURL = "http://ciudadano-registry-service:8080"
+	}
+	client := &http.Client{Timeout: 15 * time.Second}
+	getURL := fmt.Sprintf("%s/api/v1/ciudadanos/%s", identityServiceURL, user.CitizenID)
+	resp, err := client.Get(getURL)
 	if err != nil {
-		log.Printf("ERROR: Failed to create session: %v", err)
+		log.Printf("ERROR: Failed to call ciudadano-registry-service: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
 			Success: false,
-			Error:   "Failed to create session",
-			Message: "Internal server error",
+			Error:   "Failed to fetch citizen info",
+			Message: "Could not retrieve citizen folderId",
 		})
 	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("ERROR: Failed to read ciudadano-registry response: %v", err)
+		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
+			Success: false,
+			Error:   "Failed to read citizen info",
+			Message: "Could not retrieve citizen folderId",
+		})
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("ERROR: ciudadano-registry-service returned status %d: %s", resp.StatusCode, string(body))
+		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
+			Success: false,
+			Error:   "Citizen registry error",
+			Message: "Could not retrieve citizen folderId",
+		})
+	}
+	var registryResp struct {
+		Success bool   `json:"success"`
+		Message string `json:"message"`
+		Data    struct {
+			CarpetaID      string `json:"carpetaId"`
+			Email          string `json:"email"`
+			NombreCompleto string `json:"nombreCompleto"`
+		} `json:"data"`
+	}
+	err = json.Unmarshal(body, &registryResp)
+	if err != nil {
+		log.Printf("ERROR: Failed to parse ciudadano-registry response: %v", err)
+		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
+			Success: false,
+			Error:   "Failed to parse citizen info",
+			Message: "Could not retrieve citizen folderId",
+		})
+	}
+	folderId := registryResp.Data.CarpetaID
+	nombreCompleto := registryResp.Data.NombreCompleto
+	log.Printf("INFO: Using ciudadano-registry response for citizen %s: carpetaId=%s, nombreCompleto=%s, email=%s", user.CitizenID, folderId, nombreCompleto, user.Email)
 
-	// Generate JWT token - for login, we use empty email and folderID since we only have basic auth data
-	jwtToken, jwtExpiresAt, err := h.jwtService.GenerateToken(user, session.ID, "", "")
+	// Usar el email de la base de datos (user.Email) para JWT y respuesta
+	jwToken, jwtExpiresAt, err := h.jwtService.GenerateToken(user, sessionID, user.Email, folderId, nombreCompleto)
 	if err != nil {
 		log.Printf("ERROR: Failed to generate JWT token: %v", err)
 		return c.JSON(http.StatusInternalServerError, &models.ErrorResponse{
@@ -423,23 +458,22 @@ func (h *Handlers) Login(c echo.Context) error {
 		})
 	}
 
-	// Create UserInfo for response - minimal info for login
 	userInfo := &models.UserInfo{
-		UserID:   user.CitizenID, // citizenID becomes userID
-		FolderID: "",             // Not available in auth service
-		Email:    "",             // Not available in auth service
+		UserID:   user.CitizenID,
+		FolderID: folderId,
+		Email:    user.Email,
+		FullName: nombreCompleto,
 	}
 
-	// Return login response with basic user info
 	response := &models.LoginResponse{
 		Success:   true,
 		Message:   "Login successful",
-		Token:     jwtToken,
+		Token:     jwToken,
 		ExpiresAt: jwtExpiresAt,
 		User:      userInfo,
 	}
 
-	log.Printf("INFO: User logged in successfully: %s", user.CitizenID)
+	log.Printf("INFO: User logged in successfully: %s (folderId: %s)", user.CitizenID, folderId)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -520,9 +554,6 @@ func (h *Handlers) callIdentityService(documentID, fullName, address string) (*m
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	// Make the request
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to ciudadano-registry-service: %w", err)

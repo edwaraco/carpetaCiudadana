@@ -8,7 +8,8 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE TABLE IF NOT EXISTS auth.users (
     citizen_id VARCHAR(50) PRIMARY KEY,      -- User's citizen ID (primary identifier)
     password_hash VARCHAR(255) NOT NULL,     -- bcrypt hashed password
-    email_verified BOOLEAN DEFAULT TRUE,     -- Set to true when user completes registration
+    email_verified BOOLEAN DEFAULT TRUE, 
+    email VARCHAR(255) NOT NULL,               -- User email address
     
     CONSTRAINT valid_citizen_id CHECK (LENGTH(citizen_id) >= 6)
 );
@@ -25,10 +26,12 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO auth_service_user;
 INSERT INTO auth.users (
     citizen_id, 
     password_hash,
+    email,
     email_verified
 ) VALUES (
     '123456',
-    '$2a$10$rKvKhzrPGm5QN8/V7QK.R.YtXyh0oO7HPVxK2SQGKdUvnCJxsH9Yi',  -- bcrypt hash of "testpassword123"
+    '$2a$10$35lpBIuHVvzkKCQqX/R3puLHaa7Urj3W69CTyPl4dlWp6CQSurYDq',  -- bcrypt hash of "testpassword123"
+    'test@example.com',
     true
 ) ON CONFLICT (citizen_id) DO NOTHING;
 
