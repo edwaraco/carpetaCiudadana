@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications-service
+  namespace: carpeta-ciudadana
+  labels:
+    app: notifications-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications-service
+  template:
+    metadata:
+      labels:
+        app: notifications-service
+    spec:
+      containers:
+      - name: notifications-service
+        image: notifications-service:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: notifications-service-config
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications-service
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: notifications-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications-service-external
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: notifications-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30090
+  type: NodePort

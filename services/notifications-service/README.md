@@ -207,11 +207,37 @@ Authorization: Bearer {jwt_token}
    - Acceder a [SendGrid Console](https://app.sendgrid.com/settings/api_keys)
    - Crear nueva API Key con permisos de "Mail Send"
 
-2. **Configurar Dominio** (Para Producción):
+2. **Verificar Email del Remitente**:
+   - Ir a **Settings > Sender Authentication**
+   - Hacer clic en **"Verify a Single Sender"**
+   - Llenar el formulario:
+     - **From Name**: `Carpeta Ciudadana`
+     - **From Email**: `carpeta.ciudadana.info@gmail.com` (o tu email verificado)
+     - **Reply To**: Mismo email o tu email personal
+     - Completar dirección y demás campos requeridos
+   - Hacer clic en **"Create"**
+   - Revisar tu email y hacer clic en el enlace de verificación
+   
+   ⚠️ **Importante**: El email en `FROM_EMAIL` debe estar verificado en SendGrid
+
+3. **Configurar API Key en .env**:
+   ```bash
+   # Copiar tu SendGrid API Key y agregarlo al archivo .env
+   SENDGRID_API_KEY=SG.tu-api-key-aqui
+   ```
+   
+   🔒 **Seguridad**: Nunca cometas el archivo .env al repositorio
+
+4. **Para Kubernetes**:
+   - El script `k8s/deploy.sh` automáticamente lee el API key del archivo `.env`
+   - No necesitas pasos manuales adicionales
+   - El configmap usa un placeholder que se reemplaza automáticamente
+
+5. **Configurar Dominio** (Para Producción):
    - Verificar dominio en SendGrid
    - Configurar registros DNS (SPF, DKIM, DMARC)
 
-3. **Modo Desarrollo**:
+6. **Modo Desarrollo**:
    - Configurar `ENVIRONMENT=development`
    - Los emails se logean pero no se envían
 
@@ -382,6 +408,87 @@ This service connects to external RabbitMQ only.
    ```bash
    docker-compose --profile standalone up -d
    ```
+
+### Kubernetes Deployment
+
+#### Prerequisites para Kubernetes
+
+1. **Kubernetes cluster** (minikube, kind, o cluster real)
+2. **kubectl configurado** para conectarse al cluster
+3. **SendGrid API Key** configurado en tu `.env` local
+
+#### Pasos de Deployment
+
+1. **Configurar SendGrid API Key**:
+   ```bash
+   # Asegúrate de que tu archivo .env tenga el SendGrid API key real
+   echo "SENDGRID_API_KEY=tu-sendgrid-api-key-real" >> .env
+   ```
+
+2. **Verificar Email en SendGrid**:
+   - El email `carpeta.ciudadana.info@gmail.com` debe estar verificado en SendGrid
+   - O cambiar `FROM_EMAIL` en `k8s/configmap.yaml` por tu email verificado
+
+3. **Deploy automático**:
+   ```bash
+   cd k8s
+   ./deploy.sh
+   ```
+   
+   El script automáticamente:
+   - Lee el API key de tu archivo `.env`
+   - Construye la imagen Docker
+   - Carga la imagen en minikube (si aplica)
+   - Crea el configmap con el API key real
+   - Despliega el servicio en Kubernetes
+
+4. **Deploy manual** (si prefieres control manual):
+   ```bash
+   # Crear namespace
+   kubectl create namespace carpeta-ciudadana
+   
+   # Aplicar manifiestos
+   kubectl apply -f k8s/configmap.yaml
+   kubectl apply -f k8s/deployment.yaml
+   ```
+
+5. **Verificar deployment**:
+   ```bash
+   # Ver pods
+   kubectl get pods -n carpeta-ciudadana -l app=notifications-service
+   
+   # Ver logs
+   kubectl logs -n carpeta-ciudadana -l app=notifications-service
+   
+   # Port-forward para testing
+   kubectl port-forward svc/notifications-service 8090:8080 -n carpeta-ciudadana
+   curl http://localhost:8090/health
+   ```
+
+#### Estructura de archivos Kubernetes
+
+```
+k8s/
+├── configmap.yaml          # Configuración del servicio (con placeholder para API key)
+├── deployment.yaml         # Deployment y Service definitions
+├── deploy.sh              # Script automático de deployment
+├── configmap.template.yaml # Template para env vars
+└── secret.local.yaml      # Archivo local para crear secrets manualmente
+```
+
+#### Troubleshooting Kubernetes
+
+**Error 401 de SendGrid:**
+- Verificar que el API key en `.env` sea válido y no esté revocado
+- Verificar que el email `FROM_EMAIL` esté verificado en SendGrid
+
+**Pod no inicia:**
+- Verificar recursos disponibles: `kubectl describe pod <pod-name> -n carpeta-ciudadana`
+- Revisar logs: `kubectl logs <pod-name> -n carpeta-ciudadana`
+
+**RabbitMQ connection error:**
+- Verificar que el servicio `carpeta-rabbitmq` esté corriendo en el cluster
+- Revisar la URL de conexión en `configmap.yaml`
 
 ## Testing
 

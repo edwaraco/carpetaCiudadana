@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
 // AppConfig contiene todas las configuraciones del servicio.
@@ -29,15 +28,14 @@ type AppConfig struct {
 	ConsumerEnabled bool
 }
 
-// RabbitMQConfig holds RabbitMQ specific configuration
+// RabbitMQConfig holds simplified RabbitMQ configuration
 type RabbitMQConfig struct {
-	URL          string   `env:"RABBITMQ_URL"`
-	ExchangeName string   `env:"EXCHANGE_NAME"`
-	QueueName    string   `env:"QUEUE_NAME"`
-	RoutingKeys  []string `env:"ROUTING_KEYS"`
-	ConsumerTag  string   `env:"CONSUMER_TAG"`
-	Workers      int      `env:"CONSUMER_WORKERS"`
-	AutoAck      bool     `env:"AUTO_ACK"`
+	URL          string `env:"RABBITMQ_URL"`
+	ExchangeName string `env:"EXCHANGE_NAME"`
+	QueueName    string `env:"QUEUE_NAME"`
+	RoutingKey   string `env:"ROUTING_KEY"` // Single routing key
+	ConsumerTag  string `env:"CONSUMER_TAG"`
+	AutoAck      bool   `env:"AUTO_ACK"`
 }
 
 // LoadConfig lee las variables de entorno y devuelve la configuración.
@@ -51,21 +49,21 @@ func LoadConfig() *AppConfig {
 	// Cargar configuración de SendGrid
 	sendGridKey := os.Getenv("SENDGRID_API_KEY")
 
-	// Validar que SendGrid esté configurado
+	// Para desarrollo/testing, usar placeholder si no está configurado
 	if sendGridKey == "" {
-		log.Fatal("ERROR: SENDGRID_API_KEY es requerida para el servicio de notificaciones.")
+		sendGridKey = "SG.placeholder-for-testing"
+		log.Println("WARN: SENDGRID_API_KEY no configurada - usando placeholder para testing")
+	} else {
+		log.Println("INFO: SendGrid configurado correctamente.")
 	}
 
-	log.Println("INFO: SendGrid configurado correctamente.")
-
-	// 🆕 RabbitMQ configuration
+	// 🆕 RabbitMQ configuration - simplified for single queue
 	rabbitmqConfig := RabbitMQConfig{
 		URL:          getEnv("RABBITMQ_URL", ""),
-		ExchangeName: getEnv("EXCHANGE_NAME", "microservices.topic"),
-		QueueName:    getEnv("QUEUE_NAME", "notifications.email.queue"),
-		RoutingKeys:  getEnvStringSlice("ROUTING_KEYS", []string{"user.registration.email", "user.registration.complete", "user.password_reset", "notifications.email.send"}),
+		ExchangeName: getEnv("EXCHANGE_NAME", "carpeta.events"),
+		QueueName:    getEnv("QUEUE_NAME", "notifications.queue"),
+		RoutingKey:   getEnv("ROUTING_KEY", "notifications.send"),
 		ConsumerTag:  getEnv("CONSUMER_TAG", "notifications-service"),
-		Workers:      getEnvInt("CONSUMER_WORKERS", 3),
 		AutoAck:      getEnvBool("AUTO_ACK", false),
 	}
 
@@ -86,7 +84,7 @@ func LoadConfig() *AppConfig {
 	if consumerEnabled {
 		log.Printf("INFO: RabbitMQ Consumer enabled - Exchange: %s, Queue: %s",
 			rabbitmqConfig.ExchangeName, rabbitmqConfig.QueueName)
-		log.Printf("INFO: Routing Keys: %v", rabbitmqConfig.RoutingKeys)
+		log.Printf("INFO: Routing Key: %s", rabbitmqConfig.RoutingKey)
 	}
 
 	return config
@@ -128,26 +126,4 @@ func getEnvInt(key string, defaultValue int) int {
 	}
 
 	return intValue
-}
-
-func getEnvStringSlice(key string, defaultValue []string) []string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-
-	// Split by comma and trim spaces
-	parts := strings.Split(value, ",")
-	result := make([]string, 0, len(parts))
-	for _, part := range parts {
-		if trimmed := strings.TrimSpace(part); trimmed != "" {
-			result = append(result, trimmed)
-		}
-	}
-
-	if len(result) == 0 {
-		return defaultValue
-	}
-
-	return result
 }

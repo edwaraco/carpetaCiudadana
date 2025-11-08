@@ -40,22 +40,19 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: auth-service
-    ports:
-      - "8081:8080"
+    network_mode: host
     environment:
-      - DATABASE_URL=postgres://auth_service_user:auth_service_password123@auth-database:5432/auth_service_db?sslmode=disable
-      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://admin:microservices2024@localhost:5673/}  # Connect to external RabbitMQ
-      - JWT_SECRET=${JWT_SECRET:-super-secret-jwt-key-for-microservices-2024}
-      - LISTEN_PORT=8080
-      - EXCHANGE_NAME=microservices.topic
-      - IDENTITY_SERVICE_URL=${IDENTITY_SERVICE_URL:-http://localhost:8082}
-      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:3000}
-      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgres://auth_service_user:auth_service_password123@localhost:5432/auth_service_db?sslmode=disable
+      - RABBITMQ_URL=amqp://admin:microservices2024@127.0.0.1:5672
+      - JWT_SECRET=super-secret-jwt-key-for-microservices-2024
+      - LISTEN_PORT=8085
+      - EXCHANGE_NAME=carpeta.events
+      - IDENTITY_SERVICE_URL=http://localhost:8080
+      - FRONTEND_BASE_URL=http://localhost:3000
+      - ENVIRONMENT=development
     depends_on:
       auth-database:
         condition: service_healthy
-    networks:
-      - auth-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]

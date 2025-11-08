@@ -45,7 +45,7 @@ func LoadConfig() (*Config, error) {
 		FrontendBaseURL:    getEnv("FRONTEND_BASE_URL", ""),
 		RabbitMQ: RabbitMQConfig{
 			URL:          getEnv("RABBITMQ_URL", ""),
-			ExchangeName: getEnv("EXCHANGE_NAME", "microservices.topic"),
+			ExchangeName: getEnv("EXCHANGE_NAME", "carpeta.events"),
 		},
 	}
 

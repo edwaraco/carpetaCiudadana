@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: carpeta-ciudadana
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: auth-service-auth-service:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: auth-service-config
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: auth-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-external
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: auth-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  type: NodePort
