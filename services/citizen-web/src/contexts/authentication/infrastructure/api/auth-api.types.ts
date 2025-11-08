@@ -8,7 +8,7 @@
 // ============================================================================
 
 export interface AuthServiceLoginRequest {
-  document_id: string;
+  citizen_id: string;
   password: string;
 }
 
@@ -30,10 +30,10 @@ export interface AuthServiceSetPasswordRequest {
 // ============================================================================
 
 export interface AuthServiceUserInfo {
-  user_id: string;
-  folder_id: string;
+  userId: string;
+  folderId: string;
   email: string;
-  full_name: string;
+  fullName: string;
 }
 
 export interface AuthServiceLoginResponse {
@@ -59,10 +59,10 @@ export interface AuthServiceSetPasswordResponse {
 }
 
 export interface AuthServiceUserProfile {
-  user_id: string;
-  folder_id: string;
+  userId: string;
+  folderId: string;
   email: string;
-  full_name: string;
+  fullName: string;
   phone?: string;
   address?: string;
 }

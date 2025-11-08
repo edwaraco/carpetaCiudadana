@@ -37,33 +37,35 @@ export class AuthApiService implements IAuthService {
   async login(request: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
       const apiRequest: AuthServiceLoginRequest = {
-        document_id: request.cedula,
+        citizen_id: request.cedula,
         password: request.password,
       };
 
-      const response = await httpClient.post<AuthServiceLoginResponse>(
+      const backendResponse = await httpClient.post<AuthServiceLoginResponse>(
         `${this.basePath}/login`,
         apiRequest
       );
 
-      if (response.success && response.data) {
-        const apiResponse = response.data;
+      // Backend returns: { success: true, message: "...", token: "...", expires_at: "...", user: {...} }
+      // httpClient.post returns this object directly (not wrapped in ApiResponse)
+      const apiData = backendResponse as unknown as AuthServiceLoginResponse;
 
+      if (apiData.success) {
         const citizen: Citizen = {
-          cedula: apiResponse.user.user_id,
-          fullName: apiResponse.user.full_name,
+          cedula: apiData.user.userId,
+          fullName: apiData.user.fullName,
           address: '',
-          personalEmail: apiResponse.user.email,
-          folderEmail: apiResponse.user.email,
+          personalEmail: apiData.user.email,
+          folderEmail: apiData.user.email,
           currentOperator: 'MiCarpeta',
           registrationDate: new Date(),
           status: 'ACTIVE',
-          carpetaId: apiResponse.user.folder_id,
+          carpetaId: apiData.user.folderId,
         };
 
         const loginResponse: LoginResponse = {
-          token: apiResponse.token,
-          expiresAt: new Date(apiResponse.expires_at),
+          token: apiData.token,
+          expiresAt: new Date(apiData.expires_at),
           user: citizen,
           requiresMFA: false,
           sessionId: undefined,
@@ -72,7 +74,7 @@ export class AuthApiService implements IAuthService {
         return {
           success: true,
           data: loginResponse,
-          message: apiResponse.message,
+          message: apiData.message,
           timestamp: new Date(),
         };
       }
@@ -81,7 +83,7 @@ export class AuthApiService implements IAuthService {
         success: false,
         error: {
           code: 'AUTH_ERROR',
-          message: 'Authentication failed',
+          message: apiData.message || 'Authentication failed',
           statusCode: 401,
         },
         timestamp: new Date(),
@@ -101,23 +103,25 @@ export class AuthApiService implements IAuthService {
         address: request.address,
       };
 
-      const response = await httpClient.post<RegisterApiResponse>(
+      const backendResponse = await httpClient.post<RegisterApiResponse>(
         `${this.basePath}/register`,
         apiRequest
       );
 
-      if (response.success && response.data) {
-        const apiResponse = response.data;
+      // Backend returns: { success: true, message: "...", citizen_id: "..." }
+      // httpClient.post returns this object directly (not wrapped in ApiResponse)
+      const apiData = backendResponse as unknown as RegisterApiResponse;
 
+      if (apiData.success) {
         const registerResponse: RegisterResponse = {
-          message: apiResponse.message,
-          cedula: apiResponse.citizen_id,
+          message: apiData.message,
+          cedula: apiData.citizen_id,
         };
 
         return {
           success: true,
           data: registerResponse,
-          message: apiResponse.message,
+          message: apiData.message,
           timestamp: new Date(),
         };
       }
@@ -126,7 +130,7 @@ export class AuthApiService implements IAuthService {
         success: false,
         error: {
           code: 'REGISTER_ERROR',
-          message: 'Registration failed',
+          message: apiData.message || 'Registration failed',
           statusCode: 400,
         },
         timestamp: new Date(),
@@ -143,36 +147,38 @@ export class AuthApiService implements IAuthService {
         password: request.password,
       };
 
-      const response = await httpClient.post<SetPasswordApiResponse>(
+      const backendResponse = await httpClient.post<SetPasswordApiResponse>(
         `${this.basePath}/set-password`,
         apiRequest
       );
 
-      if (response.success && response.data) {
-        const apiResponse = response.data;
+      // Backend returns: { success: true, message: "...", token: "...", expires_at: "...", user: {...} }
+      // httpClient.post returns this object directly (not wrapped in ApiResponse)
+      const apiData = backendResponse as unknown as SetPasswordApiResponse;
 
+      if (apiData.success) {
         const citizen: Citizen = {
-          cedula: apiResponse.user.user_id,
-          fullName: apiResponse.user.full_name,
-          address: apiResponse.user.address || '',
-          personalEmail: apiResponse.user.email,
-          folderEmail: apiResponse.user.email,
+          cedula: apiData.user.userId,
+          fullName: apiData.user.fullName,
+          address: apiData.user.address || '',
+          personalEmail: apiData.user.email,
+          folderEmail: apiData.user.email,
           currentOperator: 'MiCarpeta',
           registrationDate: new Date(),
           status: 'ACTIVE',
-          carpetaId: apiResponse.user.folder_id,
+          carpetaId: apiData.user.folderId,
         };
 
         const setPasswordResponse: SetPasswordResponse = {
-          token: apiResponse.token,
-          expiresAt: new Date(apiResponse.expires_at),
+          token: apiData.token,
+          expiresAt: new Date(apiData.expires_at),
           user: citizen,
         };
 
         return {
           success: true,
           data: setPasswordResponse,
-          message: apiResponse.message,
+          message: apiData.message,
           timestamp: new Date(),
         };
       }
@@ -181,7 +187,7 @@ export class AuthApiService implements IAuthService {
         success: false,
         error: {
           code: 'SET_PASSWORD_ERROR',
-          message: 'Failed to set password',
+          message: apiData.message || 'Failed to set password',
           statusCode: 400,
         },
         timestamp: new Date(),
