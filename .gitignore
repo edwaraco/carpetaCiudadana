@@ -18,6 +18,7 @@ dist/
 *.swo
 *~
 .DS_Store
+.kiro
 
 # Environment variables
 .env

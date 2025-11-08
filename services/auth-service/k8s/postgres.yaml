@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-postgres
+  namespace: carpeta-ciudadana
+  labels:
+    app: auth-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-postgres
+  template:
+    metadata:
+      labels:
+        app: auth-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: auth-postgres-secret
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U auth_service_user -d auth_service_db
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh  
+            - -c
+            - pg_isready -U auth_service_user -d auth_service_db
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: postgres-storage
+        emptyDir: {}
+      - name: init-sql
+        configMap:
+          name: auth-postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-postgres-service
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: auth-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP

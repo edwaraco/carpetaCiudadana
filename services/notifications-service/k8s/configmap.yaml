@@ -19,6 +19,6 @@ data:
   CONSUMER_ENABLED: "true"
   
   # SendGrid configuration
-  SENDGRID_API_KEY: "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"
+  SENDGRID_API_KEY: "SG.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING"
   FROM_EMAIL: "carpeta.ciudadana.info@gmail.com"
   FROM_NAME: "Carpeta Ciudadana"

@@ -38,4 +38,16 @@ public interface CarpetaCiudadanoService {
     DocumentosPaginadosResponse obtenerDocumentosPaginados(String carpetaId, String cursor, Integer pageSize);
 
     String generarUrlDescarga(String carpetaId, String documentoId);
+
+    void actualizarEstadoDocumento(
+            String carpetaId, String documentoId, String nuevoEstado, String mensaje);
+
+    /**
+     * Inicia el proceso de autenticación de un documento
+     *
+     * @param carpetaId ID de la carpeta
+     * @param documentoId ID del documento
+     * @return Documento con estado actualizado a EN_AUTENTICACION y URL de descarga
+     */
+    co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse iniciarAutenticacionDocumento(String carpetaId, String documentoId);
 }

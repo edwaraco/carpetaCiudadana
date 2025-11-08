@@ -8,6 +8,8 @@ import co.edu.eafit.carpeta.ciudadana.dto.request.BuscarCarpetaRequest;
 import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoResponse;
 import co.edu.eafit.carpeta.ciudadana.dto.response.DocumentosPaginadosResponse;
 import co.edu.eafit.carpeta.ciudadana.entity.CarpetaCiudadano;
+import co.edu.eafit.carpeta.ciudadana.event.DocumentoEventPublisher;
+import co.edu.eafit.carpeta.ciudadana.event.DocumentoSubidoEvent;
 import co.edu.eafit.carpeta.ciudadana.util.CursorUtil;
 import co.edu.eafit.carpeta.ciudadana.util.ResponseUtil;
 import co.edu.eafit.carpeta.ciudadana.entity.Documento;
@@ -44,6 +46,7 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
     private final CrearDocumentoMapper crearDocumentoMapper;
     private final HistorialAccesoMapper historialAccesoMapper;
     private final MinioStorageService minioStorageService;
+    private final DocumentoEventPublisher eventoPublisher;
 
     public CarpetaCiudadanoServiceImpl(
             CarpetaCiudadanoRepository carpetaRepository,
@@ -52,7 +55,8 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
             CarpetaMapper carpetaMapper,
             CrearDocumentoMapper crearDocumentoMapper,
             HistorialAccesoMapper historialAccesoMapper,
-            MinioStorageService minioStorageService) {
+            MinioStorageService minioStorageService,
+            DocumentoEventPublisher eventoPublisher) {
         this.carpetaRepository = carpetaRepository;
         this.documentoRepository = documentoRepository;
         this.historialRepository = historialRepository;
@@ -60,6 +64,7 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
         this.crearDocumentoMapper = crearDocumentoMapper;
         this.historialAccesoMapper = historialAccesoMapper;
         this.minioStorageService = minioStorageService;
+        this.eventoPublisher = eventoPublisher;
     }
 
     @Override
@@ -119,6 +124,21 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
                     request.carpetaId(), documento.getDocumentoId(), "SUBIDA", "SISTEMA",
                     "Documento subido exitosamente");
             historialRepository.save(acceso);
+
+            // Publicar evento de documento subido
+            DocumentoSubidoEvent evento =
+                    DocumentoSubidoEvent.builder()
+                            .documentoId(documento.getDocumentoId())
+                            .carpetaId(request.carpetaId())
+                            .propietarioCedula(userId)
+                            .tipoDocumento(documento.getTipoDocumento())
+                            .nombreArchivo(fileName)
+                            .tamanioBytes(archivo.getSize())
+                            .hashDocumento(hashDocumento)
+                            .fechaSubida(documento.getFechaRecepcion())
+                            .build();
+
+            eventoPublisher.publicarDocumentoSubido(evento);
 
             log.info("Documento subido exitosamente: {}", documento.getDocumentoId());
             return documento;
@@ -231,6 +251,78 @@ public class CarpetaCiudadanoServiceImpl implements CarpetaCiudadanoService {
             log.error("Error calculando hash: {}", e.getMessage());
             throw new StorageException("Error calculando hash del documento", e);
         }
+    }
+
+    @Override
+    public void actualizarEstadoDocumento(
+            String carpetaId, String documentoId, String nuevoEstado, String mensaje) {
+        log.info(
+                "Actualizando estado de documento: documentoId={}, carpetaId={}, nuevoEstado={}, mensaje={}",
+                documentoId,
+                carpetaId,
+                nuevoEstado,
+                mensaje);
+
+        Documento documento =
+                documentoRepository
+                        .findById(carpetaId, documentoId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Documento", "documentoId", documentoId));
+
+        documento.setEstadoDocumento(nuevoEstado);
+
+        documentoRepository.save(documento);
+
+        String descripcionHistorial = mensaje != null 
+                ? String.format("Estado actualizado a: %s - %s", nuevoEstado, mensaje)
+                : String.format("Estado actualizado a: %s", nuevoEstado);
+
+        HistorialAcceso acceso =
+                historialAccesoMapper.crearAcceso(
+                        carpetaId,
+                        documentoId,
+                        "ACTUALIZACION_ESTADO",
+                        "SISTEMA",
+                        descripcionHistorial);
+        historialRepository.save(acceso);
+
+        log.info("Estado del documento actualizado exitosamente: {}", documentoId);
+    }
+
+    @Override
+    public co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse iniciarAutenticacionDocumento(String carpetaId, String documentoId) {
+        log.info("Iniciando autenticación de documento: {} en carpeta: {}", documentoId, carpetaId);
+
+        Documento documento = documentoRepository.findById(carpetaId, documentoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Documento", "documentoId", documentoId));
+
+        // Validar que el documento esté en estado TEMPORAL
+        if (!"TEMPORAL".equals(documento.getEstadoDocumento())) {
+            throw new IllegalStateException(
+                    String.format("El documento debe estar en estado TEMPORAL para iniciar autenticación. Estado actual: %s", 
+                    documento.getEstadoDocumento()));
+        }
+
+        // Actualizar estado a EN_AUTENTICACION
+        documento.setEstadoDocumento("EN_AUTENTICACION");
+        documento.setFechaUltimaModificacion(LocalDateTime.now());
+        
+        Documento documentoActualizado = documentoRepository.save(documento);
+
+        // Generar URL de descarga
+        String urlDescarga = generarUrlDescarga(carpetaId, documentoId);
+
+        // Registrar en historial
+        HistorialAcceso acceso = historialAccesoMapper.crearAcceso(
+                carpetaId,
+                documentoId,
+                "INICIO_AUTENTICACION",
+                "SISTEMA",
+                "Proceso de autenticación iniciado");
+        historialRepository.save(acceso);
+
+        log.info("Autenticación iniciada exitosamente para documento: {}", documentoId);
+        return new co.edu.eafit.carpeta.ciudadana.dto.response.DocumentoConUrlResponse(documentoActualizado, urlDescarga);
     }
 
     private void actualizarEspacioUtilizado(String carpetaId, long cambioBytes) {
