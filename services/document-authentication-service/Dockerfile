@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Document Authentication Service
 # Stage 1: Base image with dependencies
-FROM python:3.10-slim as base
+FROM python:3.13-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -17,12 +17,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Production image
-FROM python:3.10-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
 # Copy installed packages from base
-COPY --from=base /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=base /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=base /usr/local/bin /usr/local/bin
 
 # Copy application code
