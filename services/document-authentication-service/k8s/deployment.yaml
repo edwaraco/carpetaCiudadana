@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-authentication-service
+  namespace: carpeta-ciudadana
+  labels:
+    app: document-authentication-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: document-authentication-service
+  template:
+    metadata:
+      labels:
+        app: document-authentication-service
+    spec:
+      containers:
+      - name: document-authentication-service
+        image: document-authentication-service:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8083
+        envFrom:
+        - configMapRef:
+            name: document-authentication-config
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8083
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-authentication-service
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: document-authentication-service
+  ports:
+  - port: 8083
+    targetPort: 8083
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-authentication-service-external
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: document-authentication-service
+  ports:
+  - port: 8083
+    targetPort: 8083
+    nodePort: 30093
+  type: NodePort
