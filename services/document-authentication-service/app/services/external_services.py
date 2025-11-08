@@ -84,27 +84,35 @@ async def get_presigned_document_url(
                 # {"success": true, "message": "...", "data": {...}, "timestamp": "..."}
                 json_response = response.json()
                 
+                logger.debug(f"Raw response from carpeta service: {json_response}")
+                
                 # Extract data from ApiResponse wrapper
                 if isinstance(json_response, dict):
                     # Check if it's wrapped in ApiResponse
-                    if "data" in json_response and json_response.get("success", False):
+                    if "data" in json_response and json_response.get("success"):
                         data = json_response["data"]
                         if isinstance(data, dict) and "urlDescarga" in data:
-                            return data["urlDescarga"]
+                            presigned_url = data["urlDescarga"]
+                            # Clean any potential extra quotes or whitespace
+                            presigned_url = presigned_url.strip().strip("'\"")
+                            logger.info(f"Extracted presigned URL: {presigned_url[:100]}...")
+                            return presigned_url
                         else:
                             raise ExternalServiceError(
                                 f"'data' object missing 'urlDescarga' field: {data}"
                             )
                     # Legacy: direct response with urlDescarga
                     elif "urlDescarga" in json_response:
-                        return json_response["urlDescarga"]
+                        presigned_url = json_response["urlDescarga"]
+                        presigned_url = presigned_url.strip().strip("'\"")
+                        return presigned_url
                     else:
                         raise ExternalServiceError(
                             f"Unexpected response format from carpeta service: {json_response}"
                         )
                 elif isinstance(json_response, str):
                     # If response is directly the URL string
-                    return json_response
+                    return json_response.strip().strip("'\"")
                 else:
                     raise ExternalServiceError(
                         f"Unexpected response type from carpeta service: {type(json_response)}"
