@@ -30,12 +30,9 @@ public class GovCarpetaService {
 
       // 204 = No Content = Ciudadano NO registrado (disponible)
       // 200 = OK = Ciudadano YA registrado
-      boolean exitoso = response.getStatusCode() == HttpStatus.NO_CONTENT 
-                     || response.getStatusCode() == HttpStatus.OK;
-
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(exitoso)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
@@ -73,7 +70,7 @@ public class GovCarpetaService {
 
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(response.getStatusCode() == HttpStatus.CREATED)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
@@ -105,10 +102,7 @@ public class GovCarpetaService {
 
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(
-              response.getStatusCode() == HttpStatus.OK
-                  || response.getStatusCode() == HttpStatus.CREATED
-                  || response.getStatusCode() == HttpStatus.NO_CONTENT)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
