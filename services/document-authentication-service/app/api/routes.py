@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/v1", tags=["authentication"])
 @router.post(
     "/authenticateDocument",
     response_model=AuthenticateDocumentResponse,
-    statusCode=202,
+    status_code=202,
     summary="Authenticate a document",
     description=(
         "Submit a document for authentication with Gov Carpeta service. "
