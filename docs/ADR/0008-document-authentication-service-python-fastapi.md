@@ -1,6 +1,7 @@
 # ADR-0008: Servicio de Autenticación de Documentos con Python FastAPI
 
 ## Estado
+
 **Aceptado** - 2024-11-07
 
 ## Contexto
@@ -50,6 +51,7 @@ Implementaremos un **microservicio de autenticación de documentos** usando:
 7. **Ecosistema Rico**: Bibliotecas maduras para HTTP, RabbitMQ, JWT
 
 **Alternativas Consideradas:**
+
 - **Go**: Mayor complejidad de desarrollo, menos bibliotecas
 - **Node.js**: Menos robusto para validación de tipos
 - **Java Spring**: Overhead excesivo para servicio simple
@@ -123,18 +125,35 @@ class CircuitBreaker:
 
 ### 4. Arquitectura de Procesamiento Asíncrono
 
+**Componentes del Sistema:**
+
+| Componente | Tecnología | Función |
+|------------|-----------|---------|
+| **Usuario** | N/A | Ciudadano que solicita autenticación de documentos |
+| **citizen-web** | React + Material-UI + Vite | Interfaz web para interacción con ciudadanos |
+| **document-authentication-service** | Python + FastAPI | Orquesta proceso de autenticación de documentos |
+| **carpeta-ciudadana-service** | Java + Spring Boot | API REST para gestión de carpetas y documentos |
+| **Gov Carpeta API** | Servicio Externo | API gubernamental para validación de documentos |
+| **RabbitMQ** | Message Broker (Quorum Queues) | Publica/consume eventos de autenticación |
+| **DynamoDB** | NoSQL Database | Almacena metadatos de documentos (incluyendo authenticationStatus) |
+| **MinIO** | Object Storage (S3-compatible) | Almacena archivos físicos de documentos |
+
 **Flujo de Autenticación:**
 
 ```mermaid
 sequenceDiagram
+    participant U as Usuario
     participant CW as citizen-web
     participant DAS as document-authentication-service
     participant CCS as carpeta-ciudadana-service
     participant GC as Gov Carpeta API
     participant RMQ as RabbitMQ
+    participant DB as DynamoDB
 
+    U->>CW: Click en botón "Autenticar"<br/>del documento
     CW->>DAS: POST /api/v1/authenticateDocument<br/>{documentId, documentTitle}<br/>Bearer {jwt_token}
     DAS-->>CW: 202 Accepted
+    CW-->>U: Mostrar: "Documento en<br/>proceso de autenticación"
     
     Note over DAS: Procesamiento en Background
     
@@ -145,12 +164,31 @@ sequenceDiagram
         CCS-->>DAS: Presigned URL
         
         DAS->>GC: PUT /apis/authenticateDocument<br/>{idCitizen, UrlDocument, documentTitle}
-        GC-->>DAS: 200 OK / 204 / 500 / 501
         
-        DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code, mensaje
+        alt Autenticación Exitosa
+            GC-->>DAS: 200 OK / 204 No Content
+            DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code: 200/204<br/>mensaje: "autenticado exitosamente"
+        else Autenticación Fallida
+            GC-->>DAS: 500 / 501 Error
+            DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code: 500/501<br/>mensaje: "authentication failed"
+        end
     else Gov Carpeta No Disponible
         DAS->>RMQ: Publish DocumentoAutenticadoEvent<br/>status_code: 500<br/>mensaje: "Gov Carpeta service unavailable"
     end
+    
+    Note over CCS,RMQ: Consumidor RabbitMQ
+    
+    RMQ->>CCS: Consume DocumentoAutenticadoEvent
+    CCS->>DB: Update Metadata del Documento<br/>authenticationStatus: "authenticated" | "authentication_failed"
+    
+    Note over U,CW: Usuario verifica estado
+    
+    U->>CW: Consultar documento
+    CW->>CCS: GET /api/v1/carpetas/{carpetaId}/documentos/{documentoId}
+    CCS->>DB: Query Metadata
+    DB-->>CCS: Metadata con authenticationStatus
+    CCS-->>CW: Documento con estado de autenticación
+    CW-->>U: Mostrar: "Autenticado" ✓<br/>o "Autenticación Fallida" ✗
 ```
 
 **Razones:**
@@ -339,11 +377,11 @@ black==24.10.0
 
 ## Referencias
 
-- **Gov Carpeta API**: https://govcarpeta-apis-4905ff3c005b.herokuapp.com/api-docs/
-- **FastAPI Documentation**: https://fastapi.tiangolo.com/
-- **Pydantic**: https://docs.pydantic.dev/
-- **Circuit Breaker Pattern**: https://martinfowler.com/bliki/CircuitBreaker.html
-- **12-Factor App**: https://12factor.net/
+- **Gov Carpeta API**: <https://govcarpeta-apis-4905ff3c005b.herokuapp.com/api-docs/>
+- **FastAPI Documentation**: <https://fastapi.tiangolo.com/>
+- **Pydantic**: <https://docs.pydantic.dev/>
+- **Circuit Breaker Pattern**: <https://martinfowler.com/bliki/CircuitBreaker.html>
+- **12-Factor App**: <https://12factor.net/>
 
 ## Revisión Futura
 
