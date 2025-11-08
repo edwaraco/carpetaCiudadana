@@ -8,12 +8,14 @@ metadata:
   labels:
     app: carpeta-ciudadana
     component: rabbitmq
-provisioner: k8s.io/minikube-hostpath  # kubernetes.io/no-provisioner
+provisioner: k8s.io/minikube-hostpath  # for minikube only
+#provisioner: docker.io/hostpath  # for Docker Desktop only
+#provisioner: kubernetes.io/host-path  # generic, works on both (in theory, but didn't work)
+#provisioner: kubernetes.io/no-provisioner # for manual PVs
 # For cloud providers, use:
 # - kubernetes.io/aws-ebs (AWS)
 # - kubernetes.io/gce-pd (GCP)
 # - kubernetes.io/azure-disk (Azure)
-# For Minikube, use: k8s.io/minikube-hostpath
 volumeBindingMode: Immediate # or WaitForFirstConsumer
 reclaimPolicy: Retain
 allowVolumeExpansion: true
