@@ -166,7 +166,7 @@ export class AuthApiService implements IAuthService {
     }
   }
 
-  async verifyMFA(request: MFAVerificationRequest): Promise<ApiResponse<MFAVerificationResponse>> {
+  async verifyMFA(_: MFAVerificationRequest): Promise<ApiResponse<MFAVerificationResponse>> {
     // MFA not supported by auth-service yet
     return {
       success: false,

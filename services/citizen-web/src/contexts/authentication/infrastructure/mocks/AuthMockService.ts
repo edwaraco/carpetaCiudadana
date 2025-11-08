@@ -16,9 +16,18 @@ import {
   SetPasswordResponse,
 } from '../../domain/types';
 
+type RegisteredUser = {
+  email: string;
+  fullName: string;
+  phone?: string;
+  address?: string;
+  verificationToken?: string;
+  password?: string;
+};
+
 export class AuthMockService implements IAuthService {
   // Store for simulating registered users
-  private registeredUsers: Map<string, { email: string; fullName: string; phone?: string; address?: string; verificationToken?: string; password?: string }> = new Map();
+  private registeredUsers: Map<string, RegisteredUser> = new Map();
 
   async login(request: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     await this.simulateDelay();
@@ -119,7 +128,7 @@ export class AuthMockService implements IAuthService {
 
     // Find user by token
     let foundCedula: string | undefined;
-    let foundUser: any;
+    let foundUser: RegisteredUser | undefined;
 
     for (const [cedula, userData] of this.registeredUsers.entries()) {
       if (userData.verificationToken === request.token) {

@@ -73,9 +73,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate data-testid="login-form">
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }} data-testid="login-form-error-alert">
           {error.message}
         </Alert>
       )}
@@ -104,6 +104,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             autoComplete="username"
             autoFocus
             placeholder="1234567890"
+            data-testid="login-form-cedula-input"
+            inputProps={{
+              'data-testid': 'login-form-cedula-field',
+            }}
           />
         )}
       />
@@ -130,12 +134,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             helperText={errors.password?.message}
             disabled={isLoading}
             autoComplete="current-password"
+            data-testid="login-form-password-input"
+            inputProps={{
+              'data-testid': 'login-form-password-field',
+            }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
+                    data-testid="login-form-toggle-password"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -154,6 +163,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         sx={{ mt: 3, mb: 2 }}
         disabled={isLoading}
         startIcon={isLoading && <CircularProgress size={20} />}
+        data-testid="login-form-submit-button"
       >
         {isLoading ? 'Logging in...' : 'Login'}
       </Button>
