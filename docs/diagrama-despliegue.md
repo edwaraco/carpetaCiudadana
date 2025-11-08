@@ -42,6 +42,7 @@ graph TB
     %% Frontend to Services
     CitizenWeb -->|"HTTP/REST<br/>Port 8080"| AuthService
     CitizenWeb -->|"HTTP/REST<br/>Port 8080"| CarpetaService
+    CitizenWeb -->|"HTTP/REST<br/>Port 8083<br/>authenticateDocument"| DocAuthService
     
     %% Auth Service connections
     AuthService -->|"HTTP/REST<br/>Port 8081<br/>validate/register citizen"| CiudadanoRegistry
@@ -84,11 +85,13 @@ graph TB
 ## Tecnologías por Componente
 
 ### Frontend
+
 | Componente | Tecnología | Puerto | Tipo |
 |------------|-----------|--------|------|
 | citizen-web | React 19 + TypeScript + Vite + Nginx | 80 (8080) | LoadBalancer |
 
 ### Servicios de Aplicación
+
 | Servicio | Tecnología | Puerto Interno | NodePort | Tipo |
 |----------|-----------|----------------|----------|------|
 | auth-service | Go 1.23 + Echo Framework | 8080 | 30080 | ClusterIP + NodePort |
@@ -98,11 +101,13 @@ graph TB
 | notifications-service | Go 1.23 + Echo Framework | 8080 | 30090 | ClusterIP + NodePort |
 
 ### Message Broker
+
 | Componente | Tecnología | Puertos | Tipo |
 |------------|-----------|---------|------|
 | RabbitMQ Cluster | RabbitMQ 3.13-management (3 nodos) | AMQP: 5672<br/>Management: 15672<br/>Prometheus: 15692 | LoadBalancer |
 
 ### Capa de Datos
+
 | Componente | Tecnología | Puerto | Tipo |
 |------------|-----------|--------|------|
 | auth-postgres | PostgreSQL 15-alpine | 5432 | ClusterIP |
@@ -110,14 +115,16 @@ graph TB
 | minio | minio/minio:latest | API: 9000<br/>Console: 9001 (NodePort: 30901) | ClusterIP + NodePort |
 
 ### Servicios Externos
+
 | Servicio | URL | Protocolo |
 |----------|-----|-----------|
-| GovCarpeta API | https://govcarpeta-apis-4905ff3c005b.herokuapp.com | HTTPS |
+| GovCarpeta API | <https://govcarpeta-apis-4905ff3c005b.herokuapp.com> | HTTPS |
 | SendGrid | SendGrid API | HTTPS |
 
 ## Protocolos de Comunicación
 
 ### HTTP/REST
+
 - **citizen-web → auth-service**: Autenticación, registro, gestión de perfil
 - **citizen-web → carpeta-ciudadana-service**: Gestión de documentos, carpetas
 - **auth-service → ciudadano-registry-service**: Validación y registro de ciudadanos
@@ -128,11 +135,13 @@ graph TB
 - **document-authentication-service → carpeta-ciudadana-service**: Obtención de URLs prefirmadas
 
 ### HTTPS (Servicios Externos)
+
 - **ciudadano-registry-service → GovCarpeta**: Validación/registro/desregistro de ciudadanos
 - **document-authentication-service → GovCarpeta**: Autenticación de documentos
 - **notifications-service → SendGrid**: Envío de emails
 
 ### AMQP (RabbitMQ)
+
 - **auth-service → RabbitMQ**: Publica eventos de registro de usuario
   - `user.registration.email` (verificación)
   - `user.registration.complete` (bienvenida)
@@ -142,17 +151,20 @@ graph TB
 - **RabbitMQ → notifications-service**: Consume eventos para enviar notificaciones
 
 ### SQL
+
 - **auth-service → auth-postgres**: Almacenamiento de usuarios y auditoría
 
 ## Colas y Exchanges de RabbitMQ
 
 ### Exchanges
+
 | Exchange | Tipo | Uso |
 |----------|------|-----|
 | microservices.topic | topic | Eventos generales del sistema |
 | carpeta.events | topic | Eventos específicos de carpeta |
 
 ### Queues
+
 | Queue | Tipo | Propósito |
 |-------|------|-----------|
 | document_verification_request | quorum | Solicitudes de verificación |
@@ -161,6 +173,7 @@ graph TB
 | notifications.email.queue | quorum | Emails a enviar |
 
 ### Routing Keys
+
 - `user.registration.email`: Email de verificación
 - `user.registration.complete`: Email de bienvenida
 - `document.verified`: Documento verificado
@@ -169,15 +182,18 @@ graph TB
 ## Almacenamiento
 
 ### PostgreSQL (auth-postgres)
+
 - **users**: Usuarios registrados con contraseñas hasheadas
 - **audit_logs**: Auditoría de operaciones de seguridad
 
 ### DynamoDB Local
+
 - **CarpetaCiudadano**: Metadatos de carpetas ciudadanas
 - **Documento**: Metadatos de documentos (título, tipo, contexto, hash, estado)
 - **HistorialAcceso**: Auditoría de accesos a documentos
 
 ### MinIO
+
 - **Bucket**: `carpeta-ciudadana-docs`
 - **Contenido**: Archivos PDF, JPEG, PNG
 - **URLs prefirmadas**: Válidas por 15 minutos
@@ -188,7 +204,7 @@ graph TB
 1. **Cluster**: Minikube con driver Docker
 2. **Namespace**: `carpeta-ciudadana` (todos los servicios)
 3. **Image Pull Policy**: `Never` o `IfNotPresent` (imágenes locales)
-4. **Persistencia**: 
+4. **Persistencia**:
    - RabbitMQ: 10Gi x 3 nodos (PVC)
    - PostgreSQL: EmptyDir (no persistente en esta configuración)
    - MinIO: EmptyDir (no persistente en esta configuración)
@@ -200,6 +216,7 @@ graph TB
 ## Acceso desde el Host (Minikube)
 
 ### NodePort Services
+
 ```bash
 # Get Minikube IP
 minikube ip  # Example: 192.168.49.2
@@ -213,6 +230,7 @@ minikube ip  # Example: 192.168.49.2
 ```
 
 ### LoadBalancer Services (via tunnel)
+
 ```bash
 # Start Minikube tunnel (requiere sudo)
 minikube tunnel

@@ -1,6 +1,7 @@
 # ADR-0008: Servicio de Autenticación de Documentos con Python FastAPI
 
 ## Estado
+
 **Aceptado** - 2024-11-07
 
 ## Contexto
@@ -50,6 +51,7 @@ Implementaremos un **microservicio de autenticación de documentos** usando:
 7. **Ecosistema Rico**: Bibliotecas maduras para HTTP, RabbitMQ, JWT
 
 **Alternativas Consideradas:**
+
 - **Go**: Mayor complejidad de desarrollo, menos bibliotecas
 - **Node.js**: Menos robusto para validación de tipos
 - **Java Spring**: Overhead excesivo para servicio simple
@@ -375,11 +377,11 @@ black==24.10.0
 
 ## Referencias
 
-- **Gov Carpeta API**: https://govcarpeta-apis-4905ff3c005b.herokuapp.com/api-docs/
-- **FastAPI Documentation**: https://fastapi.tiangolo.com/
-- **Pydantic**: https://docs.pydantic.dev/
-- **Circuit Breaker Pattern**: https://martinfowler.com/bliki/CircuitBreaker.html
-- **12-Factor App**: https://12factor.net/
+- **Gov Carpeta API**: <https://govcarpeta-apis-4905ff3c005b.herokuapp.com/api-docs/>
+- **FastAPI Documentation**: <https://fastapi.tiangolo.com/>
+- **Pydantic**: <https://docs.pydantic.dev/>
+- **Circuit Breaker Pattern**: <https://martinfowler.com/bliki/CircuitBreaker.html>
+- **12-Factor App**: <https://12factor.net/>
 
 ## Revisión Futura
 
