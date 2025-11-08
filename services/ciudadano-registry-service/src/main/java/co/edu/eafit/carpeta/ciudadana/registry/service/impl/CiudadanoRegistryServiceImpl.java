@@ -72,9 +72,15 @@ public class CiudadanoRegistryServiceImpl implements CiudadanoRegistryService {
       // Consultar API externa de GovCarpeta
       GovCarpetaResponse response = govCarpetaService.validarCiudadano(cedula);
 
-      boolean disponible = response.getCodigoRespuesta() == 200;
+      // 204 = No Content = Ciudadano NO registrado = Disponible para registro
+      // 200 = OK = Ciudadano YA registrado = NO disponible
+      boolean disponible = response.getCodigoRespuesta() == 204;
       String mensaje =
-          disponible ? "Ciudadano disponible para registro" : "Ciudadano no disponible";
+          disponible 
+              ? "Ciudadano disponible para registro" 
+              : (response.getCodigoRespuesta() == 200 
+                  ? "Ciudadano ya registrado en GovCarpeta" 
+                  : "Error validando ciudadano");
 
       registrarAuditoria(
           cedula,

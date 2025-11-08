@@ -19,6 +19,7 @@ dist/
 *~
 .DS_Store
 .kiro
+.vscode
 
 # Environment variables
 .env

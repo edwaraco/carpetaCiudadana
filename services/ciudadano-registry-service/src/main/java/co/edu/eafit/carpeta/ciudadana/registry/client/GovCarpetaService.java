@@ -28,9 +28,11 @@ public class GovCarpetaService {
       ResponseEntity<String> response = govCarpetaClient.validarCiudadano(cedula);
       log.info("Respuesta validación ciudadano {}: {}", cedula, response.getStatusCode());
 
+      // 204 = No Content = Ciudadano NO registrado (disponible)
+      // 200 = OK = Ciudadano YA registrado
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(response.getStatusCode() == HttpStatus.NO_CONTENT)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
@@ -68,7 +70,7 @@ public class GovCarpetaService {
 
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(response.getStatusCode() == HttpStatus.CREATED)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
@@ -100,10 +102,7 @@ public class GovCarpetaService {
 
       return GovCarpetaResponse.builder()
           .codigoRespuesta(response.getStatusCode().value())
-          .exitoso(
-              response.getStatusCode() == HttpStatus.OK
-                  || response.getStatusCode() == HttpStatus.CREATED
-                  || response.getStatusCode() == HttpStatus.NO_CONTENT)
+          .exitoso(response.getStatusCode().is2xxSuccessful())
           .mensaje(response.getBody())
           .build();
     } catch (Exception e) {
