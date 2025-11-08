@@ -22,7 +22,7 @@ import { isMFARequired } from '@/shared/utils/env';
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation('authentication');
   const location = useLocation();
-  const state = location.state as { message?: string; folderEmail?: string } | null;
+  const state = location.state as { message?: string; cedula?: string } | null;
 
   const [showMFA, setShowMFA] = useState(false);
 
@@ -72,7 +72,7 @@ export const LoginPage: React.FC = () => {
           {!showMFA ? (
             <>
               <LoginForm
-                initialEmail={state?.folderEmail || ''}
+                initialCedula={state?.cedula || ''}
                 onMFARequired={handleMFARequired}
               />
 

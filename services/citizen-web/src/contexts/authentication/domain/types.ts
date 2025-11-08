@@ -19,7 +19,7 @@ export type UserType = 'CITIZEN' | 'INSTITUTION_OFFICIAL';
 export type SessionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
 
 export interface LoginRequest {
-  email: string;
+  cedula: string; // Document ID (primary identifier for authentication)
   password: string;
   mfaCode?: string;
 }
@@ -30,6 +30,30 @@ export interface LoginResponse {
   user: Citizen;
   requiresMFA: boolean;
   sessionId?: string;
+}
+
+export interface RegisterRequest {
+  cedula: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  cedula: string;
+}
+
+export interface SetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface SetPasswordResponse {
+  token: string;
+  expiresAt: Date;
+  user: Citizen;
 }
 
 export interface MFAVerificationRequest {

@@ -11,6 +11,7 @@ import { Layout } from '@/shared/components/Layout';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { SetPasswordPage } from '@/pages/SetPasswordPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { DocumentsPage } from '@/pages/DocumentsPage';
 import { DocumentViewerPage } from '@/pages/DocumentViewerPage';
@@ -92,7 +93,10 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="login" element={<LoginPage />} />
               {isFeatureEnabled('REGISTRATION') && (
-                <Route path="register" element={<RegisterPage />} />
+                <>
+                  <Route path="register" element={<RegisterPage />} />
+                  <Route path="set-password" element={<SetPasswordPage />} />
+                </>
               )}
 
               {/* Protected routes */}

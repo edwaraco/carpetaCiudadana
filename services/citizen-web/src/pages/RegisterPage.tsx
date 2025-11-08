@@ -1,29 +1,19 @@
 /**
  * Register Page
- * Page for citizen registration
+ * Page for citizen registration with auth-service
  */
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Container, Box } from '@mui/material';
-import { RegisterCitizenForm } from '../contexts/identity/components';
+import { RegisterForm } from '@/contexts/authentication/components';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation('identity');
 
-  const handleSuccess = (folderEmail: string) => {
-    console.log('Registration successful! Folder email:', folderEmail);
-    // Redirect to login after successful registration
-    setTimeout(() => {
-      navigate('/login', {
-        state: {
-          message: t('registerPage.successMessage'),
-          folderEmail
-        }
-      });
-    }, 3000);
+  const handleSuccess = (cedula: string) => {
+    console.log('Registration initiated successfully! Cedula:', cedula);
+    // User will be redirected to set-password by the RegisterForm component
   };
 
   const handleCancel = () => {
@@ -31,9 +21,9 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <RegisterCitizenForm
+    <Container maxWidth="sm">
+      <Box sx={{ py: 8 }}>
+        <RegisterForm
           onSuccess={handleSuccess}
           onCancel={handleCancel}
         />

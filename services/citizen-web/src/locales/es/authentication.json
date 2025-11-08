@@ -64,6 +64,49 @@
   "session": {
     "expired": "Su sesión ha expirado. Por favor, inicie sesión nuevamente",
     "concurrent": "Se ha detectado una sesión activa en otro dispositivo"
+  },
+  "registerForm": {
+    "title": "Registrar Nueva Cuenta",
+    "subtitle": "Cree su cuenta de Carpeta Ciudadana",
+    "cedulaLabel": "Cédula",
+    "fullNameLabel": "Nombre Completo",
+    "emailLabel": "Correo Electrónico",
+    "phoneLabel": "Teléfono (Opcional)",
+    "addressLabel": "Dirección (Opcional)",
+    "submitButton": "Registrar",
+    "submitting": "Registrando...",
+    "cancelButton": "Cancelar",
+    "hasAccount": "¿Ya tiene una cuenta?",
+    "loginLink": "Inicie sesión aquí",
+    "successMessage": "Registro iniciado exitosamente. Revise su correo electrónico para el enlace de verificación.",
+    "validation": {
+      "cedulaRequired": "La cédula es requerida",
+      "cedulaPattern": "La cédula debe tener entre 6 y 10 dígitos",
+      "fullNameRequired": "El nombre completo es requerido",
+      "fullNameMinLength": "El nombre completo debe tener al menos 3 caracteres",
+      "emailRequired": "El correo electrónico es requerido",
+      "emailPattern": "Dirección de correo electrónico inválida",
+      "phonePattern": "Formato de teléfono inválido"
+    }
+  },
+  "setPasswordForm": {
+    "title": "Completar Registro",
+    "subtitle": "Establezca su contraseña para completar el registro",
+    "passwordLabel": "Contraseña",
+    "confirmPasswordLabel": "Confirmar Contraseña",
+    "submitButton": "Completar Registro",
+    "submitting": "Completando registro...",
+    "cancelButton": "Cancelar",
+    "successMessage": "Registro completado exitosamente. Redirigiendo al inicio...",
+    "backToLogin": "Volver al inicio de sesión",
+    "invalidToken": "Token de verificación inválido o expirado",
+    "validation": {
+      "passwordRequired": "La contraseña es requerida",
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+      "passwordPattern": "La contraseña debe contener al menos una mayúscula, una minúscula y un número",
+      "confirmPasswordRequired": "Debe confirmar su contraseña",
+      "passwordsDoNotMatch": "Las contraseñas no coinciden"
+    }
   }
 }
 
