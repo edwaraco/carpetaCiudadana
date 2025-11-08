@@ -53,9 +53,9 @@ echo "🔧 Configuring Nginx API Gateway..."
 # Export environment variables with defaults for all microservices
 export DOCUMENTS_SERVICE_URL="${DOCUMENTS_SERVICE_URL:-carpeta-ciudadana-service:8080}"
 export FOLDERS_SERVICE_URL="${FOLDERS_SERVICE_URL:-carpeta-ciudadana-service:8080}"
-export IDENTITY_SERVICE_URL="${IDENTITY_SERVICE_URL:-carpeta-ciudadana-service:8080}"
-export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-carpeta-ciudadana-service:8080}"
-export NOTIFICATIONS_SERVICE_URL="${NOTIFICATIONS_SERVICE_URL:-carpeta-ciudadana-service:8080}"
+export IDENTITY_SERVICE_URL="${IDENTITY_SERVICE_URL:-identity-service:8080}"
+export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-auth-service:8080}"
+export NOTIFICATIONS_SERVICE_URL="${NOTIFICATIONS_SERVICE_URL:-notifications-service:8080}"
 export PORTABILITY_SERVICE_URL="${PORTABILITY_SERVICE_URL:-carpeta-ciudadana-service:8080}"
 export REQUESTS_SERVICE_URL="${REQUESTS_SERVICE_URL:-carpeta-ciudadana-service:8080}"
 

@@ -3,7 +3,6 @@
  * Makes actual HTTP calls to the auth-service backend
  */
 
-import axios, { AxiosError } from 'axios';
 import type { ApiResponse } from '@/shared/utils/api.types';
 import type { IAuthService } from '@/contexts/authentication/infrastructure/IAuthService';
 import type {
@@ -25,59 +24,66 @@ import type {
   SetPasswordApiRequest,
   SetPasswordApiResponse,
 } from './auth-api.types';
-import { getEnvVar } from '@/shared/utils/env';
+import { httpClient } from '@/shared/utils/httpClient';
 
 export class AuthApiService implements IAuthService {
-  private authServiceUrl: string;
+  private basePath: string = '/auth';
 
   constructor() {
-    // Get auth-service URL from environment, fallback to localhost
-    this.authServiceUrl = getEnvVar('VITE_AUTH_SERVICE_URL') || 'http://localhost:8081';
+    // Uses httpClient with baseURL=/api/v1
+    // Nginx proxies /api/auth/* to auth-service:8080
   }
 
   async login(request: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
-      // Map domain request to auth-service API request
       const apiRequest: AuthServiceLoginRequest = {
         document_id: request.cedula,
         password: request.password,
       };
 
-      // Call auth-service login endpoint
-      const response = await axios.post<AuthServiceLoginResponse>(
-        `${this.authServiceUrl}/auth/login`,
+      const response = await httpClient.post<AuthServiceLoginResponse>(
+        `${this.basePath}/login`,
         apiRequest
       );
 
-      const apiResponse = response.data;
+      if (response.success && response.data) {
+        const apiResponse = response.data;
 
-      // Map auth-service response to domain response
-      // Note: auth-service returns minimal user info, we'll need to fetch full profile
-      // from identity-registry service in the future
-      const citizen: Citizen = {
-        cedula: apiResponse.document_id,
-        fullName: apiResponse.document_id, // Temporary - should come from identity-registry
-        address: '', // Should come from identity-registry
-        personalEmail: '', // Should come from identity-registry
-        folderEmail: `user.${apiResponse.document_id}@carpetacolombia.co`, // Temporary format
-        currentOperator: 'MiCarpeta', // Should come from identity-registry
-        registrationDate: new Date(), // Should come from identity-registry
-        status: 'ACTIVE',
-        carpetaId: '', // Should come from identity-registry
-      };
+        const citizen: Citizen = {
+          cedula: apiResponse.user.user_id,
+          fullName: apiResponse.user.full_name,
+          address: '',
+          personalEmail: apiResponse.user.email,
+          folderEmail: apiResponse.user.email,
+          currentOperator: 'MiCarpeta',
+          registrationDate: new Date(),
+          status: 'ACTIVE',
+          carpetaId: apiResponse.user.folder_id,
+        };
 
-      const loginResponse: LoginResponse = {
-        token: apiResponse.token,
-        expiresAt: new Date(apiResponse.expires_at),
-        user: citizen,
-        requiresMFA: false, // auth-service doesn't support MFA yet
-        sessionId: undefined,
-      };
+        const loginResponse: LoginResponse = {
+          token: apiResponse.token,
+          expiresAt: new Date(apiResponse.expires_at),
+          user: citizen,
+          requiresMFA: false,
+          sessionId: undefined,
+        };
+
+        return {
+          success: true,
+          data: loginResponse,
+          message: apiResponse.message,
+          timestamp: new Date(),
+        };
+      }
 
       return {
-        success: true,
-        data: loginResponse,
-        message: apiResponse.message,
+        success: false,
+        error: {
+          code: 'AUTH_ERROR',
+          message: 'Authentication failed',
+          statusCode: 401,
+        },
         timestamp: new Date(),
       };
     } catch (error) {
@@ -87,7 +93,6 @@ export class AuthApiService implements IAuthService {
 
   async register(request: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
     try {
-      // Map domain request to auth-service API request
       const apiRequest: RegisterApiRequest = {
         document_id: request.cedula,
         email: request.email,
@@ -96,23 +101,34 @@ export class AuthApiService implements IAuthService {
         address: request.address,
       };
 
-      // Call auth-service register endpoint
-      const response = await axios.post<RegisterApiResponse>(
-        `${this.authServiceUrl}/auth/register`,
+      const response = await httpClient.post<RegisterApiResponse>(
+        `${this.basePath}/register`,
         apiRequest
       );
 
-      const apiResponse = response.data;
+      if (response.success && response.data) {
+        const apiResponse = response.data;
 
-      const registerResponse: RegisterResponse = {
-        message: apiResponse.message,
-        cedula: apiResponse.document_id,
-      };
+        const registerResponse: RegisterResponse = {
+          message: apiResponse.message,
+          cedula: apiResponse.citizen_id,
+        };
+
+        return {
+          success: true,
+          data: registerResponse,
+          message: apiResponse.message,
+          timestamp: new Date(),
+        };
+      }
 
       return {
-        success: true,
-        data: registerResponse,
-        message: apiResponse.message,
+        success: false,
+        error: {
+          code: 'REGISTER_ERROR',
+          message: 'Registration failed',
+          statusCode: 400,
+        },
         timestamp: new Date(),
       };
     } catch (error) {
@@ -122,43 +138,52 @@ export class AuthApiService implements IAuthService {
 
   async setPassword(request: SetPasswordRequest): Promise<ApiResponse<SetPasswordResponse>> {
     try {
-      // Map domain request to auth-service API request
       const apiRequest: SetPasswordApiRequest = {
         token: request.token,
         password: request.password,
       };
 
-      // Call auth-service set-password endpoint
-      const response = await axios.post<SetPasswordApiResponse>(
-        `${this.authServiceUrl}/auth/set-password`,
+      const response = await httpClient.post<SetPasswordApiResponse>(
+        `${this.basePath}/set-password`,
         apiRequest
       );
 
-      const apiResponse = response.data;
+      if (response.success && response.data) {
+        const apiResponse = response.data;
 
-      // Map user profile to Citizen domain type
-      const citizen: Citizen = {
-        cedula: apiResponse.user.document_id,
-        fullName: apiResponse.user.full_name,
-        address: apiResponse.user.address || '',
-        personalEmail: apiResponse.user.email,
-        folderEmail: `${apiResponse.user.full_name.toLowerCase().replace(/\s+/g, '.')}.${apiResponse.user.document_id}@carpetacolombia.co`,
-        currentOperator: 'MiCarpeta',
-        registrationDate: new Date(),
-        status: 'ACTIVE',
-        carpetaId: '', // Should be generated or fetched from identity-registry
-      };
+        const citizen: Citizen = {
+          cedula: apiResponse.user.user_id,
+          fullName: apiResponse.user.full_name,
+          address: apiResponse.user.address || '',
+          personalEmail: apiResponse.user.email,
+          folderEmail: apiResponse.user.email,
+          currentOperator: 'MiCarpeta',
+          registrationDate: new Date(),
+          status: 'ACTIVE',
+          carpetaId: apiResponse.user.folder_id,
+        };
 
-      const setPasswordResponse: SetPasswordResponse = {
-        token: apiResponse.token,
-        expiresAt: new Date(apiResponse.expires_at),
-        user: citizen,
-      };
+        const setPasswordResponse: SetPasswordResponse = {
+          token: apiResponse.token,
+          expiresAt: new Date(apiResponse.expires_at),
+          user: citizen,
+        };
+
+        return {
+          success: true,
+          data: setPasswordResponse,
+          message: apiResponse.message,
+          timestamp: new Date(),
+        };
+      }
 
       return {
-        success: true,
-        data: setPasswordResponse,
-        message: apiResponse.message,
+        success: false,
+        error: {
+          code: 'SET_PASSWORD_ERROR',
+          message: 'Failed to set password',
+          statusCode: 400,
+        },
         timestamp: new Date(),
       };
     } catch (error) {
@@ -201,21 +226,7 @@ export class AuthApiService implements IAuthService {
     };
   }
 
-  private handleError<T>(error: unknown): ApiResponse<T> {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<{ success: false; error: string; message: string }>;
-
-      return {
-        success: false,
-        error: {
-          code: axiosError.response?.data?.error || 'AUTH_SERVICE_ERROR',
-          message: axiosError.response?.data?.message || axiosError.message || 'Authentication failed',
-          statusCode: axiosError.response?.status || 500,
-        },
-        timestamp: new Date(),
-      };
-    }
-
+  private handleError<T>(_error: unknown): ApiResponse<T> {
     return {
       success: false,
       error: {

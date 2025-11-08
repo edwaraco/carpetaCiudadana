@@ -29,18 +29,25 @@ export interface AuthServiceSetPasswordRequest {
 // Response Types (from OpenAPI)
 // ============================================================================
 
+export interface AuthServiceUserInfo {
+  user_id: string;
+  folder_id: string;
+  email: string;
+  full_name: string;
+}
+
 export interface AuthServiceLoginResponse {
   success: boolean;
   message: string;
   token: string;
-  expires_at: string; // ISO 8601 date-time string
-  document_id: string;
+  expires_at: string;
+  user: AuthServiceUserInfo;
 }
 
 export interface AuthServiceRegisterResponse {
   success: boolean;
   message: string;
-  document_id: string;
+  citizen_id: string;
 }
 
 export interface AuthServiceSetPasswordResponse {
@@ -52,7 +59,8 @@ export interface AuthServiceSetPasswordResponse {
 }
 
 export interface AuthServiceUserProfile {
-  document_id: string;
+  user_id: string;
+  folder_id: string;
   email: string;
   full_name: string;
   phone?: string;

@@ -2,35 +2,8 @@
 # This nginx configuration acts as an API Gateway routing requests to different microservices
 # Environment variables are substituted at container startup time
 
-# Upstream definitions for microservices
-# Variables are replaced by envsubst during container initialization
-
-upstream documents_service {
-    server ${DOCUMENTS_SERVICE_URL};
-}
-
-upstream folders_service {
-    server ${FOLDERS_SERVICE_URL};
-}
-
-upstream identity_service {
-    server ${IDENTITY_SERVICE_URL};
-}
-
 upstream auth_service {
     server ${AUTH_SERVICE_URL};
-}
-
-upstream notifications_service {
-    server ${NOTIFICATIONS_SERVICE_URL};
-}
-
-upstream portability_service {
-    server ${PORTABILITY_SERVICE_URL};
-}
-
-upstream requests_service {
-    server ${REQUESTS_SERVICE_URL};
 }
 
 server {
@@ -56,58 +29,61 @@ server {
     # API GATEWAY ROUTES
     # ========================================
 
-    # Documents API - Gestión de documentos (CRUD, upload, download)
-    # Routes: /api/documents/carpetas/{carpetaId}/documentos/*
-    location /api/documents/ {
-        rewrite ^/api/documents/(.*)$ /api/v1/$1 break;
-        proxy_pass http://documents_service;
+    # NOTE: Routes for services not yet deployed are commented out
+    # Uncomment when carpeta-ciudadana-service is available
 
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_cache_bypass $http_upgrade;
+    # # Documents API - Gestión de documentos (CRUD, upload, download)
+    # # Routes: /api/documents/carpetas/{carpetaId}/documentos/*
+    # location /api/documents/ {
+    #     rewrite ^/api/documents/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$documents_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection 'upgrade';
+    #     proxy_cache_bypass $http_upgrade;
+    #
+    #     # Timeout settings for large file uploads
+    #     proxy_connect_timeout 60s;
+    #     proxy_send_timeout 60s;
+    #     proxy_read_timeout 60s;
+    #     client_max_body_size 50M;
+    # }
 
-        # Timeout settings for large file uploads
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-        client_max_body_size 50M;
-    }
+    # # Folders API - Información de carpetas ciudadanas
+    # # Routes: /api/folders/carpetas/*
+    # location /api/folders/ {
+    #     rewrite ^/api/folders/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$folders_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
 
-    # Folders API - Información de carpetas ciudadanas
-    # Routes: /api/folders/carpetas/*
-    location /api/folders/ {
-        rewrite ^/api/folders/(.*)$ /api/v1/$1 break;
-        proxy_pass http://folders_service;
-
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Identity API - Registro y validación de ciudadanos
-    # Routes: /api/identity/ciudadanos/*
-    location /api/identity/ {
-        rewrite ^/api/identity/(.*)$ /api/v1/$1 break;
-        proxy_pass http://identity_service;
-
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    # # Identity API - Registro y validación de ciudadanos
+    # # Routes: /api/identity/ciudadanos/*
+    # location /api/identity/ {
+    #     rewrite ^/api/identity/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$identity_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
 
     # Authentication API - Login, MFA, sesiones
     # Routes: /api/auth/login, /api/auth/mfa, etc.
-    location /api/auth/ {
-        rewrite ^/api/auth/(.*)$ /api/v1/$1 break;
+    location /api/v1/auth/ {
+        rewrite ^/api/v1/auth/(.*)$ /auth/$1 break;
         proxy_pass http://auth_service;
 
         proxy_http_version 1.1;
@@ -117,44 +93,44 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Notifications API - Gestión de notificaciones
-    # Routes: /api/notifications/*
-    location /api/notifications/ {
-        rewrite ^/api/notifications/(.*)$ /api/v1/$1 break;
-        proxy_pass http://notifications_service;
+    # # Notifications API - Gestión de notificaciones
+    # # Routes: /api/notifications/*
+    # location /api/notifications/ {
+    #     rewrite ^/api/notifications/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$notifications_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
 
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    # # Portability API - Cambio de operador
+    # # Routes: /api/portability/*
+    # location /api/portability/ {
+    #     rewrite ^/api/portability/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$portability_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
 
-    # Portability API - Cambio de operador
-    # Routes: /api/portability/*
-    location /api/portability/ {
-        rewrite ^/api/portability/(.*)$ /api/v1/$1 break;
-        proxy_pass http://portability_service;
-
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Requests API - Solicitudes de documentos
-    # Routes: /api/requests/*
-    location /api/requests/ {
-        rewrite ^/api/requests/(.*)$ /api/v1/$1 break;
-        proxy_pass http://requests_service;
-
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    # # Requests API - Solicitudes de documentos
+    # # Routes: /api/requests/*
+    # location /api/requests/ {
+    #     rewrite ^/api/requests/(.*)$ /api/v1/$1 break;
+    #     proxy_pass http://$requests_service_url;
+    #
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
 
     # ========================================
     # FRONTEND ROUTES
