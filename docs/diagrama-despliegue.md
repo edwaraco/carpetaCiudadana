@@ -217,7 +217,8 @@ graph TB
 5. **Alta Disponibilidad**:
    - RabbitMQ: 3 nodos con Quorum Queues
    - Frontend: 3 réplicas
-   - Otros servicios: 1 réplica, pero podrían ser escalados según demanda
+   - Otros servicios: 3 réplicas también con balanceador de carga
+   - Todo puede ser escalado según demanda
 
 ## Acceso desde el Host (Minikube)
 
