@@ -30,24 +30,24 @@ services:
       - dynamodb-local
     restart: unless-stopped
 
-  # ciudadano-registry-service:
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile
-  #  container_name: ciudadano-registry-service
-  #  environment:
-  #    SPRING_PROFILES_ACTIVE: docker
-  #    AWS_DYNAMODB_ENDPOINT: http://dynamodb-local:8000
-  #    AWS_REGION: us-east-1
-  #    AWS_ACCESS_KEY_ID: dummy
-  #    AWS_SECRET_ACCESS_KEY: dummy
-  #  ports:
-  #    - "8081:8081"
-  #  depends_on:
-  #    - dynamodb-local
-  #  networks:
-  #    - carpeta-ciudadana-network
-  #  restart: unless-stopped
+  ciudadano-registry-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ciudadano-registry-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AWS_DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+    ports:
+      - "8081:8081"
+    depends_on:
+      - dynamodb-local
+    networks:
+      - registry-network
+    restart: unless-stopped
 
 networks:
   registry-network:
