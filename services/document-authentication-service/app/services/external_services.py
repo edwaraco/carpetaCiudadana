@@ -84,18 +84,24 @@ async def get_presigned_document_url(
                 # {"success": true, "message": "...", "data": {...}, "timestamp": "..."}
                 json_response = response.json()
                 
-                logger.debug(f"Raw response from carpeta service: {json_response}")
+                logger.info(f"Response type: {type(json_response)}, has 'data': {'data' in json_response if isinstance(json_response, dict) else 'N/A'}, success value: {json_response.get('success') if isinstance(json_response, dict) else 'N/A'}")
                 
                 # Extract data from ApiResponse wrapper
                 if isinstance(json_response, dict):
                     # Check if it's wrapped in ApiResponse
                     if "data" in json_response and json_response.get("success"):
                         data = json_response["data"]
+                        logger.info(f"Data extracted: {data}")
                         if isinstance(data, dict) and "urlDescarga" in data:
                             presigned_url = data["urlDescarga"]
+                            logger.info(f"Raw presigned URL (last 50 chars): ...{presigned_url[-50:]}")
                             # Clean any potential extra quotes or whitespace
                             presigned_url = presigned_url.strip().strip("'\"")
-                            logger.info(f"Extracted presigned URL: {presigned_url[:100]}...")
+                            # Remove URL-encoded quote at the end if present (e.g., %27)
+                            if presigned_url.endswith("%27"):
+                                presigned_url = presigned_url[:-3]
+                                logger.info("Removed trailing %27 from URL")
+                            logger.info(f"Cleaned presigned URL (first 80 chars): {presigned_url[:80]}...")
                             return presigned_url
                         else:
                             raise ExternalServiceError(
@@ -107,6 +113,7 @@ async def get_presigned_document_url(
                         presigned_url = presigned_url.strip().strip("'\"")
                         return presigned_url
                     else:
+                        logger.error(f"Response does not match expected format. Keys: {json_response.keys()}")
                         raise ExternalServiceError(
                             f"Unexpected response format from carpeta service: {json_response}"
                         )
