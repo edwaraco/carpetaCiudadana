@@ -2,32 +2,35 @@
 
 ## Despliegue en Kubernetes (Minikube)
 
-### 1. Desplegar infraestructura (DynamoDB Local + MinIO)
-
-```bash
-kubectl apply -f k8s/infrastructure.yaml
-kubectl wait --for=condition=ready pod -l app=dynamodb-local -n carpeta-ciudadana --timeout=60s
-kubectl wait --for=condition=ready pod -l app=minio -n carpeta-ciudadana --timeout=60s
-```
-
-### 2. Construir imagen Docker
+### 1. Construir imagen Docker
 
 ```bash
 docker build -t carpeta-ciudadana-service:latest .
 ```
 
-### 3. Cargar imagen en minikube
+### 2. Cargar imagen en minikube
 
 ```bash
 minikube image load carpeta-ciudadana-service:latest
 ```
 
-### 4. Desplegar servicio
+### 3. Desplegar servicio (todos los manifiestos en orden)
 
 ```bash
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/
+```
+
+El orden de aplicación será:
+- 00-secret.yaml (Secrets)
+- 01-configmap.yaml (ConfigMap)
+- 02-infrastructure.yaml (DynamoDB Local + MinIO)
+- 03-deployment.yaml (Service Deployment)
+
+### 4. Esperar a que la infraestructura esté lista
+
+```bash
+kubectl wait --for=condition=ready pod -l app=dynamodb-local -n carpeta-ciudadana --timeout=60s
+kubectl wait --for=condition=ready pod -l app=minio -n carpeta-ciudadana --timeout=60s
 ```
 
 ### 5. Verificar despliegue

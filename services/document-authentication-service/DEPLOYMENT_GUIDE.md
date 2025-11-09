@@ -17,9 +17,12 @@ minikube image load document-authentication-service:latest
 ### 3. Desplegar servicio
 
 ```bash
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/
 ```
+
+El orden de aplicación será:
+- 00-configmap.yaml (ConfigMap)
+- 01-deployment.yaml (Service Deployment)
 
 ### 4. Verificar despliegue
 
