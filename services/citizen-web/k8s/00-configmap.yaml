@@ -63,4 +63,5 @@ data:
   PORTABILITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
   REQUESTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
   DOCUMENT_AUTHENTICATION_SERVICE_URL: "document-authentication-service:8083"
+  MINIO_SERVICE_URL: "minio:9000"
 

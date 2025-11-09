@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 public class MinioStorageServiceImpl implements MinioStorageService {
 
     private final MinioClient minioClient;
-    private final MinioClient minioExternalClient;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -27,10 +26,8 @@ public class MinioStorageServiceImpl implements MinioStorageService {
     @Value("${minio.presigned-url-expiry-minutes}")
     private int defaultExpiryMinutes;
 
-    public MinioStorageServiceImpl(MinioClient minioClient, 
-                                   @Qualifier("minioExternalClient") MinioClient minioExternalClient) {
+    public MinioStorageServiceImpl(MinioClient minioClient) {
         this.minioClient = minioClient;
-        this.minioExternalClient = minioExternalClient;
     }
 
     @Override
@@ -64,8 +61,7 @@ public class MinioStorageServiceImpl implements MinioStorageService {
         try {
             log.info("Generando URL prefirmada para: {} (expira en {} minutos)", objectName, expiryMinutes);
 
-            // Use external client for presigned URLs so browsers can access via localhost
-            String url = minioExternalClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)

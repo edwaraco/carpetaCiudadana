@@ -80,8 +80,18 @@ export const useDownloadDocument = (): UseDownloadDocumentReturn => {
         `Downloading document ${documentId} using presigned URL (valid for ${minutosValidez} minutes)`
       );
 
-      // Step 2: Fetch the file from MinIO using presigned URL
-      const fileResponse = await fetch(urlDescarga);
+      // IMPORTANT: MinIO presigned URLs use internal endpoint (http://minio:9000)
+      // which browsers cannot access. We need to proxy through nginx.
+      // Rewrite: http://minio:9000/bucket/path?signature=xxx
+      //      to: /minio-proxy/bucket/path?signature=xxx
+      // The nginx proxy will forward to the internal MinIO service
+      const proxiedUrl = urlDescarga.replace(/^http:\/\/minio:9000/, '/minio-proxy');
+      
+      console.info(`Original URL: ${urlDescarga}`);
+      console.info(`Proxied URL: ${proxiedUrl}`);
+
+      // Step 2: Fetch the file from MinIO via nginx proxy
+      const fileResponse = await fetch(proxiedUrl);
 
       if (!fileResponse.ok) {
         throw new Error(
