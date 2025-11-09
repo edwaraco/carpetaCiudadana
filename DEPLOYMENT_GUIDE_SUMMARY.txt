@@ -29,6 +29,12 @@ minikube image load document-authentication-service:latest
 minikube image load citizen-web:latest
 minikube image load ciudadano-registry-service:latest
 
+# POBLAR SENDGRID_API_KEY
+# Antes de desplegar, hay que cambiar el placeholder de SENDGRID_API_KEY por la clave real
+# ve a services/notifications-service/k8s/00-configmap.yaml
+# edita la línea 22, que originalmente dice:
+#   SENDGRID_API_KEY: "SENDGRID_API_KEY"
+
 # Despliegas cada servicio con kubectl. pero comienzas por RabbitMQ (y su operador)
 kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
 cd services/rabbitmq-service; kubectl apply -f k8s/; cd ../..

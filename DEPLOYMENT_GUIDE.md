@@ -225,6 +225,15 @@ cd ../..
 
 cd services/notifications-service
 
+# IMPORTANT: Configure SendGrid API Key
+# ============================================================================
+# Before deploying, you MUST update the SENDGRID_API_KEY in the ConfigMap
+# 1. Edit: services/notifications-service/k8s/00-configmap.yaml
+# 2. Find line 22 that says: SENDGRID_API_KEY: "SENDGRID_API_KEY"
+# 3. Replace "SENDGRID_API_KEY" with your actual SendGrid API key
+# 4. Example: SENDGRID_API_KEY: "SG.xxxxxxxxxxxx.yyyyyyyyyyyy"
+# ============================================================================
+
 # 4.1 Build Docker image
 docker build -t notifications-service:latest .
 
