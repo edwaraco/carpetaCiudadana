@@ -170,3 +170,43 @@ async def process_document_authentication(
             logger.critical(
                 f"Failed to publish error event to RabbitMQ: {str(publish_error)}"
             )
+
+
+async def process_document_authentication_from_event(
+    document_id: str,
+    document_title: str,
+    jwt_payload: JWTPayload,
+    raw_token: str,
+    dummy_jwt: bool = False,
+    dummy_url: str = None,
+) -> None:
+    """
+    Process document authentication from RabbitMQ event.
+
+    This function is called by the RabbitMQ consumer when an authentication
+    request event is received from document-authentication-proxy.
+
+    Args:
+        document_id: UUID of the document to authenticate
+        document_title: Title of the document
+        jwt_payload: Decoded JWT token payload with folderId and citizenId
+        raw_token: Raw JWT token string for service-to-service calls
+        dummy_jwt: If True, JWT validation was skipped in proxy
+        dummy_url: Optional presigned URL (dummy mode)
+
+    Note:
+        This is a wrapper around the existing process_document_authentication
+        function that adapts event parameters to the expected format.
+    """
+    # Create AuthenticateDocumentRequest from event parameters
+    from app.models import AuthenticateDocumentRequest
+
+    request = AuthenticateDocumentRequest(
+        documentId=document_id,
+        documentTitle=document_title,
+        dummyJWT=dummy_jwt,
+        dummyURL=dummy_url,
+    )
+
+    # Call existing authentication processing logic
+    await process_document_authentication(request, jwt_payload, raw_token)

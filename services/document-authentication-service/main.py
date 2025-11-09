@@ -34,8 +34,8 @@ async def lifespan(app: FastAPI):
     Application lifespan manager.
 
     Handles startup and shutdown events:
-    - Startup: Connect to RabbitMQ
-    - Shutdown: Disconnect from RabbitMQ
+    - Startup: Connect to RabbitMQ and start event consumer
+    - Shutdown: Stop event consumer and disconnect from RabbitMQ
 
     Args:
         app: FastAPI application instance
@@ -45,14 +45,26 @@ async def lifespan(app: FastAPI):
     try:
         await rabbitmq_client.connect()
         logger.info("RabbitMQ connection established")
+        
+        # Start consuming authentication request events
+        from app.services.rabbitmq_consumer import rabbitmq_consumer
+        await rabbitmq_consumer.start_consuming()
+        logger.info("RabbitMQ consumer started")
     except Exception as e:
-        logger.error(f"Failed to connect to RabbitMQ: {str(e)}")
-        logger.warning("Service starting without RabbitMQ connection")
+        logger.error(f"Failed to connect to RabbitMQ or start consumer: {str(e)}")
+        logger.warning("Service starting without RabbitMQ connection/consumer")
 
     yield
 
     # Shutdown
     logger.info("Shutting down document authentication service...")
+    try:
+        from app.services.rabbitmq_consumer import rabbitmq_consumer
+        await rabbitmq_consumer.stop_consuming()
+        logger.info("RabbitMQ consumer stopped")
+    except Exception as e:
+        logger.error(f"Error stopping consumer: {str(e)}")
+    
     await rabbitmq_client.disconnect()
     logger.info("Service shutdown complete")
 
