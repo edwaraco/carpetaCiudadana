@@ -15,6 +15,14 @@ spec:
       labels:
         app: auth-service
     spec:
+      # Wait for dependencies before starting the main container
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z auth-postgres 5432; do echo waiting for postgres; sleep 2; done;']
+      - name: wait-for-rabbitmq
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z carpeta-rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;']
       containers:
       - name: auth-service
         image: auth-service:latest
