@@ -5,7 +5,6 @@ import co.edu.eafit.carpeta.ciudadana.service.MinioStorageService;
 import io.minio.*;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
