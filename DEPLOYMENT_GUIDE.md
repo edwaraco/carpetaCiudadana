@@ -68,12 +68,65 @@ docker stats minikube --no-stream  # (verify)
 
 ### Run all services with Makefile (Powershell)
 
+The Makefile automates ALL the deployment steps. It's the easiest way to deploy.
+
+**Prerequisites**:
+- Chocolatey installed (package manager for Windows)
+- Make installed via Chocolatey
+
+**Install Chocolatey and Make**:
+
 ```powershell
-# This on an admin powershell.
+# Install Chocolatey (run in an admin PowerShell)
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install Make (after Chocolatey is installed, in admin PowerShell)
 choco install make
-make powershell-deploy-all
+
+# Verify installation (close and reopen PowerShell)
+make --version
 ```
+
+**Deploy All Services**:
+
+```powershell
+# Run in the root directory of the project
+make deploy-windows
+```
+
+This will:
+1. Deploy RabbitMQ Cluster Operator and RabbitMQ Service
+2. Deploy Auth Service (with PostgreSQL)
+3. Deploy Ciudadano Registry Service (with PostgreSQL)
+4. Deploy Notifications Service
+5. Deploy Carpeta Ciudadana Service (with DynamoDB Local and MinIO)
+6. Deploy Document Authentication Service
+7. Deploy Citizen Web (Frontend)
+8. Update your Windows hosts file automatically
+
+**Other Makefile Commands**:
+
+```powershell
+# Update a specific service after making changes
+make update-service-windows SERVICE=citizen-web
+
+# Verify all deployments are healthy
+make verify-windows
+
+# Show port-forward commands (run these in separate terminals)
+make port-forwards-windows
+
+# Update hosts file manually
+make update-hosts-windows
+
+# Remove all deployments (clean up)
+make clean-windows
+
+# Show help
+make help
+```
+
+**Important**: After deployment completes, run `make port-forwards-windows` to see the port-forward commands. You need to run those in separate PowerShell terminals and keep them open.
 
 ### Run all services manually (Powershell)
 
