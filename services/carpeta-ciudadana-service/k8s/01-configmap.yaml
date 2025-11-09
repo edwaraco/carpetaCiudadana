@@ -22,8 +22,8 @@ data:
   AWS_REGION: "us-east-1"
   # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are in secret.yaml
   
-  # MinIO Configuration (same as docker-compose)
-  MINIO_ENDPOINT: "http://citizen-os.local:9000"
+  # MinIO Configuration (using Kubernetes MinIO service)
+  MINIO_ENDPOINT: "http://minio:9000"
   # MINIO_ACCESS_KEY and MINIO_SECRET_KEY are in secret.yaml
   MINIO_BUCKET_NAME: "carpeta-ciudadana-docs"
   MINIO_PRESIGNED_URL_EXPIRY: "15"
