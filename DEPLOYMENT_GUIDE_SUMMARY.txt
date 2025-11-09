@@ -38,8 +38,16 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
+# ============== ACTUALIZAR ARCHIVO HOSTS (NECESARIO PARA ACCEDER AL FRONTEND) ==============
+# En PowerShell como ADMINISTRADOR (abre una nueva ventana con "Run as Administrator"):
+cd c:\Users\Esteban\Downloads\CODE\carpetaCiudadana
+powershell -ExecutionPolicy Bypass -File tools/update-minikube-hosts.ps1
 
-# =================================== TROUBLESHOOT =======================================
+# Esto agregará "192.168.49.2 citizen-web.local" a tu archivo hosts
+# Ahora puedes acceder a la aplicación en: http://citizen-web.local
+
+
+# =================================== VERIFICAR =======================================
 
 # Ver todos los pods
 kubectl get pods -n carpeta-ciudadana
@@ -60,6 +68,42 @@ kubectl get hpa -n carpeta-ciudadana
 kubectl get svc -n carpeta-ciudadana
 kubectl get networkpolicies -n carpeta-ciudadana
 kubectl get ingress -n carpeta-ciudadana
+
+# Ver eventos recientes del cluster (útil para debugging)
+kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp' | Select-Object -Last 20
+
+# Ver descripción completa de un pod (para ver errores de scheduling, probes, etc)
+kubectl describe pod <pod-name> -n carpeta-ciudadana
+
+# Ver logs de múltiples pods de una app
+kubectl logs -n carpeta-ciudadana -l app=auth-service --tail=50 --prefix
+
+# Ver uso de recursos (CPU/Memoria) por pod
+kubectl top pods -n carpeta-ciudadana
+
+# Ver configuración de un ConfigMap
+kubectl get configmap carpeta-ciudadana-config -n carpeta-ciudadana -o yaml
+
+# Verificar que el Ingress esté funcionando
+kubectl get ingress -n carpeta-ciudadana
+kubectl describe ingress citizen-web-ingress -n carpeta-ciudadana
+
+# Probar conectividad desde un pod a otro servicio
+kubectl exec -n carpeta-ciudadana -l app=carpeta-ciudadana-service -it -- sh
+# Dentro del pod:
+# nc -zv minio 9000
+# nc -zv carpeta-rabbitmq 5672
+# wget -O- http://citizen-web:8080
+
+# Ver el estado de rollout de un deployment
+kubectl rollout status deployment/carpeta-ciudadana-service -n carpeta-ciudadana
+kubectl rollout history deployment/carpeta-ciudadana-service -n carpeta-ciudadana
+
+# Verificar health checks de RabbitMQ
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl list_queues
+
+# =================================== TROUBLESHOOT =======================================
 
 # Cada que cambies el código de un servicio, recompila su imagen, cárgala en minikube, y haz un rollout restart
 # Ejemplo para el servicio citizen-web:
