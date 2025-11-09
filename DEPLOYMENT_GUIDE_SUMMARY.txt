@@ -38,24 +38,25 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
+# PORT FORWARD SERVICIOS (MANTENER ESTOS TERMINALES ABIERTOS)
+kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+
 # ACTUALIZAR ARCHIVO HOSTS (NECESARIO PARA ACCEDER AL FRONTEND)
 # En PowerShell como ADMINISTRADOR:
 cd c:<idk>/carpetaCiudadana/tools
 powershell -ExecutionPolicy Bypass -File update-minikube-hosts.ps1
-# O doble click en el archivo tools/update-minikube-hosts.ps1
 # O, bueno, corre su contraparte de linux
 # Esto agregará "192.168.49.2 citizen-web.local" a tu archivo hosts
 
+# Y ya podrás acceder
 
-# INICIAR MINIKUBE TUNNEL (NECESARIO PARA INGRESS)
-# En PowerShell como ADMINISTRADOR (abre OTRA ventana nueva y déjala abierta):
-minikube tunnel
-# IMPORTANTE: Esta ventana debe permanecer abierta mientras uses la aplicación
-# El tunnel permite que el Ingress funcione en el puerto 80
+# Frontend
+http://localhost:8080/
 
-# Ahora puedes acceder a la aplicación en: http://citizen-web.local
-
-
+# RabbitMQ Management UI
+# admin / admin123
+http://localhost:15672
 
 
 

@@ -163,6 +163,7 @@ kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl clust
 # Open a NEW PowerShell terminal and run:
 kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
 # RabbitMQ Management UI will be available at http://localhost:15672
+# AMQP will be available at amqp://localhost:5672
 # Credentials: admin / admin123
 
 cd ../..
@@ -326,6 +327,11 @@ kubectl wait --for=condition=ready pod -l app=citizen-web -n carpeta-ciudadana -
 # 7.5 Verify deployment
 kubectl get pods -n carpeta-ciudadana -l app=citizen-web
 kubectl logs -n carpeta-ciudadana -l app=citizen-web --tail=20
+
+# 7.6 Set up port-forward for citizen-web (KEEP THIS TERMINAL OPEN)
+# Open ANOTHER NEW PowerShell terminal and run:
+kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
+# Frontend will be available at http://localhost:8080
 
 cd ../..
 
