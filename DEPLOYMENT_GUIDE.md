@@ -524,6 +524,13 @@ start http://localhost:8083/api/v1/docs
 # minikube image load citizen-web:latest
 # kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 #
+# IMPORTANT: Restart port-forwards after updating services
+# After updating any service that has port-forwards (almost all of them),
+# you need to stop and restart the port-forwards:
+# cd tools
+# .\port-forwards-stop.ps1
+# .\port-forwards-start.ps1
+#
 # To check RAM usage:
 # kubectl top nodes
 # docker stats minikube --no-stream

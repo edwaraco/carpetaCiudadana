@@ -251,3 +251,10 @@ cd services/citizen-web; kubectl apply -f k8s/01-deployment.yaml; cd ../..
 # Si debes de cambiar alguna config de k8s, hazlo y luego aplica los cambios, y haz un rollout restart
 cd services/carpeta-ciudadana-service; kubectl apply -f k8s/01-configmap.yaml; cd ../..
 kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
+
+# Cada que actualices un servicio que tenga port forwardings (prácticamente todos), 
+# detén y vuelve a iniciar los port-forwards
+# Usando los scripts:
+cd tools;
+.\port-forwards-stop.ps1;
+.\port-forwards-start.ps1;

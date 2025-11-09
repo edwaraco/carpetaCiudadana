@@ -54,9 +54,9 @@ server {
     # Presigned URLs from MinIO will have http://minio:9000 which browsers can't access
     # Frontend will rewrite those to /minio-proxy/ which nginx forwards to the internal MinIO service
     location /minio-proxy/ {
-        # Remove /minio-proxy/ prefix and forward to MinIO
-        rewrite ^/minio-proxy/(.*)$ /$1 break;
-        proxy_pass http://minio_storage;
+        # Proxy to MinIO - nginx automatically strips the location prefix
+        # /minio-proxy/bucket/file.pdf becomes /bucket/file.pdf when proxied
+        proxy_pass http://minio_storage/;
 
         proxy_http_version 1.1;
         
