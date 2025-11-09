@@ -70,26 +70,19 @@ minikube image load document-authentication-service:latest
 minikube image load citizen-web:latest
 minikube image load ciudadano-registry-service:latest
 
-<<<<<<< HEAD
 # ======================================== CONFIGURACIÓN PRE-DESPLIEGUE ========================================
 
-=======
->>>>>>> origin/main
 # POBLAR SENDGRID_API_KEY
 # Antes de desplegar, hay que cambiar el placeholder de SENDGRID_API_KEY por la clave real
 # ve a services/notifications-service/k8s/00-configmap.yaml
 # edita la línea 22, que originalmente dice:
 #   SENDGRID_API_KEY: "SENDGRID_API_KEY"
 
-<<<<<<< HEAD
 # ======================================== DESPLEGAR SERVICIOS ========================================
 
 # Los comandos de despliegue son IDÉNTICOS en Windows (PowerShell) y Linux/Mac (Bash):
 
 # Desplegar RabbitMQ Cluster Operator
-=======
-# Despliegas cada servicio con kubectl. pero comienzas por RabbitMQ (y su operador)
->>>>>>> origin/main
 kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
 
 # WINDOWS (PowerShell):
@@ -129,7 +122,9 @@ kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin
 # WINDOWS (PowerShell):
 # ---------------------
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-<<<<<<< HEAD
+# WINDOWS (PowerShell):
+# ---------------------
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 cd tools
 .\port-forwards-start.ps1    # Inicia todos los port-forwards
 .\port-forwards-status.ps1   # Ver estado
@@ -144,16 +139,6 @@ chmod +x port-forwards-start.sh port-forwards-status.sh port-forwards-stop.sh
 ./port-forwards-status.sh    # Ver estado
 ./port-forwards-stop.sh      # Detener todos
 cd ..
-=======
-cd tools;
-.\port-forwards-start.ps1;
-
-# Ver estado de los port-forwards:
-.\port-forwards-status.ps1
-
-# Detener todos los port-forwards:
-.\port-forwards-stop.ps1
->>>>>>> origin/main
 
 # ===============================================================================
 # OPCIÓN 2: Manual - Abre terminales separadas para cada servicio
@@ -331,22 +316,9 @@ cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
-<<<<<<< HEAD
 # LINUX/MAC (Bash):
 # -----------------
 cd services/citizen-web && docker build -t citizen-web:latest . && cd ../..
-=======
-# Si la imagen no se cambia, usa force remove de la imagen y luego carga la nueva
-# Este es el método más seguro sin bajar el deployment
-cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
-minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
-minikube image load citizen-web:latest
-kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
-
-# Si aún así falla, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
-kubectl delete deployment citizen-web -n carpeta-ciudadana
-minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
->>>>>>> origin/main
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
@@ -380,10 +352,10 @@ cd services/citizen-web && kubectl apply -f k8s/01-deployment.yaml && cd ../..
 # ===== Cambiar configuración de k8s =====
 
 # WINDOWS:
+# WINDOWS:
 cd services/carpeta-ciudadana-service; kubectl apply -f k8s/01-configmap.yaml; cd ../..
 kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
 
-<<<<<<< HEAD
 # LINUX/MAC:
 cd services/carpeta-ciudadana-service && kubectl apply -f k8s/01-configmap.yaml && cd ../..
 kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
@@ -417,11 +389,3 @@ cd tools
 chmod +x k8s-update-service.sh
 ./k8s-update-service.sh citizen-web
 cd ..
-=======
-# Cada que actualices un servicio que tenga port forwardings (prácticamente todos), 
-# detén y vuelve a iniciar los port-forwards
-# Usando los scripts:
-cd tools;
-.\port-forwards-stop.ps1;
-.\port-forwards-start.ps1;
->>>>>>> origin/main
