@@ -82,9 +82,9 @@ const CONTEXT_MAP_BE_TO_FE: Record<string, DocumentContext> = {
  */
 const STATUS_MAP_BE_TO_FE: Record<string, DocumentStatus> = {
   TEMPORAL: 'TEMPORAL',
-  PROCESADO: 'AUTENTICADO', // Processed documents are considered certified in frontend
-  CERTIFICADO: 'AUTENTICADO',
-  REVOCADO: 'RECHAZADO',
+  EN_AUTENTICACION: 'TEMPORAL', // Documents being authenticated are still shown as temporal
+  AUTENTICADO: 'AUTENTICADO', // Authenticated documents
+  RECHAZADO: 'RECHAZADO', // Rejected documents
 };
 
 // ============================================================================

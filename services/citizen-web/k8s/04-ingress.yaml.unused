@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: citizen-web-ingress
+  namespace: carpeta-ciudadana
+  annotations:
+    # For local development (Minikube)
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Uncomment for production with cert-manager
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  # Uncomment for production with TLS
+  # tls:
+  # - hosts:
+  #   - carpetaciudadana.example.com
+  #   secretName: carpeta-ciudadana-tls
+  rules:
+  # Local development rule - Single domain for frontend + API
+  - host: citizen-web.local
+    http:
+      paths:
+      # Backend API - must come FIRST (more specific path)
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: carpeta-ciudadana-service
+            port:
+              number: 8080
+      # Frontend - comes LAST (catch-all)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: citizen-web
+            port:
+              number: 8080
+  # Uncomment for production
+  # - host: carpetaciudadana.example.com
+  #   http:
+  #     paths:
+  #     - path: /
+  #       pathType: Prefix
+  #       backend:
+  #         service:
+  #           name: citizen-web
+  #           port:
+  #             number: 8080
+

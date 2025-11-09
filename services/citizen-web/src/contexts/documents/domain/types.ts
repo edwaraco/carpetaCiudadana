@@ -131,7 +131,7 @@ export interface BackendDocumentoResponse {
   titulo: string;
   tipoDocumento: string;
   contextoDocumento: string;
-  estadoDocumento: string; // TEMPORAL, PROCESADO, CERTIFICADO, REVOCADO
+  estadoDocumento: string; // TEMPORAL, EN_AUTENTICACION, AUTENTICADO, RECHAZADO
   fechaRecepcion: string; // ISO 8601 LocalDateTime
   fechaUltimaModificacion: string; // ISO 8601 LocalDateTime
   esDescargable: boolean;

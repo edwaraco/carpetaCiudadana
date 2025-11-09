@@ -21,17 +21,24 @@ kubectl create namespace carpeta-ciudadana
 ### 2. Apply all manifests
 
 ```bash
-kubectl apply -f k8s/ -n carpeta-ciudadana
+kubectl apply -f k8s/
 ```
+
+El orden de aplicación será:
+- 00-configmap.yaml (Environment configuration)
+- 01-deployment.yaml (Deployment with 3 replicas)
+- 02-service.yaml (LoadBalancer service)
+- 03-hpa.yaml (Horizontal Pod Autoscaler)
+- 04-ingress.yaml (Ingress with TLS)
 
 Or apply individually:
 
 ```bash
-kubectl apply -f k8s/configmap.yaml -n carpeta-ciudadana
-kubectl apply -f k8s/deployment.yaml -n carpeta-ciudadana
-kubectl apply -f k8s/service.yaml -n carpeta-ciudadana
-kubectl apply -f k8s/hpa.yaml -n carpeta-ciudadana
-kubectl apply -f k8s/ingress.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/00-configmap.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/01-deployment.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/02-service.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/03-hpa.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/04-ingress.yaml -n carpeta-ciudadana
 ```
 
 ### 3. Verify deployment
@@ -65,7 +72,7 @@ data:
 After editing, reapply:
 
 ```bash
-kubectl apply -f k8s/configmap.yaml -n carpeta-ciudadana
+kubectl apply -f k8s/00-configmap.yaml -n carpeta-ciudadana
 kubectl rollout restart deployment/carpeta-ciudadana-frontend -n carpeta-ciudadana
 ```
 
@@ -142,6 +149,7 @@ kubectl describe svc carpeta-ciudadana-frontend -n carpeta-ciudadana
 ### ConfigMap changes not applied
 
 ```bash
+kubectl apply -f k8s/00-configmap.yaml -n carpeta-ciudadana
 kubectl rollout restart deployment/carpeta-ciudadana-frontend -n carpeta-ciudadana
 ```
 

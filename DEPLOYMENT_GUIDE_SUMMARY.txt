@@ -1,0 +1,239 @@
+# Luego de iniciar el cluster con los pasos de la guía completa...
+# Resumidamente con
+winget install -e --id Kubernetes.kubectl
+winget install -e --id Kubernetes.minikube
+
+# Esto en un PowerShell aparte
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass  # admin rights
+minikube start --driver=docker --memory=16384 --cpus=2
+minikube addons enable metrics-server
+minikube addons enable ingress
+# Y vuelves.
+
+# ========================================================================================================
+
+# Ahora sí
+# Vas a recompilar las imágenes Docker de los servicios locales
+cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+cd services/auth-service; docker build -t auth-service:latest .; cd ../..
+cd services/notifications-service; docker build -t notifications-service:latest .; cd ../..
+cd services/carpeta-ciudadana-service; docker build -t carpeta-ciudadana-service:latest .; cd ../..
+cd services/document-authentication-service; docker build -t document-authentication-service:latest .; cd ../..
+cd services/ciudadano-registry-service; docker build -t ciudadano-registry-service:latest .; cd ../..
+
+# Luego, cargas las imágenes en minikube
+minikube image load auth-service:latest
+minikube image load notifications-service:latest
+minikube image load carpeta-ciudadana-service:latest
+minikube image load document-authentication-service:latest
+minikube image load citizen-web:latest
+minikube image load ciudadano-registry-service:latest
+
+# Despliegas cada servicio con kubectl. pero comienzas por RabbitMQ (y su operador)
+kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+cd services/rabbitmq-service; kubectl apply -f k8s/; cd ../..
+cd services/auth-service; kubectl apply -f k8s/; cd ../..
+cd services/notifications-service; kubectl apply -f k8s/; cd ../..
+cd services/carpeta-ciudadana-service; kubectl apply -f k8s/; cd ../..
+cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
+cd services/citizen-web; kubectl apply -f k8s/; cd ../..
+cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
+
+# INSTALAR KUBERNETES DASHBOARD (OPCIONAL - para administración del cluster)
+# Este paso es opcional pero recomendado para tener una interfaz gráfica del cluster
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# Crear usuario administrador para el Dashboard
+kubectl create serviceaccount admin-user -n kubernetes-dashboard
+kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:admin-user
+
+# PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
+# ===============================================================================
+# OPCIÓN 1: Script Automático (RECOMENDADO) - Inicia TODOS los port-forwards
+# -------------------------------------------------------------------------------
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+cd tools;
+.\start-all-port-forwards.ps1;
+
+# Ver estado de los port-forwards:
+.\status-port-forwards.ps1
+
+# Detener todos los port-forwards:
+.\stop-all-port-forwards.ps1
+
+# ===============================================================================
+# OPCIÓN 2: Manual - Abre terminales separadas para cada servicio
+# -------------------------------------------------------------------------------
+
+# Terminal 1 - Frontend (REQUERIDO)
+kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
+
+# Terminal 2 - RabbitMQ Management UI (REQUERIDO para monitoreo)
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+
+# Terminal 3 - MinIO Console (OPCIONAL - administración de archivos)
+kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
+
+# Terminal 4 - MinIO API (OPCIONAL - operaciones S3)
+kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
+
+# Terminal 5 - Carpeta Ciudadana API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8082:8080
+
+# Terminal 6 - Ciudadano Registry API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-service 8081:8081
+
+# Terminal 7 - Document Authentication API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+# Terminal 8 - Auth Service PostgreSQL (OPCIONAL - administración DB)
+kubectl port-forward -n carpeta-ciudadana svc/auth-postgres-service 5432:5432
+
+# Terminal 9 - Ciudadano Registry PostgreSQL (OPCIONAL - administración DB)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-postgres-service 5433:5432
+
+# Terminal 10 - Kubernetes Dashboard (OPCIONAL - administración cluster)
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
+
+
+# ======================================== ACCESO A LOS SERVICIOS ========================================
+# Después de tener los port-forwards activos, accede desde tu navegador:
+
+# INTERFAZ PRINCIPAL
+# ------------------
+# Frontend Web Application
+http://localhost:8080
+# Interfaz principal para ciudadanos (registro, login, gestión de documentos)
+
+
+# INTERFACES DE ADMINISTRACIÓN
+# -----------------------------
+# RabbitMQ Management UI (credenciales: admin / admin123)
+http://localhost:15672
+# - Monitoreo de colas y mensajes
+# - Gestión de exchanges y bindings
+# - Estadísticas de rendimiento
+
+# MinIO Console (credenciales: admin / admin123)
+http://localhost:9001
+# - Navegador de archivos S3
+# - Gestión de buckets
+# - Políticas de acceso
+# - Monitoreo de uso
+
+# Kubernetes Dashboard (requiere token de autenticación)
+
+# Generar token:
+kubectl -n kubernetes-dashboard create token admin-user
+# Acceder:
+https://localhost:8443
+# - Monitoreo de pods y deployments
+# - Logs y eventos del cluster
+# - Gestión de recursos
+
+
+# BASES DE DATOS (usar cliente PostgreSQL como pgAdmin, DBeaver, etc.)
+# ---------------------------------------------------------------------
+# Auth Service PostgreSQL
+Host: localhost
+Port: 5432
+Database: auth_service_db
+User: auth_service_user
+Password: auth_service_password123
+
+# Ciudadano Registry PostgreSQL
+Host: localhost
+Port: 5433
+Database: ciudadano_registry_db
+User: ciudadano_registry_user
+Password: ciudadano_registry_password123
+
+
+# APIS Y DOCUMENTACIÓN
+# --------------------
+# Carpeta Ciudadana Service - Swagger UI
+http://localhost:8082/api/v1/swagger-ui.html
+# Documentación interactiva de la API principal de gestión de documentos
+
+# Ciudadano Registry Service - Swagger UI
+http://localhost:8081/ciudadano-registry/swagger-ui.html
+# Documentación de la API de registro de ciudadanos
+
+# Document Authentication Service - API Docs (FastAPI)
+http://localhost:8083/api/v1/docs
+# Documentación de la API de autenticación de documentos
+
+# MinIO S3 API Endpoint
+http://localhost:9000
+# Endpoint para operaciones S3 programáticas
+
+
+
+# =================================== VERIFICAR =======================================
+
+# Ver todos los pods
+kubectl get pods -n carpeta-ciudadana
+
+# Ver logs por app (ignora el nombre del pod)
+kubectl logs -n carpeta-ciudadana -l app=carpeta-ciudadana-service --tail=50
+
+# Ejecutar comando en el primer pod de una app
+kubectl exec -n carpeta-ciudadana -l app=carpeta-ciudadana-service -it -- sh
+
+# Ver pods organizados por app
+kubectl get pods -n carpeta-ciudadana -L app
+
+# Ver estado de replicación
+kubectl get hpa -n carpeta-ciudadana
+
+# Ver network policies
+kubectl get svc -n carpeta-ciudadana
+kubectl get networkpolicies -n carpeta-ciudadana
+
+# Ver eventos recientes del cluster (útil para debugging)
+kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp' | Select-Object -Last 20
+
+# Ver descripción completa de un pod (para ver errores de scheduling, probes, etc)
+kubectl describe pod <pod-name> -n carpeta-ciudadana
+
+# Ver logs de múltiples pods de una app
+kubectl logs -n carpeta-ciudadana -l app=auth-service --tail=50 --prefix
+
+# Ver uso de recursos (CPU/Memoria) por pod
+kubectl top pods -n carpeta-ciudadana
+
+# Ver configuración de un ConfigMap
+kubectl get configmap carpeta-ciudadana-config -n carpeta-ciudadana -o yaml
+
+# Probar conectividad desde un pod a otro servicio
+kubectl exec -n carpeta-ciudadana -l app=carpeta-ciudadana-service -it -- sh
+# Dentro del pod:
+# nc -zv minio 9000
+# nc -zv carpeta-rabbitmq 5672
+# wget -O- http://citizen-web:8080
+
+# Ver el estado de rollout de un deployment
+kubectl rollout status deployment/carpeta-ciudadana-service -n carpeta-ciudadana
+kubectl rollout history deployment/carpeta-ciudadana-service -n carpeta-ciudadana
+
+# Verificar health checks de RabbitMQ
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl list_queues
+
+# =================================== TROUBLESHOOT =======================================
+
+# Cada que cambies el código de un servicio, recompila su imagen, cárgala en minikube, y haz un rollout restart
+# Ejemplo para el servicio citizen-web:
+cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+minikube image load citizen-web:latest
+kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+
+# Si la imagen no se cambia, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
+kubectl delete deployment citizen-web -n carpeta-ciudadana
+minikube image rm docker.io/library/citizen-web:latest
+minikube image load citizen-web:latest
+cd services/citizen-web; kubectl apply -f k8s/01-deployment.yaml; cd ../..
+
+# Si debes de cambiar alguna config de k8s, hazlo y luego aplica los cambios, y haz un rollout restart
+cd services/carpeta-ciudadana-service; kubectl apply -f k8s/01-configmap.yaml; cd ../..
+kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana

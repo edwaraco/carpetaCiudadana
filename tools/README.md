@@ -2,13 +2,99 @@
 
 Utilidades y scripts para desarrollo, deployment y gestión del proyecto Carpeta Ciudadana.
 
+> **💡 Nota para usuarios de Windows**: Los scripts están disponibles en dos versiones:
+>
+> - **`.sh`** - Para Linux/Mac (Bash)
+> - **`.ps1`** - Para Windows (PowerShell)
+
 ## 📜 Scripts Disponibles
 
-### k8s-update-service.sh
+### 🚀 Port-Forward Management (Nuevo)
+
+Scripts para gestionar port-forwards de forma automática en background.
+
+#### start-all-port-forwards.ps1
+
+Inicia TODOS los port-forwards necesarios en background como PowerShell jobs.
+
+**Uso:**
+
+```powershell
+cd tools
+.\start-all-port-forwards.ps1
+```
+
+**Características:**
+
+- ✅ Inicia 10 port-forwards simultáneamente en background
+- ✅ Separa servicios REQUERIDOS vs OPCIONALES
+- ✅ Muestra URLs de acceso y credenciales
+- ✅ Los jobs persisten incluso si cierras la terminal
+- ✅ Verificación automática de Minikube
+- ✅ Previene duplicación de port-forwards
+
+**Port-forwards incluidos:**
+
+- **REQUERIDOS:**
+  - Frontend (8080)
+  - RabbitMQ (5672, 15672)
+
+- **OPCIONALES - Administración:**
+  - MinIO Console (9001)
+  - MinIO API (9000)
+  - Kubernetes Dashboard (8443)
+
+- **OPCIONALES - APIs/Swagger:**
+  - Carpeta Ciudadana API (8082)
+  - Ciudadano Registry API (8081)
+  - Document Authentication API (8083)
+
+- **OPCIONALES - Bases de Datos:**
+  - Auth PostgreSQL (5432)
+  - Registry PostgreSQL (5433)
+
+#### status-port-forwards.ps1
+
+Verifica el estado de todos los port-forwards activos.
+
+**Uso:**
+
+```powershell
+.\status-port-forwards.ps1
+```
+
+**Muestra:**
+
+- Total de port-forwards activos
+- Servicios agrupados por estado (Running/Failed/Stopped)
+- Tabla con detalles (ID, hora de inicio, estado)
+- Comandos útiles para debugging
+
+#### stop-all-port-forwards.ps1
+
+Detiene TODOS los port-forwards activos.
+
+**Uso:**
+
+```powershell
+.\stop-all-port-forwards.ps1
+```
+
+**Características:**
+
+- ✅ Detiene todos los jobs de port-forward
+- ✅ Limpia los jobs del sistema
+- ✅ Confirmación visual de cada servicio detenido
+
+---
+
+### k8s-update-service (.sh / .ps1)
 
 Script genérico para actualizar servicios en Kubernetes (Minikube).
 
 #### 🚀 Uso Rápido
+
+**Linux/Mac:**
 
 ```bash
 # Actualizar citizen-web completo
@@ -16,6 +102,16 @@ Script genérico para actualizar servicios en Kubernetes (Minikube).
 
 # Ver ayuda
 ./tools/k8s-update-service.sh --help
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Actualizar citizen-web completo
+.\tools\k8s-update-service.ps1 -ServiceName citizen-web
+
+# Ver ayuda
+Get-Help .\tools\k8s-update-service.ps1 -Detailed
 ```
 
 #### Características
@@ -40,6 +136,8 @@ Script genérico para actualizar servicios en Kubernetes (Minikube).
 
 #### Ejemplos
 
+**Linux/Mac:**
+
 ```bash
 # Actualización completa
 ./tools/k8s-update-service.sh citizen-web
@@ -54,7 +152,25 @@ Script genérico para actualizar servicios en Kubernetes (Minikube).
 ./tools/k8s-update-service.sh document-authentication-service --tag v1.2.0
 ```
 
+**Windows (PowerShell):**
+
+```powershell
+# Actualización completa
+.\tools\k8s-update-service.ps1 -ServiceName citizen-web
+
+# Solo configuración (sin rebuild)
+.\tools\k8s-update-service.ps1 -ServiceName auth-service -SkipBuild
+
+# Rebuild local sin cargar en Minikube
+.\tools\k8s-update-service.ps1 -ServiceName carpeta-ciudadana-service -SkipLoad
+
+# Usar tag específico
+.\tools\k8s-update-service.ps1 -ServiceName document-authentication-service -Tag v1.2.0
+```
+
 #### Opciones
+
+**Linux/Mac (Bash):**
 
 | Opción | Descripción |
 |--------|-------------|
@@ -64,6 +180,49 @@ Script genérico para actualizar servicios en Kubernetes (Minikube).
 | `-c, --skip-config` | Saltar aplicación de ConfigMap |
 | `-t, --tag` | Tag de la imagen Docker (default: latest) |
 | `-h, --help` | Mostrar ayuda completa |
+
+**Windows (PowerShell):**
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-ServiceName` | Nombre del servicio (requerido) |
+| `-Namespace` | Namespace de Kubernetes (default: carpeta-ciudadana) |
+| `-SkipBuild` | Saltar construcción de imagen Docker |
+| `-SkipLoad` | Saltar carga de imagen en Minikube |
+| `-SkipConfig` | Saltar aplicación de ConfigMap |
+| `-Tag` | Tag de la imagen Docker (default: latest) |
+
+---
+
+### update-minikube-hosts (.sh / .ps1)
+
+Script para actualizar el archivo hosts del sistema con la IP actual de Minikube.
+
+#### Uso
+
+**Linux/Mac:**
+
+```bash
+# Ejecutar script (requiere sudo)
+./tools/update-minikube-hosts.sh
+```
+
+**Windows (PowerShell como Administrador):**
+
+```powershell
+# Ejecutar script (requiere permisos de Administrador)
+.\tools\update-minikube-hosts.ps1
+```
+
+> **⚠️ Importante**: En Windows, debes ejecutar PowerShell como Administrador para que el script pueda modificar el archivo hosts.
+
+#### Qué hace
+
+- Obtiene la IP actual de Minikube
+- Actualiza las entradas en el archivo hosts:
+  - `citizen-web.local`
+  - `citizen-os.local`
+- Elimina entradas antiguas antes de agregar las nuevas
 
 ---
 
@@ -78,6 +237,7 @@ Herramientas para testing de RabbitMQ y mensajería.
 ## 📝 Propósito General
 
 Centralizar scripts útiles para:
+
 - ✅ Automatización de tareas repetitivas
 - ✅ Deployment en Kubernetes
 - ✅ Generación de código/scaffolding

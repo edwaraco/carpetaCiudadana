@@ -22,8 +22,8 @@ data:
   AWS_REGION: "us-east-1"
   # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are in secret.yaml
   
-  # MinIO Configuration (same as docker-compose)
-  MINIO_ENDPOINT: "http://citizen-os.local:9000"
+  # MinIO Configuration (using Kubernetes MinIO service)
+  MINIO_ENDPOINT: "http://minio:9000"
   # MINIO_ACCESS_KEY and MINIO_SECRET_KEY are in secret.yaml
   MINIO_BUCKET_NAME: "carpeta-ciudadana-docs"
   MINIO_PRESIGNED_URL_EXPIRY: "15"
@@ -35,8 +35,8 @@ data:
   RABBITMQ_CONNECTION_TIMEOUT: "60000"
   RABBITMQ_HEARTBEAT: "30"
   
-  # CORS Configuration (same as application.yml)
-  CORS_ALLOWED_ORIGINS: "http://citizen-web.local:8080"
+  # CORS Configuration - Allow localhost access (for port-forward)
+  CORS_ALLOWED_ORIGINS: "http://localhost:8080"
   CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
   CORS_ALLOWED_HEADERS: "*"
   CORS_ALLOW_CREDENTIALS: "true"
