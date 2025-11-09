@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-authentication-proxy
+  namespace: carpeta-ciudadana
+  labels:
+    app: document-authentication-proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: document-authentication-proxy
+  template:
+    metadata:
+      labels:
+        app: document-authentication-proxy
+    spec:
+      containers:
+      - name: document-authentication-proxy
+        image: document-authentication-proxy:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8084
+        envFrom:
+        - configMapRef:
+            name: document-authentication-proxy-config
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8084
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8084
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-authentication-proxy
+  namespace: carpeta-ciudadana
+spec:
+  selector:
+    app: document-authentication-proxy
+  ports:
+  - port: 8084
+    targetPort: 8084
+  type: LoadBalancer

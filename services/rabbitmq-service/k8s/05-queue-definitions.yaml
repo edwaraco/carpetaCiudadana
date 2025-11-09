@@ -45,6 +45,19 @@ data:
       "policies": [],
       "queues": [
         {
+          "name": "document.authentication.request.queue",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3,
+            "x-delivery-limit": 3,
+            "x-dead-letter-exchange": "carpeta.dlx",
+            "x-dead-letter-routing-key": "document.authentication.request.queue.dlq"
+          }
+        },
+        {
           "name": "documento.autenticado.queue",
           "vhost": "/",
           "durable": true,
@@ -79,6 +92,16 @@ data:
             "x-delivery-limit": 3,
             "x-dead-letter-exchange": "carpeta.dlx",
             "x-dead-letter-routing-key": "notifications.queue.dlq"
+          }
+        },
+        {
+          "name": "document.authentication.request.queue.dlq",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "quorum",
+            "x-quorum-initial-group-size": 3
           }
         },
         {
@@ -126,6 +149,14 @@ data:
         {
           "source": "carpeta.events",
           "vhost": "/",
+          "destination": "document.authentication.request.queue",
+          "destination_type": "queue",
+          "routing_key": "document.authentication.request",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.events",
+          "vhost": "/",
           "destination": "documento.autenticado.queue",
           "destination_type": "queue",
           "routing_key": "document.authentication.response",
@@ -145,6 +176,14 @@ data:
           "destination": "notifications.queue",
           "destination_type": "queue",
           "routing_key": "notifications.#",
+          "arguments": {}
+        },
+        {
+          "source": "carpeta.dlx",
+          "vhost": "/",
+          "destination": "document.authentication.request.queue.dlq",
+          "destination_type": "queue",
+          "routing_key": "document.authentication.request.queue.dlq",
           "arguments": {}
         },
         {
