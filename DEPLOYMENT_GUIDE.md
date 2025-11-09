@@ -77,7 +77,268 @@ make powershell-deploy-all
 
 ### Run all services manually (Powershell)
 
+This section contains ALL the deployment steps in the correct order for deploying all services.
+
+**Prerequisites**: You must have completed the "Tools and start cluster" section above.
+
 ```powershell
+# ============================================================================
+# STEP 1: Deploy RabbitMQ Cluster Operator and RabbitMQ Service
+# ============================================================================
+# RabbitMQ is the message broker used by all services for event-driven communication
+
+# 1.1 Install RabbitMQ Cluster Operator
+kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+
+# 1.2 Verify operator is running
+kubectl get pods -n rabbitmq-system
+kubectl get customresourcedefinition | Select-String rabbitmq
+
+# 1.3 Deploy RabbitMQ cluster
+cd services/rabbitmq-service
+kubectl apply -f k8s/
+
+# 1.4 Wait for RabbitMQ pods to be ready (this takes 2-3 minutes)
+kubectl get pods -n carpeta-ciudadana -w
+# Press Ctrl+C when all carpeta-rabbitmq-server-* pods show 1/1 Running
+
+# 1.5 Verify cluster status
+kubectl get rabbitmqclusters -n carpeta-ciudadana
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
+
+# 1.6 Set up port-forward for RabbitMQ (KEEP THIS TERMINAL OPEN)
+# Open a NEW PowerShell terminal and run:
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+# RabbitMQ Management UI will be available at http://localhost:15672
+# Credentials: admin / admin123
+
+cd ../..
+
+# ============================================================================
+# STEP 2: Deploy Auth Service (Authentication & Authorization)
+# ============================================================================
+# Handles user registration, login, and JWT token generation
+
+cd services/auth-service
+
+# 2.1 Build Docker image
+docker build -t auth-service:latest .
+
+# 2.2 Load image into minikube
+minikube image load auth-service:latest
+
+# 2.3 Deploy service (includes PostgreSQL database)
+kubectl apply -f k8s/
+
+# 2.4 Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=auth-service -n carpeta-ciudadana --timeout=120s
+
+# 2.5 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=auth-service
+kubectl logs -n carpeta-ciudadana -l app=auth-service --tail=20
+
+cd ../..
+
+# ============================================================================
+# STEP 3: Deploy Ciudadano Registry Service
+# ============================================================================
+# Manages citizen registration and identity validation
+
+cd services/ciudadano-registry-service
+
+# 3.1 Build Docker image
+docker build -t ciudadano-registry-service:latest .
+
+# 3.2 Load image into minikube
+minikube image load ciudadano-registry-service:latest
+
+# 3.3 Deploy service (includes PostgreSQL infrastructure)
+kubectl apply -f k8s/
+
+# 3.4 Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=ciudadano-registry-service -n carpeta-ciudadana --timeout=120s
+
+# 3.5 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=ciudadano-registry-service
+kubectl logs -n carpeta-ciudadana -l app=ciudadano-registry-service --tail=20
+
+cd ../..
+
+# ============================================================================
+# STEP 4: Deploy Notifications Service
+# ============================================================================
+# Handles email notifications (verification, welcome, etc.)
+
+cd services/notifications-service
+
+# 4.1 Build Docker image
+docker build -t notifications-service:latest .
+
+# 4.2 Load image into minikube
+minikube image load notifications-service:latest
+
+# 4.3 Deploy service
+kubectl apply -f k8s/
+
+# 4.4 Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=notifications-service -n carpeta-ciudadana --timeout=120s
+
+# 4.5 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=notifications-service
+kubectl logs -n carpeta-ciudadana -l app=notifications-service --tail=20
+
+cd ../..
+
+# ============================================================================
+# STEP 5: Deploy Carpeta Ciudadana Service (Main Document Management)
+# ============================================================================
+# Core service for managing citizen folders and documents
+
+cd services/carpeta-ciudadana-service
+
+# 5.1 Build Docker image
+docker build -t carpeta-ciudadana-service:latest .
+
+# 5.2 Load image into minikube
+minikube image load carpeta-ciudadana-service:latest
+
+# 5.3 Deploy service (includes DynamoDB Local and MinIO)
+kubectl apply -f k8s/
+
+# 5.4 Wait for infrastructure to be ready
+kubectl wait --for=condition=ready pod -l app=dynamodb-local -n carpeta-ciudadana --timeout=120s
+kubectl wait --for=condition=ready pod -l app=minio -n carpeta-ciudadana --timeout=120s
+
+# 5.5 Wait for service to be ready
+kubectl wait --for=condition=ready pod -l app=carpeta-ciudadana-service -n carpeta-ciudadana --timeout=120s
+
+# 5.6 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=carpeta-ciudadana-service
+kubectl logs -n carpeta-ciudadana -l app=carpeta-ciudadana-service --tail=20
+
+# 5.7 Set up port-forward for carpeta-ciudadana-service (KEEP THIS TERMINAL OPEN)
+# Open ANOTHER NEW PowerShell terminal and run:
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+
+cd ../..
+
+# ============================================================================
+# STEP 6: Deploy Document Authentication Service
+# ============================================================================
+# Validates document authenticity with Gov Carpeta API
+
+cd services/document-authentication-service
+
+# 6.1 Build Docker image
+docker build -t document-authentication-service:latest .
+
+# 6.2 Load image into minikube
+minikube image load document-authentication-service:latest
+
+# 6.3 Deploy service
+kubectl apply -f k8s/
+
+# 6.4 Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=document-authentication-service -n carpeta-ciudadana --timeout=120s
+
+# 6.5 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=document-authentication-service
+kubectl logs -n carpeta-ciudadana -l app=document-authentication-service --tail=20
+
+# 6.6 Set up port-forward for document-authentication-service (KEEP THIS TERMINAL OPEN)
+# Open ANOTHER NEW PowerShell terminal and run:
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+cd ../..
+
+# ============================================================================
+# STEP 7: Deploy Citizen Web (Frontend)
+# ============================================================================
+# React frontend for citizens to interact with the system
+
+cd services/citizen-web
+
+# 7.1 Build Docker image
+docker build -t citizen-web:latest .
+
+# 7.2 Load image into minikube
+minikube image load citizen-web:latest
+
+# 7.3 Deploy service
+kubectl apply -f k8s/
+
+# 7.4 Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=citizen-web -n carpeta-ciudadana --timeout=120s
+
+# 7.5 Verify deployment
+kubectl get pods -n carpeta-ciudadana -l app=citizen-web
+kubectl logs -n carpeta-ciudadana -l app=citizen-web --tail=20
+
+cd ../..
+
+# ============================================================================
+# STEP 8: Update hosts file for local domain routing
+# ============================================================================
+# This allows accessing the frontend via citizen-web.local instead of IP
+
+# Run as Administrator
+powershell -ExecutionPolicy Bypass -File tools/update-minikube-hosts.ps1
+
+# ============================================================================
+# STEP 9: Verify all deployments
+# ============================================================================
+
+# 9.1 Check all pods are running
+kubectl get pods -n carpeta-ciudadana
+
+# 9.2 Check all services
+kubectl get svc -n carpeta-ciudadana
+
+# 9.3 Check RabbitMQ cluster
+kubectl get rabbitmqclusters -n carpeta-ciudadana
+
+# 9.4 Check resource usage
+kubectl top pods -n carpeta-ciudadana
+kubectl top nodes
+
+# ============================================================================
+# STEP 10: Access Points
+# ============================================================================
+
+# RabbitMQ Management UI
+start http://localhost:15672
+# Credentials: admin / admin123
+
+# Carpeta Ciudadana Service API (Swagger)
+start http://localhost:8080/api/v1/swagger-ui.html
+
+# Document Authentication Service API (Swagger)
+start http://localhost:8083/api/v1/docs
+
+# Citizen Web Frontend
+start http://citizen-web.local
+# Or use minikube IP:
+$minikubeIP = minikube ip
+start "http://$minikubeIP:30080"
+
+# ============================================================================
+# IMPORTANT NOTES
+# ============================================================================
+# 
+# Port Forwards Required (keep these terminals open):
+# 1. RabbitMQ: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+# 2. Carpeta Ciudadana Service: kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+# 3. Document Authentication: kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+#
+# To update a service after making changes:
+# Use the script: .\tools\k8s-update-service.ps1 -ServiceName <service-name>
+# Example: .\tools\k8s-update-service.ps1 -ServiceName citizen-web
+#
+# To check RAM usage:
+# kubectl top nodes
+# docker stats minikube --no-stream
+#
+# ============================================================================
 ```
 
 ## For Linux/Mac users (bash)
