@@ -29,6 +29,12 @@ minikube image load document-authentication-service:latest
 minikube image load citizen-web:latest
 minikube image load ciudadano-registry-service:latest
 
+# POBLAR SENDGRID_API_KEY
+# Antes de desplegar, hay que cambiar el placeholder de SENDGRID_API_KEY por la clave real
+# ve a services/notifications-service/k8s/00-configmap.yaml
+# edita la línea 22, que originalmente dice:
+#   SENDGRID_API_KEY: "SENDGRID_API_KEY"
+
 # Despliegas cada servicio con kubectl. pero comienzas por RabbitMQ (y su operador)
 kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
 cd services/rabbitmq-service; kubectl apply -f k8s/; cd ../..
@@ -53,13 +59,13 @@ kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin
 # -------------------------------------------------------------------------------
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 cd tools;
-.\start-all-port-forwards.ps1;
+.\port-forwards-start.ps1;
 
 # Ver estado de los port-forwards:
-.\status-port-forwards.ps1
+.\port-forwards-status.ps1
 
 # Detener todos los port-forwards:
-.\stop-all-port-forwards.ps1
+.\port-forwards-stop.ps1
 
 # ===============================================================================
 # OPCIÓN 2: Manual - Abre terminales separadas para cada servicio
@@ -127,6 +133,7 @@ http://localhost:9001
 kubectl -n kubernetes-dashboard create token admin-user
 # Acceder:
 https://localhost:8443
+https://localhost:8443/#/deployment?namespace=carpeta-ciudadana
 # - Monitoreo de pods y deployments
 # - Logs y eventos del cluster
 # - Gestión de recursos
@@ -228,12 +235,26 @@ cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
-# Si la imagen no se cambia, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
+# Si la imagen no se cambia, usa force remove de la imagen y luego carga la nueva
+# Este es el método más seguro sin bajar el deployment
+cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
+minikube image load citizen-web:latest
+kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+
+# Si aún así falla, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
 kubectl delete deployment citizen-web -n carpeta-ciudadana
-minikube image rm docker.io/library/citizen-web:latest
+minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
 minikube image load citizen-web:latest
 cd services/citizen-web; kubectl apply -f k8s/01-deployment.yaml; cd ../..
 
 # Si debes de cambiar alguna config de k8s, hazlo y luego aplica los cambios, y haz un rollout restart
 cd services/carpeta-ciudadana-service; kubectl apply -f k8s/01-configmap.yaml; cd ../..
 kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
+
+# Cada que actualices un servicio que tenga port forwardings (prácticamente todos), 
+# detén y vuelve a iniciar los port-forwards
+# Usando los scripts:
+cd tools;
+.\port-forwards-stop.ps1;
+.\port-forwards-start.ps1;

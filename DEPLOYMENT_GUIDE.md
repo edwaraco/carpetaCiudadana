@@ -225,6 +225,15 @@ cd ../..
 
 cd services/notifications-service
 
+# IMPORTANT: Configure SendGrid API Key
+# ============================================================================
+# Before deploying, you MUST update the SENDGRID_API_KEY in the ConfigMap
+# 1. Edit: services/notifications-service/k8s/00-configmap.yaml
+# 2. Find line 22 that says: SENDGRID_API_KEY: "SENDGRID_API_KEY"
+# 3. Replace "SENDGRID_API_KEY" with your actual SendGrid API key
+# 4. Example: SENDGRID_API_KEY: "SG.xxxxxxxxxxxx.yyyyyyyyyyyy"
+# ============================================================================
+
 # 4.1 Build Docker image
 docker build -t notifications-service:latest .
 
@@ -508,6 +517,19 @@ start http://localhost:8083/api/v1/docs
 # To update a service after making changes:
 # Use the script: .\tools\k8s-update-service.ps1 -ServiceName <service-name>
 # Example: .\tools\k8s-update-service.ps1 -ServiceName citizen-web
+#
+# Manual update if image doesn't change (use force remove):
+# cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+# minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
+# minikube image load citizen-web:latest
+# kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+#
+# IMPORTANT: Restart port-forwards after updating services
+# After updating any service that has port-forwards (almost all of them),
+# you need to stop and restart the port-forwards:
+# cd tools
+# .\port-forwards-stop.ps1
+# .\port-forwards-start.ps1
 #
 # To check RAM usage:
 # kubectl top nodes

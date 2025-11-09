@@ -13,7 +13,7 @@ Utilidades y scripts para desarrollo, deployment y gestión del proyecto Carpeta
 
 Scripts para gestionar port-forwards de forma automática en background.
 
-#### start-all-port-forwards.ps1
+#### port-forwards-start.ps1
 
 Inicia TODOS los port-forwards necesarios en background como PowerShell jobs.
 
@@ -21,7 +21,7 @@ Inicia TODOS los port-forwards necesarios en background como PowerShell jobs.
 
 ```powershell
 cd tools
-.\start-all-port-forwards.ps1
+.\port-forwards-start.ps1
 ```
 
 **Características:**
@@ -53,14 +53,14 @@ cd tools
   - Auth PostgreSQL (5432)
   - Registry PostgreSQL (5433)
 
-#### status-port-forwards.ps1
+#### port-forwards-status.ps1
 
 Verifica el estado de todos los port-forwards activos.
 
 **Uso:**
 
 ```powershell
-.\status-port-forwards.ps1
+.\port-forwards-status.ps1
 ```
 
 **Muestra:**
@@ -70,14 +70,14 @@ Verifica el estado de todos los port-forwards activos.
 - Tabla con detalles (ID, hora de inicio, estado)
 - Comandos útiles para debugging
 
-#### stop-all-port-forwards.ps1
+#### port-forwards-stop.ps1
 
 Detiene TODOS los port-forwards activos.
 
 **Uso:**
 
 ```powershell
-.\stop-all-port-forwards.ps1
+.\port-forwards-stop.ps1
 ```
 
 **Características:**
