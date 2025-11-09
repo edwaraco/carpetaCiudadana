@@ -21,7 +21,7 @@ Write-Host "IP de Minikube: $MinikubeIP" -ForegroundColor Green
 $HostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
 
 # Dominios a actualizar
-$Domains = @("citizen-web.local", "citizen-os.local")
+$Domains = @("citizen-web.local")
 
 # Leer el contenido actual del archivo hosts
 $HostsContent = Get-Content $HostsFile
@@ -53,3 +53,47 @@ Write-Host "`nEntradas actuales:" -ForegroundColor Cyan
 foreach ($domain in $Domains) {
     Get-Content $HostsFile | Where-Object { $_ -match [regex]::Escape($domain) }
 }
+
+# Esperar un momento y verificar acceso al frontend
+Write-Host "`nVerificando acceso al frontend..." -ForegroundColor Cyan
+Write-Host "Esperando a que el Ingress esté listo (esto puede tomar 10-30 segundos)..." -ForegroundColor Yellow
+
+$maxAttempts = 30
+$attempt = 0
+$success = $false
+
+while ($attempt -lt $maxAttempts -and -not $success) {
+    $attempt++
+    Start-Sleep -Seconds 2
+    
+    try {
+        $response = Invoke-WebRequest -Uri "http://citizen-web.local" -Method Head -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+        $success = $true
+        Write-Host ""
+        Write-Host "✅ Frontend accesible en http://citizen-web.local - Status: $($response.StatusCode)" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "🎉 ¡Todo listo! Puedes acceder a la aplicación en tu navegador:" -ForegroundColor Green
+        Write-Host "   http://citizen-web.local" -ForegroundColor Cyan
+    } catch {
+        Write-Host "." -NoNewline -ForegroundColor Yellow
+    }
+}
+
+if (-not $success) {
+    Write-Host ""
+    Write-Host ""
+    Write-Host "⚠️  No se pudo conectar al frontend después de $maxAttempts intentos" -ForegroundColor Yellow
+    Write-Host "   Esto puede deberse a que los pods todavía se están iniciando." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "   Verifica el estado de los pods:" -ForegroundColor Yellow
+    Write-Host "   kubectl get pods -n carpeta-ciudadana" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   Verifica el Ingress:" -ForegroundColor Yellow
+    Write-Host "   kubectl get ingress -n carpeta-ciudadana" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   Luego intenta acceder manualmente a: http://citizen-web.local" -ForegroundColor Cyan
+}
+
+Write-Host ""
+Write-Host "Presiona Enter para cerrar..." -ForegroundColor Gray
+Read-Host
