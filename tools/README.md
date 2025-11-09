@@ -13,7 +13,11 @@ Utilidades y scripts para desarrollo, deployment y gestión del proyecto Carpeta
 
 Scripts para gestionar port-forwards de forma automática en background.
 
+<<<<<<< HEAD
 > **📌 Importante**: Disponible tanto para Windows (PowerShell) como para Linux/Mac (Bash)
+=======
+#### port-forwards-start.ps1
+>>>>>>> origin/main
 
 #### port-forwards-start (.sh / .ps1)
 
@@ -25,6 +29,7 @@ Inicia TODOS los port-forwards necesarios en background.
 ```powershell
 cd tools
 .\port-forwards-start.ps1
+<<<<<<< HEAD
 ```
 
 **Linux/Mac (Bash):**
@@ -32,6 +37,8 @@ cd tools
 cd tools
 chmod +x port-forwards-start.sh
 ./port-forwards-start.sh
+=======
+>>>>>>> origin/main
 ```
 
 **Características:**
@@ -62,7 +69,11 @@ chmod +x port-forwards-start.sh
 - **OPCIONALES - Bases de Datos:**
   - Auth PostgreSQL (5432)
 
+<<<<<<< HEAD
 #### port-forwards-status (.sh / .ps1)
+=======
+#### port-forwards-status.ps1
+>>>>>>> origin/main
 
 Verifica el estado de todos los port-forwards activos.
 
@@ -71,11 +82,14 @@ Verifica el estado de todos los port-forwards activos.
 **Windows (PowerShell):**
 ```powershell
 .\port-forwards-status.ps1
+<<<<<<< HEAD
 ```
 
 **Linux/Mac (Bash):**
 ```bash
 ./port-forwards-status.sh
+=======
+>>>>>>> origin/main
 ```
 
 **Muestra:**
@@ -85,7 +99,11 @@ Verifica el estado de todos los port-forwards activos.
 - Tabla con detalles (ID, hora de inicio, estado)
 - Comandos útiles para debugging
 
+<<<<<<< HEAD
 #### port-forwards-stop (.sh / .ps1)
+=======
+#### port-forwards-stop.ps1
+>>>>>>> origin/main
 
 Detiene TODOS los port-forwards activos.
 
@@ -94,11 +112,14 @@ Detiene TODOS los port-forwards activos.
 **Windows (PowerShell):**
 ```powershell
 .\port-forwards-stop.ps1
+<<<<<<< HEAD
 ```
 
 **Linux/Mac (Bash):**
 ```bash
 ./port-forwards-stop.sh
+=======
+>>>>>>> origin/main
 ```
 
 **Características:**
