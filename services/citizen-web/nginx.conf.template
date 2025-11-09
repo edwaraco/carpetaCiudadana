@@ -209,8 +209,9 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+    # Cache static assets (but NOT minio-proxy paths!)
+    # This regex matches static file extensions but excludes /minio-proxy/ paths
+    location ~* ^(?!/minio-proxy/).*\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
