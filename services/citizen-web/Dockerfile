@@ -38,9 +38,10 @@ RUN addgroup -g 1001 -S nginx-app && \
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 
-# Copy docker entrypoint script
+# Copy docker entrypoint script and ensure Unix line endings
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN dos2unix /docker-entrypoint.sh 2>/dev/null || sed -i 's/\r$//' /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
