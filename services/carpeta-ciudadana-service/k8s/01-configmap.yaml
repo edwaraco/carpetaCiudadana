@@ -24,6 +24,9 @@ data:
   
   # MinIO Configuration (using Kubernetes MinIO service)
   MINIO_ENDPOINT: "http://minio:9000"
+  # External endpoint for presigned URLs (accessible from browser via port-forward)
+  # This endpoint is used ONLY for generating presigned URLs that browsers can access
+  MINIO_EXTERNAL_ENDPOINT: "http://localhost:9000"
   # MINIO_ACCESS_KEY and MINIO_SECRET_KEY are in secret.yaml
   MINIO_BUCKET_NAME: "carpeta-ciudadana-docs"
   MINIO_PRESIGNED_URL_EXPIRY: "15"

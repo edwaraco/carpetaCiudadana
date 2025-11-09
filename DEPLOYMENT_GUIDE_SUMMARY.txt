@@ -53,13 +53,13 @@ kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin
 # -------------------------------------------------------------------------------
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 cd tools;
-.\start-all-port-forwards.ps1;
+.\port-forwards-start.ps1;
 
 # Ver estado de los port-forwards:
-.\status-port-forwards.ps1
+.\port-forwards-status.ps1
 
 # Detener todos los port-forwards:
-.\stop-all-port-forwards.ps1
+.\port-forwards-stop.ps1
 
 # ===============================================================================
 # OPCIÓN 2: Manual - Abre terminales separadas para cada servicio

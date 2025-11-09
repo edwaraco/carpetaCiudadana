@@ -5,6 +5,7 @@ import co.edu.eafit.carpeta.ciudadana.service.MinioStorageService;
 import io.minio.*;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class MinioStorageServiceImpl implements MinioStorageService {
 
     private final MinioClient minioClient;
+    private final MinioClient minioExternalClient;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -25,8 +27,10 @@ public class MinioStorageServiceImpl implements MinioStorageService {
     @Value("${minio.presigned-url-expiry-minutes}")
     private int defaultExpiryMinutes;
 
-    public MinioStorageServiceImpl(MinioClient minioClient) {
+    public MinioStorageServiceImpl(MinioClient minioClient, 
+                                   @Qualifier("minioExternalClient") MinioClient minioExternalClient) {
         this.minioClient = minioClient;
+        this.minioExternalClient = minioExternalClient;
     }
 
     @Override
@@ -60,7 +64,8 @@ public class MinioStorageServiceImpl implements MinioStorageService {
         try {
             log.info("Generando URL prefirmada para: {} (expira en {} minutos)", objectName, expiryMinutes);
 
-            String url = minioClient.getPresignedObjectUrl(
+            // Use external client for presigned URLs so browsers can access via localhost
+            String url = minioExternalClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)
