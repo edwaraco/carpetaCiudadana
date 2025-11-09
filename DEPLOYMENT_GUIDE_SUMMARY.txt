@@ -39,22 +39,74 @@ cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
 # PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
-# Abre DOS terminales separadas y ejecuta uno en cada una:
+# Abre terminales separadas para cada servicio que quieras acceder:
 
-# Terminal 1 - Frontend
+# Terminal 1 - Frontend (REQUERIDO)
 kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
 
-# Terminal 2 - RabbitMQ
+# Terminal 2 - RabbitMQ Management UI (REQUERIDO para monitoreo)
 kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
 
+# Terminal 3 - MinIO Console (OPCIONAL - administración de archivos)
+kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
 
-# ACCESO A LOS SERVICIOS (después de tener los port-forwards activos)
+# Terminal 4 - MinIO API (OPCIONAL - operaciones S3)
+kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
 
-# Frontend
+# Terminal 5 - Carpeta Ciudadana API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+
+# Terminal 6 - Document Authentication API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+
+# ======================================== ACCESO A LOS SERVICIOS ========================================
+# Después de tener los port-forwards activos, accede desde tu navegador:
+
+# INTERFAZ PRINCIPAL
+# ------------------
+# Frontend Web Application
 http://localhost:8080
+# Interfaz principal para ciudadanos (registro, login, gestión de documentos)
 
+
+# INTERFACES DE ADMINISTRACIÓN
+# -----------------------------
 # RabbitMQ Management UI (credenciales: admin / admin123)
 http://localhost:15672
+# - Monitoreo de colas y mensajes
+# - Gestión de exchanges y bindings
+# - Estadísticas de rendimiento
+
+# MinIO Console (credenciales: admin / admin123)
+http://localhost:9001
+# - Navegador de archivos S3
+# - Gestión de buckets
+# - Políticas de acceso
+# - Monitoreo de uso
+
+# Kubernetes Dashboard (OPCIONAL - requiere instalación adicional)
+# kubectl proxy
+# http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+# http://localhost:8001/api/v1/namespaces/
+# - Monitoreo de pods y deployments
+# - Logs y eventos del cluster
+# - Gestión de recursos
+
+
+# APIS Y DOCUMENTACIÓN
+# --------------------
+# Carpeta Ciudadana Service - Swagger UI
+http://localhost:8080/api/v1/swagger-ui.html
+# Documentación interactiva de la API principal
+
+# Document Authentication Service - API Docs
+http://localhost:8083/api/v1/docs
+# Documentación de la API de autenticación de documentos
+
+# MinIO S3 API Endpoint
+http://localhost:9000
+# Endpoint para operaciones S3 programáticas
 
 
 

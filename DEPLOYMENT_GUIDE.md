@@ -361,33 +361,96 @@ kubectl top pods -n carpeta-ciudadana
 kubectl top nodes
 
 # ============================================================================
-# STEP 10: Access Points
+# STEP 10: Access Points - Admin Interfaces & APIs
 # ============================================================================
 
-# RabbitMQ Management UI
-start http://localhost:15672
-# Credentials: admin / admin123
+# REQUIRED PORT-FORWARDS
+# Keep these terminals open for accessing the services:
 
-# Carpeta Ciudadana Service API (Swagger)
-start http://localhost:8080/api/v1/swagger-ui.html
+# Terminal 1 - Frontend (REQUIRED)
+kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
 
-# Document Authentication Service API (Swagger)
-start http://localhost:8083/api/v1/docs
+# Terminal 2 - RabbitMQ (REQUIRED for monitoring)
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
 
+# Terminal 3 - MinIO Console (OPTIONAL - file management)
+kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
+
+# Terminal 4 - MinIO API (OPTIONAL - S3 operations)
+kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
+
+# Terminal 5 - Carpeta Ciudadana API (OPTIONAL - Swagger)
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+
+# Terminal 6 - Document Authentication API (OPTIONAL - Swagger)
+kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+# ====================================================================================
+# WEB INTERFACES - Open in your browser:
+# ====================================================================================
+
+# MAIN APPLICATION
+# ----------------
 # Citizen Web Frontend
-start http://citizen-web.local
-# Or use minikube IP:
-$minikubeIP = minikube ip
-start "http://$minikubeIP:30080"
+start http://localhost:8080
+# Main interface for citizens (registration, login, document management)
+
+# ADMINISTRATION INTERFACES
+# -------------------------
+# RabbitMQ Management UI (Credentials: admin / admin123)
+start http://localhost:15672
+# - Queue and message monitoring
+# - Exchange and binding management  
+# - Performance statistics
+# - User and permission management
+
+# MinIO Console (Credentials: admin / admin123)
+start http://localhost:9001
+# - S3 bucket browser
+# - File upload/download interface
+# - Access policy management
+# - Storage usage monitoring
+# - Object versioning
+
+# Kubernetes Dashboard (OPTIONAL - requires additional setup)
+# First, install the dashboard:
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+# Then start proxy:
+# kubectl proxy
+# Access at:
+start http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+# - Pod and deployment monitoring
+# - Cluster logs and events
+# - Resource management
+# - Real-time metrics
+
+# API DOCUMENTATION
+# -----------------
+# Carpeta Ciudadana Service - Swagger UI
+start http://localhost:8080/api/v1/swagger-ui.html
+# Interactive API documentation for document management
+
+# Document Authentication Service - API Docs  
+start http://localhost:8083/api/v1/docs
+# FastAPI interactive documentation for document authentication
+
+# MinIO S3 API Endpoint
+# http://localhost:9000
+# Programmatic S3 API access (use AWS SDK or MinIO client)
 
 # ============================================================================
 # IMPORTANT NOTES
 # ============================================================================
 # 
 # Port Forwards Required (keep these terminals open):
-# 1. RabbitMQ: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
-# 2. Carpeta Ciudadana Service: kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
-# 3. Document Authentication: kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+# 1. Frontend: kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
+# 2. RabbitMQ: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
+# 3. MinIO Console: kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
+# 4. MinIO API: kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
+#
+# Admin Credentials:
+# - RabbitMQ: admin / admin123
+# - MinIO: admin / admin123
 #
 # To update a service after making changes:
 # Use the script: .\tools\k8s-update-service.ps1 -ServiceName <service-name>
