@@ -9,29 +9,39 @@ Utilidades y scripts para desarrollo, deployment y gestión del proyecto Carpeta
 
 ## 📜 Scripts Disponibles
 
-### 🚀 Port-Forward Management (Nuevo)
+### 🚀 Port-Forward Management
 
 Scripts para gestionar port-forwards de forma automática en background.
 
-#### port-forwards-start.ps1
+> **📌 Importante**: Disponible tanto para Windows (PowerShell) como para Linux/Mac (Bash)
 
-Inicia TODOS los port-forwards necesarios en background como PowerShell jobs.
+#### port-forwards-start (.sh / .ps1)
+
+Inicia TODOS los port-forwards necesarios en background.
 
 **Uso:**
 
+**Windows (PowerShell):**
 ```powershell
 cd tools
 .\port-forwards-start.ps1
 ```
 
+**Linux/Mac (Bash):**
+```bash
+cd tools
+chmod +x port-forwards-start.sh
+./port-forwards-start.sh
+```
+
 **Características:**
 
-- ✅ Inicia 10 port-forwards simultáneamente en background
+- ✅ Inicia 9 port-forwards simultáneamente en background
 - ✅ Separa servicios REQUERIDOS vs OPCIONALES
 - ✅ Muestra URLs de acceso y credenciales
-- ✅ Los jobs persisten incluso si cierras la terminal
 - ✅ Verificación automática de Minikube
 - ✅ Previene duplicación de port-forwards
+- ✅ Windows: Jobs de PowerShell / Linux/Mac: Procesos en background
 
 **Port-forwards incluidos:**
 
@@ -51,16 +61,21 @@ cd tools
 
 - **OPCIONALES - Bases de Datos:**
   - Auth PostgreSQL (5432)
-  - Registry PostgreSQL (5433)
 
-#### port-forwards-status.ps1
+#### port-forwards-status (.sh / .ps1)
 
 Verifica el estado de todos los port-forwards activos.
 
 **Uso:**
 
+**Windows (PowerShell):**
 ```powershell
 .\port-forwards-status.ps1
+```
+
+**Linux/Mac (Bash):**
+```bash
+./port-forwards-status.sh
 ```
 
 **Muestra:**
@@ -70,20 +85,26 @@ Verifica el estado de todos los port-forwards activos.
 - Tabla con detalles (ID, hora de inicio, estado)
 - Comandos útiles para debugging
 
-#### port-forwards-stop.ps1
+#### port-forwards-stop (.sh / .ps1)
 
 Detiene TODOS los port-forwards activos.
 
 **Uso:**
 
+**Windows (PowerShell):**
 ```powershell
 .\port-forwards-stop.ps1
 ```
 
+**Linux/Mac (Bash):**
+```bash
+./port-forwards-stop.sh
+```
+
 **Características:**
 
-- ✅ Detiene todos los jobs de port-forward
-- ✅ Limpia los jobs del sistema
+- ✅ Detiene todos los port-forwards activos
+- ✅ Limpia jobs/procesos del sistema
 - ✅ Confirmación visual de cada servicio detenido
 
 ---
