@@ -12,10 +12,10 @@ data:
   # RabbitMQ Configuration
   # SECURITY NOTE: For production, replace credentials with Kubernetes secrets
   RABBITMQ_URL: "amqp://admin:admin123@carpeta-rabbitmq:5672/"
-  DOCUMENT_AUTHENTICATED_QUEUE: "document_authenticated_response"
+  DOCUMENT_AUTHENTICATED_QUEUE: "documento.autenticado.queue"
   
   # External Services
-  CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service.carpeta-ciudadana.svc.cluster.local:8080/api/v1"
+  CARPETA_CIUDADANA_SERVICE_URL: "http://carpeta-ciudadana-service:8080"
   GOV_CARPETA_SERVICE_URL: "https://govcarpeta-apis-4905ff3c005b.herokuapp.com"
   
   # JWT Configuration (same as auth-service)

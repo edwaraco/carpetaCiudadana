@@ -1,6 +1,6 @@
 /**
  * LoginForm Component
- * Handles user login with email and password
+ * Handles user login with cedula (document ID) and password
  */
 
 import React, { useEffect } from 'react';
@@ -19,18 +19,18 @@ import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 
 interface LoginFormProps {
-  initialEmail?: string;
+  initialCedula?: string;
   onSuccess?: () => void;
   onMFARequired?: () => void;
 }
 
 interface LoginFormData {
-  email: string;
+  cedula: string;
   password: string;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
-  initialEmail = '',
+  initialCedula = '',
   onSuccess,
   onMFARequired,
 }) => {
@@ -44,7 +44,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     formState: { errors },
   } = useForm<LoginFormData>({
     defaultValues: {
-      email: initialEmail,
+      cedula: initialCedula,
       password: '',
     },
   });
@@ -67,42 +67,47 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const onSubmit = async (data: LoginFormData) => {
     clearError();
     await login({
-      email: data.email,
+      cedula: data.cedula,
       password: data.password,
     });
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate data-testid="login-form">
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }} data-testid="login-form-error-alert">
           {error.message}
         </Alert>
       )}
 
-      {/* Email */}
+      {/* Cédula */}
       <Controller
-        name="email"
+        name="cedula"
         control={control}
         rules={{
-          required: 'Email is required',
+          required: 'Cédula is required',
           pattern: {
-            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-            message: 'Invalid email address',
+            value: /^\d{6,10}$/,
+            message: 'Cédula must be 6-10 digits',
           },
         }}
         render={({ field }) => (
           <TextField
             {...field}
             fullWidth
-            label="Email"
-            type="email"
+            label="Cédula"
+            type="text"
             margin="normal"
-            error={!!errors.email}
-            helperText={errors.email?.message}
+            error={!!errors.cedula}
+            helperText={errors.cedula?.message}
             disabled={isLoading}
-            autoComplete="email"
+            autoComplete="username"
             autoFocus
+            placeholder="1234567890"
+            data-testid="login-form-cedula-input"
+            inputProps={{
+              'data-testid': 'login-form-cedula-field',
+            }}
           />
         )}
       />
@@ -129,12 +134,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             helperText={errors.password?.message}
             disabled={isLoading}
             autoComplete="current-password"
+            data-testid="login-form-password-input"
+            inputProps={{
+              'data-testid': 'login-form-password-field',
+            }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
+                    data-testid="login-form-toggle-password"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -153,6 +163,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         sx={{ mt: 3, mb: 2 }}
         disabled={isLoading}
         startIcon={isLoading && <CircularProgress size={20} />}
+        data-testid="login-form-submit-button"
       >
         {isLoading ? 'Logging in...' : 'Login'}
       </Button>

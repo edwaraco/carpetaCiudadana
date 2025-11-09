@@ -7,7 +7,7 @@ metadata:
     app: ciudadano-registry-service
     version: v1
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: ciudadano-registry-service
@@ -37,11 +37,11 @@ spec:
           readOnly: true
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "50m"
+            memory: "512Mi"
+            cpu: "100m"
           limits:
-            memory: "256Mi"
-            cpu: "200m"
+            memory: "1Gi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /actuator/health

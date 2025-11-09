@@ -222,12 +222,12 @@ describe('documentMappers', () => {
         expect(mapBackendToFrontendStatus('TEMPORAL')).toBe('TEMPORARY');
       });
 
-      it('should map PROCESADO to CERTIFIED', () => {
-        expect(mapBackendToFrontendStatus('PROCESADO')).toBe('CERTIFIED');
+      it('should map PROCESADO to AUTENTICADO', () => {
+        expect(mapBackendToFrontendStatus('PROCESADO')).toBe('AUTENTICADO');
       });
 
-      it('should map CERTIFICADO to CERTIFIED', () => {
-        expect(mapBackendToFrontendStatus('CERTIFICADO')).toBe('CERTIFIED');
+      it('should map CERTIFICADO to AUTENTICADO', () => {
+        expect(mapBackendToFrontendStatus('CERTIFICADO')).toBe('AUTENTICADO');
       });
 
       it('should map REVOCADO to REVOKED', () => {
@@ -349,7 +349,7 @@ describe('documentMappers', () => {
           presignedUrl: undefined,
         },
         certification: undefined,
-        documentStatus: 'CERTIFIED',
+        documentStatus: 'AUTENTICADO',
         receptionDate: expect.any(Date),
       });
     });

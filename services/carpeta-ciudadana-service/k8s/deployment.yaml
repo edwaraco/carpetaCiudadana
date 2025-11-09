@@ -6,7 +6,7 @@ metadata:
   labels:
     app: carpeta-ciudadana-service
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: carpeta-ciudadana-service
@@ -62,17 +62,3 @@ spec:
   - port: 8080
     targetPort: 8080
   type: LoadBalancer
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: carpeta-ciudadana-service-external
-  namespace: carpeta-ciudadana
-spec:
-  selector:
-    app: carpeta-ciudadana-service
-  ports:
-  - port: 8080
-    targetPort: 8080
-    nodePort: 30081
-  type: NodePort

@@ -2,7 +2,7 @@
 RabbitMQ client for publishing document authentication events.
 
 This module handles connection to RabbitMQ and publishing events
-to the document_authenticated_response queue.
+to the documento.autenticado.queue queue.
 """
 
 import json
@@ -87,7 +87,7 @@ class RabbitMQClient:
             # Convert event to JSON
             event_dict = event.model_dump()
             # Convert datetime to ISO format string
-            event_dict["fecha_autenticacion"] = event.fecha_autenticacion.isoformat()
+            event_dict["fechaAutenticacion"] = event.fechaAutenticacion.isoformat()
 
             message_body = json.dumps(event_dict)
 
@@ -104,8 +104,8 @@ class RabbitMQClient:
             )
 
             logger.info(
-                f"Published authentication event for document {event.documento_id} "
-                f"with status {event.status_code}"
+                f"Published authentication event for document {event.documentoId} "
+                f"with status {event.statusCode}"
             )
         except Exception as e:
             logger.error(f"Failed to publish event to RabbitMQ: {str(e)}")

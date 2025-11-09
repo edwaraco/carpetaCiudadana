@@ -52,7 +52,7 @@ class TestAuthUtilities(unittest.TestCase):
         with self.assertRaises(HTTPException) as context:
             decode_jwt_token(invalid_token)
 
-        self.assertEqual(context.exception.status_code, 401)
+        self.assertEqual(context.exception.statusCode, 401)
 
     @patch("app.utils.auth.settings")
     def test_decode_expired_token(self, mock_settings):
@@ -67,7 +67,7 @@ class TestAuthUtilities(unittest.TestCase):
         with self.assertRaises(HTTPException) as context:
             decode_jwt_token(token)
 
-        self.assertEqual(context.exception.status_code, 401)
+        self.assertEqual(context.exception.statusCode, 401)
 
     @patch("app.utils.auth.settings")
     def test_decode_token_wrong_signature(self, mock_settings):
@@ -82,7 +82,7 @@ class TestAuthUtilities(unittest.TestCase):
         with self.assertRaises(HTTPException) as context:
             decode_jwt_token(token)
 
-        self.assertEqual(context.exception.status_code, 401)
+        self.assertEqual(context.exception.statusCode, 401)
 
 
 if __name__ == "__main__":

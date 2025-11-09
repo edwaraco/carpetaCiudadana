@@ -45,7 +45,7 @@ data:
       "policies": [],
       "queues": [
         {
-          "name": "document_authentication_response",
+          "name": "documento.autenticado.queue",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -54,7 +54,7 @@ data:
             "x-quorum-initial-group-size": 3,
             "x-delivery-limit": 3,
             "x-dead-letter-exchange": "carpeta.dlx",
-            "x-dead-letter-routing-key": "document_authentication_response.dlq"
+            "x-dead-letter-routing-key": "documento.autenticado.queue.dlq"
           }
         },
         {
@@ -82,7 +82,7 @@ data:
           }
         },
         {
-          "name": "document_authentication_response.dlq",
+          "name": "documento.autenticado.queue.dlq",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -126,7 +126,7 @@ data:
         {
           "source": "carpeta.events",
           "vhost": "/",
-          "destination": "document_authentication_response",
+          "destination": "documento.autenticado.queue",
           "destination_type": "queue",
           "routing_key": "document.authentication.response",
           "arguments": {}
@@ -150,9 +150,9 @@ data:
         {
           "source": "carpeta.dlx",
           "vhost": "/",
-          "destination": "document_authentication_response.dlq",
+          "destination": "documento.autenticado.queue.dlq",
           "destination_type": "queue",
-          "routing_key": "document_authentication_response.dlq",
+          "routing_key": "documento.autenticado.queue.dlq",
           "arguments": {}
         },
         {

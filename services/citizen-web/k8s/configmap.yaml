@@ -6,6 +6,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: citizen-web-config
+  namespace: carpeta-ciudadana
   labels:
     app: citizen-web
     component: frontend
@@ -27,7 +28,7 @@ data:
   VITE_FEATURE_UPLOAD_DOCUMENTS: "true"
   VITE_FEATURE_DOWNLOAD_DOCUMENTS: "true"
   VITE_FEATURE_DELETE_DOCUMENTS: "false"
-  VITE_FEATURE_NOTIFICATIONS: "true"
+  VITE_FEATURE_NOTIFICATIONS: "false"
 
   # Feature Flags - Dashboard
   VITE_FEATURE_STORAGE_STATS: "true"
@@ -44,7 +45,7 @@ data:
   VITE_USE_MOCKS: "true"
 
   # Mock Configuration - Granular Control
-  VITE_MOCK_AUTHENTICATION: "true"
+  VITE_MOCK_AUTHENTICATION: "false"
   VITE_MOCK_IDENTITY: "true"
   VITE_MOCK_DOCUMENTS: "false"
   VITE_MOCK_CARPETA: "false"
@@ -56,9 +57,10 @@ data:
   # Nginx API Gateway - Microservices URLs
   DOCUMENTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
   FOLDERS_SERVICE_URL: "carpeta-ciudadana-service:8080"
-  IDENTITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  IDENTITY_SERVICE_URL: "identity-service:8080"
   AUTH_SERVICE_URL: "auth-service:8080"
   NOTIFICATIONS_SERVICE_URL: "notifications-service:8080"
   PORTABILITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
   REQUESTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
+  DOCUMENT_AUTHENTICATION_SERVICE_URL: "document-authentication-service:8083"
 

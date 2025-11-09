@@ -6,7 +6,7 @@ metadata:
   labels:
     app: notifications-service
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: notifications-service
@@ -55,18 +55,4 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: notifications-service-external
-  namespace: carpeta-ciudadana
-spec:
-  selector:
-    app: notifications-service
-  ports:
-  - port: 8080
-    targetPort: 8080
-    nodePort: 30090
-  type: NodePort
+  type: LoadBalancer

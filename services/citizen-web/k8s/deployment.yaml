@@ -1,25 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: carpeta-ciudadana-frontend
+  name: citizen-web
+  namespace: carpeta-ciudadana
   labels:
-    app: carpeta-ciudadana-frontend
+    app: citizen-web
     tier: frontend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: carpeta-ciudadana-frontend
+      app: citizen-web
   template:
     metadata:
       labels:
-        app: carpeta-ciudadana-frontend
+        app: citizen-web
         tier: frontend
     spec:
       containers:
-      - name: frontend
+      - name: citizen-web
         image: citizen-web:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never  # Use local image
         ports:
         - containerPort: 8080
           name: http
@@ -29,7 +30,7 @@ spec:
             name: citizen-web-config
         resources:
           requests:
-            memory: "256Mi"
+            memory: "128Mi"
             cpu: "100m"
           limits:
             memory: "512Mi"
@@ -46,7 +47,7 @@ spec:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
           periodSeconds: 10
           timeoutSeconds: 3
           failureThreshold: 3

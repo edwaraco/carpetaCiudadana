@@ -72,7 +72,7 @@ python example_5_dummy_url.py  # JWT real + URL dummy
 kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqadmin -u admin -p admin123 list queues name messages
 
 # Leer mensaje de la cola
-kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqadmin -u admin -p admin123 get queue=document_authenticated_response count=1
+kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqadmin -u admin -p admin123 get queue=documento.autenticado.queue count=1
 ```
 
 ### Ver Logs

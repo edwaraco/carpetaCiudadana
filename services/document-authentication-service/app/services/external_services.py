@@ -46,7 +46,7 @@ async def check_gov_carpeta_health() -> bool:
 
 
 async def get_presigned_document_url(
-    carpeta_id: str, documento_id: str, jwt_token: str
+    carpetaId: str, documentoId: str, jwt_token: str
 ) -> str:
     """
     Get presigned URL for document download from carpeta-ciudadana-service.
@@ -55,8 +55,8 @@ async def get_presigned_document_url(
     obtain a temporary presigned URL for downloading the document.
 
     Args:
-        carpeta_id: UUID of the citizen's folder
-        documento_id: UUID of the document
+        carpetaId: UUID of the citizen's folder
+        documentoId: UUID of the document
         jwt_token: JWT bearer token for authentication
 
     Returns:
@@ -67,7 +67,7 @@ async def get_presigned_document_url(
     """
     url = (
         f"{settings.carpeta_ciudadana_service_url}/api/v1/carpetas/"
-        f"{carpeta_id}/documentos/{documento_id}/descargar"
+        f"{carpetaId}/documentos/{documentoId}/descargar"
     )
 
     headers = {"Authorization": f"Bearer {jwt_token}"}
@@ -80,21 +80,53 @@ async def get_presigned_document_url(
                 response = client.get(url, headers=headers)
                 response.raise_for_status()
 
-                # The response should contain the presigned URL
-                # Assuming the API returns JSON with a 'url' field
-                data = response.json()
-                if isinstance(data, dict) and "url" in data:
-                    return data["url"]
-                elif isinstance(data, str):
+                # The response is wrapped in ApiResponse format:
+                # {"success": true, "message": "...", "data": {...}, "timestamp": "..."}
+                json_response = response.json()
+                
+                logger.info(f"Response type: {type(json_response)}, has 'data': {'data' in json_response if isinstance(json_response, dict) else 'N/A'}, success value: {json_response.get('success') if isinstance(json_response, dict) else 'N/A'}")
+                
+                # Extract data from ApiResponse wrapper
+                if isinstance(json_response, dict):
+                    # Check if it's wrapped in ApiResponse
+                    if "data" in json_response and json_response.get("success"):
+                        data = json_response["data"]
+                        logger.info(f"Data extracted: {data}")
+                        if isinstance(data, dict) and "urlDescarga" in data:
+                            presigned_url = data["urlDescarga"]
+                            logger.info(f"Raw presigned URL (last 50 chars): ...{presigned_url[-50:]}")
+                            # Clean any potential extra quotes or whitespace
+                            presigned_url = presigned_url.strip().strip("'\"")
+                            # Remove URL-encoded quote at the end if present (e.g., %27)
+                            if presigned_url.endswith("%27"):
+                                presigned_url = presigned_url[:-3]
+                                logger.info("Removed trailing %27 from URL")
+                            logger.info(f"Cleaned presigned URL (first 80 chars): {presigned_url[:80]}...")
+                            return presigned_url
+                        else:
+                            raise ExternalServiceError(
+                                f"'data' object missing 'urlDescarga' field: {data}"
+                            )
+                    # Legacy: direct response with urlDescarga
+                    elif "urlDescarga" in json_response:
+                        presigned_url = json_response["urlDescarga"]
+                        presigned_url = presigned_url.strip().strip("'\"")
+                        return presigned_url
+                    else:
+                        logger.error(f"Response does not match expected format. Keys: {json_response.keys()}")
+                        raise ExternalServiceError(
+                            f"Unexpected response format from carpeta service: {json_response}"
+                        )
+                elif isinstance(json_response, str):
                     # If response is directly the URL string
-                    return data
+                    return json_response.strip().strip("'\"")
                 else:
                     raise ExternalServiceError(
-                        f"Unexpected response format from carpeta service: {data}"
+                        f"Unexpected response type from carpeta service: {type(json_response)}"
                     )
 
         presigned_url = carpeta_service_circuit_breaker.call(_make_request)
-        logger.info(f"Retrieved presigned URL for document {documento_id}")
+        logger.info(f"Retrieved presigned URL for document {documentoId}")
         return presigned_url
 
     except Exception as e:
@@ -140,45 +172,45 @@ async def authenticate_document_with_gov_carpeta(
                     try:
                         message = response.json()
                         if isinstance(message, str):
-                            return {"status_code": "200", "message": message}
+                            return {"statusCode": "200", "message": message}
                         else:
                             return {
-                                "status_code": "200",
+                                "statusCode": "200",
                                 "message": str(message),
                             }
                     except Exception:
                         return {
-                            "status_code": "200",
+                            "statusCode": "200",
                             "message": response.text,
                         }
 
                 elif response.status_code == 204:
                     return {
-                        "status_code": "204",
+                        "statusCode": "204",
                         "message": "No Content",
                     }
 
                 elif response.status_code == 500:
                     return {
-                        "status_code": "500",
+                        "statusCode": "500",
                         "message": "Application Error",
                     }
 
                 elif response.status_code == 501:
                     return {
-                        "status_code": "501",
+                        "statusCode": "501",
                         "message": "Wrong Parameters",
                     }
 
                 else:
                     return {
-                        "status_code": str(response.status_code),
+                        "statusCode": str(response.status_code),
                         "message": response.text or "Unknown error",
                     }
 
         result = gov_carpeta_circuit_breaker.call(_make_request)
         logger.info(
-            f"Gov Carpeta authentication result: {result['status_code']} - {result['message']}"
+            f"Gov Carpeta authentication result: {result['statusCode']} - {result['message']}"
         )
         return result
 

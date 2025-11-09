@@ -13,6 +13,8 @@ import type {
   CursorPaginatedResponse,
   BackendDocumentoUrlResponse,
   PaginationCursor,
+  AuthenticateDocumentRequest,
+  AuthenticateDocumentResponse,
 } from '@/contexts/documents/domain/types';
 
 export class DocumentMockService implements IDocumentService {
@@ -49,7 +51,7 @@ export class DocumentMockService implements IDocumentService {
           algorithm: 'RSA-2048',
           hashAlgorithm: 'SHA-256',
         },
-        documentStatus: 'CERTIFIED',
+        documentStatus: 'AUTENTICADO',
         receptionDate: new Date('2024-01-15'),
       },
       {
@@ -75,7 +77,7 @@ export class DocumentMockService implements IDocumentService {
           algorithm: 'RSA-4096',
           hashAlgorithm: 'SHA-256',
         },
-        documentStatus: 'CERTIFIED',
+        documentStatus: 'AUTENTICADO',
         receptionDate: new Date('2024-01-10'),
       },
       {
@@ -91,7 +93,7 @@ export class DocumentMockService implements IDocumentService {
           hash: 'ghi789hash',
           storageUrl: 'https://storage.example.com/doc-003.pdf',
         },
-        documentStatus: 'TEMPORARY',
+        documentStatus: 'TEMPORAL',
         receptionDate: new Date('2024-02-01'),
       },
     ];
@@ -119,7 +121,7 @@ export class DocumentMockService implements IDocumentService {
         hash: `hash-${Date.now()}`,
         storageUrl: `https://storage.example.com/${docId}.${this.getFileExtension(request.file.name)}`,
       },
-      documentStatus: 'TEMPORARY',
+      documentStatus: 'TEMPORAL',
       receptionDate: new Date(),
     };
 
@@ -209,11 +211,11 @@ export class DocumentMockService implements IDocumentService {
       };
     }
 
-    if (document.documentStatus === 'CERTIFIED') {
+    if (document.documentStatus === 'AUTENTICADO') {
       return {
         success: false,
         error: {
-          code: 'CANNOT_DELETE_CERTIFIED',
+          code: 'CANNOT_DELETE_AUTENTICADO',
           message: 'Certified documents cannot be deleted',
           statusCode: 403,
         },
@@ -262,7 +264,7 @@ export class DocumentMockService implements IDocumentService {
     };
 
     document.certification = certification;
-    document.documentStatus = 'CERTIFIED';
+    document.documentStatus = 'AUTENTICADO';
 
     return {
       success: true,
@@ -311,6 +313,41 @@ export class DocumentMockService implements IDocumentService {
     return {
       success: true,
       data: mockResponse,
+      timestamp: new Date(),
+    };
+  }
+
+  async authenticateDocument(
+    request: AuthenticateDocumentRequest
+  ): Promise<ApiResponse<AuthenticateDocumentResponse>> {
+    await this.simulateDelay(800);
+
+    console.log(
+      `[Mock] Authenticating document ${request.documentId} (${request.documentTitle})`
+    );
+
+    const document = this.documents.get(request.documentId);
+
+    if (!document) {
+      return {
+        success: false,
+        error: {
+          code: 'DOCUMENT_NOT_FOUND',
+          message: 'Document not found',
+          statusCode: 404,
+        },
+        timestamp: new Date(),
+      };
+    }
+
+    // Simulate successful authentication response (202 Accepted)
+    return {
+      success: true,
+      data: {
+        status: 202,
+        message: 'Accepted',
+      },
+      message: 'Document authentication request accepted',
       timestamp: new Date(),
     };
   }

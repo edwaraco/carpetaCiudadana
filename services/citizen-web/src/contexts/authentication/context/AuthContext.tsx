@@ -5,10 +5,10 @@
 
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService } from '../infrastructure';
-import { Citizen } from '../../identity/domain/types';
-import { LoginRequest, MFAVerificationRequest, MFAType } from '../domain/types';
-import { ApiError } from '../../../shared/utils/api.types';
+import { authService } from '@/contexts/authentication/infrastructure';
+import type { Citizen } from '@/contexts/identity/domain/types';
+import type { LoginRequest, MFAVerificationRequest, MFAType, RegisterRequest, SetPasswordRequest } from '@/contexts/authentication/domain/types';
+import type { ApiError } from '@/shared/utils/api.types';
 
 interface AuthContextValue {
   // State
@@ -19,9 +19,12 @@ interface AuthContextValue {
   error: ApiError | null;
   requiresMFA: boolean;
   sessionId: string | null;
+  registrationMessage: string | null;
 
   // Methods
   login: (request: LoginRequest) => Promise<void>;
+  register: (request: RegisterRequest) => Promise<{ success: boolean; cedula?: string }>;
+  setPassword: (request: SetPasswordRequest) => Promise<void>;
   verifyMFA: (code: string, type: MFAType) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -41,6 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<ApiError | null>(null);
   const [requiresMFA, setRequiresMFA] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -177,8 +181,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const register = useCallback(async (request: RegisterRequest): Promise<{ success: boolean; cedula?: string }> => {
+    setIsLoading(true);
+    setError(null);
+    setRegistrationMessage(null);
+
+    try {
+      const response = await authService.register(request);
+
+      if (response.success && response.data) {
+        setRegistrationMessage(response.data.message);
+        return { success: true, cedula: response.data.cedula };
+      } else if (response.error) {
+        setError(response.error);
+        return { success: false };
+      }
+      return { success: false };
+    } catch (err) {
+      setError({
+        code: 'REGISTRATION_ERROR',
+        message: 'An unexpected error occurred during registration',
+        statusCode: 500,
+      });
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const setPassword = useCallback(async (request: SetPasswordRequest) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await authService.setPassword(request);
+
+      if (response.success && response.data) {
+        // Auto-login after setting password
+        setToken(response.data.token);
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+
+        // Store in localStorage
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } catch (err) {
+      setError({
+        code: 'SET_PASSWORD_ERROR',
+        message: 'An unexpected error occurred while setting password',
+        statusCode: 500,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
+    setRegistrationMessage(null);
   }, []);
 
   const value: AuthContextValue = {
@@ -189,7 +252,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     requiresMFA,
     sessionId,
+    registrationMessage,
     login,
+    register,
+    setPassword,
     verifyMFA,
     logout,
     clearError,

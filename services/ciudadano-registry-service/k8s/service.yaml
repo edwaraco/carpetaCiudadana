@@ -6,7 +6,7 @@ metadata:
   labels:
     app: ciudadano-registry-service
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
   - port: 8081
     targetPort: 8081

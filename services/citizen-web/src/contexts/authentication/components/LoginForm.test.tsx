@@ -1,5 +1,6 @@
 /**
  * LoginForm Tests
+ * Uses data-testid for all selectors
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -7,21 +8,27 @@ import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginForm } from './LoginForm';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '@/contexts/authentication/context/AuthContext';
 
 // Mock authService
-vi.mock('../infrastructure', () => ({
+vi.mock('@/contexts/authentication/infrastructure', () => ({
   authService: {
     login: vi.fn(() =>
       Promise.resolve({
         success: true,
         data: {
           token: 'mock-token',
+          expiresAt: new Date(Date.now() + 3600000),
           user: {
-            id: 'user-123',
-            fullName: 'Test User',
-            email: 'test@example.com',
             cedula: '1234567890',
+            fullName: 'Juan Pérez García',
+            address: 'Calle 123 #45-67',
+            personalEmail: 'juan@example.com',
+            folderEmail: 'juan.perez.1234567890@carpetacolombia.co',
+            currentOperator: 'MiCarpeta',
+            registrationDate: new Date(),
+            status: 'ACTIVE',
+            carpetaId: 'carpeta-123',
           },
           requiresMFA: false,
         },
@@ -41,36 +48,86 @@ describe('LoginForm', () => {
   it('renders the form with all fields', () => {
     render(<LoginForm />, { wrapper: Wrapper });
 
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form-cedula-input')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form-password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form-submit-button')).toBeInTheDocument();
   });
 
   it('validates required fields', async () => {
     const user = userEvent.setup();
     render(<LoginForm />, { wrapper: Wrapper });
 
-    const submitButton = screen.getByRole('button', { name: /login/i });
+    const submitButton = screen.getByTestId('login-form-submit-button');
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/cédula is required/i)).toBeInTheDocument();
       expect(screen.getByText(/password is required/i)).toBeInTheDocument();
     });
   });
 
-  it('validates email format', async () => {
+  it('validates cedula format (must be 6-10 digits)', async () => {
     const user = userEvent.setup();
     render(<LoginForm />, { wrapper: Wrapper });
 
-    const emailInput = screen.getByLabelText(/email/i);
-    await user.type(emailInput, 'invalid-email');
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    await user.type(cedulaInput, '12345'); // Less than 6 digits
 
-    const submitButton = screen.getByRole('button', { name: /login/i });
+    const submitButton = screen.getByTestId('login-form-submit-button');
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/cédula must be 6-10 digits/i)).toBeInTheDocument();
+    });
+  });
+
+  it('validates cedula format (no letters allowed)', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />, { wrapper: Wrapper });
+
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    await user.type(cedulaInput, 'abc123'); // Contains letters
+
+    const submitButton = screen.getByTestId('login-form-submit-button');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/cédula must be 6-10 digits/i)).toBeInTheDocument();
+    });
+  });
+
+  it('accepts valid cedula (6 digits)', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />, { wrapper: Wrapper });
+
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    const passwordInput = screen.getByTestId('login-form-password-field');
+    const submitButton = screen.getByTestId('login-form-submit-button');
+
+    await user.type(cedulaInput, '123456'); // 6 digits - valid
+    await user.type(passwordInput, 'password123');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/cédula must be 6-10 digits/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('accepts valid cedula (10 digits)', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />, { wrapper: Wrapper });
+
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    const passwordInput = screen.getByTestId('login-form-password-field');
+    const submitButton = screen.getByTestId('login-form-submit-button');
+
+    await user.type(cedulaInput, '1234567890'); // 10 digits - valid
+    await user.type(passwordInput, 'password123');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/cédula must be 6-10 digits/i)).not.toBeInTheDocument();
     });
   });
 
@@ -78,10 +135,10 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />, { wrapper: Wrapper });
 
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByTestId('login-form-password-field');
     await user.type(passwordInput, '123');
 
-    const submitButton = screen.getByRole('button', { name: /login/i });
+    const submitButton = screen.getByTestId('login-form-submit-button');
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -93,41 +150,46 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />, { wrapper: Wrapper });
 
-    const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement;
+    const passwordInput = screen.getByTestId('login-form-password-field') as HTMLInputElement;
     expect(passwordInput.type).toBe('password');
 
-    const toggleButton = screen.getByRole('button', { name: '' });
+    const toggleButton = screen.getByTestId('login-form-toggle-password');
     await user.click(toggleButton);
 
     expect(passwordInput.type).toBe('text');
+
+    await user.click(toggleButton);
+    expect(passwordInput.type).toBe('password');
   });
 
-  it('accepts initial email value', () => {
-    render(<LoginForm initialEmail="test@example.com" />, { wrapper: Wrapper });
+  it('accepts initial cedula value', () => {
+    render(<LoginForm initialCedula="1234567890" />, { wrapper: Wrapper });
 
-    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
-    expect(emailInput.value).toBe('test@example.com');
+    const cedulaInput = screen.getByTestId('login-form-cedula-field') as HTMLInputElement;
+    expect(cedulaInput.value).toBe('1234567890');
   });
 
-  it('disables form while loading', async () => {
+  it('accepts valid cedula and password', async () => {
     const user = userEvent.setup();
     render(<LoginForm />, { wrapper: Wrapper });
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /login/i });
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    const passwordInput = screen.getByTestId('login-form-password-field');
+    const submitButton = screen.getByTestId('login-form-submit-button');
 
-    await user.type(emailInput, 'test@example.com');
+    await user.type(cedulaInput, '1234567890');
     await user.type(passwordInput, 'password123');
 
-    // Button should be enabled before clicking
+    // Button should be enabled
     expect(submitButton).not.toBeDisabled();
 
     await user.click(submitButton);
 
-    // Form fields and button should be disabled while loading
-    // Note: Due to the mock being synchronous, the loading state might be very brief
-    // We check that the form was processed (onSuccess would be called if it worked)
+    // Form should be processed without validation errors
+    await waitFor(() => {
+      expect(screen.queryByText(/cédula must be 6-10 digits/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/password must be at least 6 characters/i)).not.toBeInTheDocument();
+    });
   });
 
   it('calls onSuccess callback on successful login', async () => {
@@ -136,17 +198,39 @@ describe('LoginForm', () => {
 
     render(<LoginForm onSuccess={onSuccess} />, { wrapper: Wrapper });
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /login/i });
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    const passwordInput = screen.getByTestId('login-form-password-field');
+    const submitButton = screen.getByTestId('login-form-submit-button');
 
-    await user.type(emailInput, 'test@example.com');
+    await user.type(cedulaInput, '1234567890');
     await user.type(passwordInput, 'password123');
     await user.click(submitButton);
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalled();
     }, { timeout: 3000 });
+  });
+
+  it('disables form while loading', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />, { wrapper: Wrapper });
+
+    const cedulaInput = screen.getByTestId('login-form-cedula-field');
+    const passwordInput = screen.getByTestId('login-form-password-field');
+    const submitButton = screen.getByTestId('login-form-submit-button');
+
+    await user.type(cedulaInput, '1234567890');
+    await user.type(passwordInput, 'password123');
+
+    // Button should be enabled before clicking
+    expect(submitButton).not.toBeDisabled();
+  });
+
+  it('shows placeholder text for cedula', () => {
+    render(<LoginForm />, { wrapper: Wrapper });
+
+    const cedulaInput = screen.getByPlaceholderText('1234567890');
+    expect(cedulaInput).toBeInTheDocument();
   });
 });
 

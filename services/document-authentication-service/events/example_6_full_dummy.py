@@ -33,17 +33,17 @@ headers = {"Authorization": f"Bearer {jwt_token}", "Content-Type": "application/
 def main():
     try:
         response = httpx.post(url, json=payload, headers=headers, timeout=10.0)
-        print(f"Status Code: {response.status_code}")
+        print(f"Status Code: {response.statusCode}")
         print(f"Response: {json.dumps(response.json(), indent=2)}")
 
-        if response.status_code == 202:
+        if response.statusCode == 202:
             print("\n✅ Request accepted! Authentication processing in background.")
             print("🧪 FULL TESTING MODE:")
             print("   - JWT validation SKIPPED (dummyJWT=true)")
             print("   - Presigned URL fetch SKIPPED (dummyURL provided)")
             print("   - Only Gov Carpeta API call will be made")
             print(
-                "\nCheck RabbitMQ queue 'document_authenticated_response' for results."
+                "\nCheck RabbitMQ queue 'documento.autenticado.queue' for results."
             )
     except Exception as e:
         print(f"❌ Error: {str(e)}")

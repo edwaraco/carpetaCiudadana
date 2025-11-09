@@ -21,7 +21,7 @@ data:
       access-key-id: dummy
       secret-access-key: dummy
       dynamodb:
-        endpoint: http://dynamodb-local:8000
+        endpoint: http://citizen-dynamodb-local:8000
 
     # Configuración de GovCarpeta API (external service)
     govcarpeta:

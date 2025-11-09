@@ -6,7 +6,7 @@ metadata:
 data:
   # Application config
   LISTEN_PORT: "8080"
-  FRONTEND_BASE_URL: "http://localhost:3000"
+  FRONTEND_BASE_URL: "http://10.100.137.220"
   ENVIRONMENT: "kubernetes"
   
   # RabbitMQ simplified configuration
@@ -19,6 +19,6 @@ data:
   CONSUMER_ENABLED: "true"
   
   # SendGrid configuration
-  SENDGRID_API_KEY: "SG.REPLACE_WITH_YOUR_SENDGRID_API_KEY_BEFORE_DEPLOYING"
+  SENDGRID_API_KEY: "SENDGRID_API_KEY"
   FROM_EMAIL: "carpeta.ciudadana.info@gmail.com"
   FROM_NAME: "Carpeta Ciudadana"

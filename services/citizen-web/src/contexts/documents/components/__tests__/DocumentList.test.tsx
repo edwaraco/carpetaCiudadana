@@ -67,7 +67,7 @@ describe('DocumentList', () => {
         presignedUrl: undefined,
       },
       certification: undefined,
-      documentStatus: 'CERTIFIED',
+      documentStatus: 'AUTENTICADO',
       receptionDate: new Date('2024-01-15'),
     },
     {
@@ -87,7 +87,7 @@ describe('DocumentList', () => {
         presignedUrl: undefined,
       },
       certification: undefined,
-      documentStatus: 'TEMPORARY',
+      documentStatus: 'TEMPORAL',
       receptionDate: new Date('2023-12-20'),
     },
   ];

@@ -67,7 +67,7 @@ vi.mock('../hooks', () => ({
           presignedUrl: undefined,
         },
         certification: undefined,
-        documentStatus: 'CERTIFIED',
+        documentStatus: 'AUTENTICADO',
         receptionDate: new Date('2024-01-15'),
       },
       {
@@ -156,7 +156,7 @@ describe('DocumentList', () => {
 
     await waitFor(() => {
       // The document status is shown as a chip with the status value
-      expect(screen.getByText('CERTIFIED')).toBeInTheDocument();
+      expect(screen.getByText('AUTENTICADO')).toBeInTheDocument();
     });
   });
 

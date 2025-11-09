@@ -179,6 +179,19 @@
     "documentNotFound": "Documento no encontrado"
   },
   "download": "Descargar",
-  "downloading": "Descargando..."
+  "downloading": "Descargando...",
+  "authenticate": {
+    "tooltip": "Autenticar Documento",
+    "success": "Solicitud de autenticación enviada exitosamente. El proceso se ejecutará en segundo plano.",
+    "error": "Error al solicitar autenticación: {{error}}",
+    "dialog": {
+      "title": "Autenticar Documento",
+      "message": "¿Está seguro de que desea autenticar el documento \"{{documentTitle}}\"?",
+      "info": "La autenticación se procesará de forma asíncrona a través del servicio Gov Carpeta. Recibirá una notificación cuando el proceso finalice.",
+      "confirm": "Autenticar",
+      "cancel": "Cancelar",
+      "authenticating": "Autenticando..."
+    }
+  }
 }
 

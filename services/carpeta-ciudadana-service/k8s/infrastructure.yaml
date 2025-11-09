@@ -77,6 +77,8 @@ spec:
           value: "admin"
         - name: MINIO_ROOT_PASSWORD
           value: "admin123"
+        - name: MINIO_SERVER_URL
+          value: "http://10.105.6.1:9000"
         command:
         - /bin/sh
         - -c
@@ -102,7 +104,7 @@ spec:
       - name: minio-storage
         emptyDir: {}
 ---
-# MinIO Service (API)
+# MinIO Service (API) - LoadBalancer for external presigned URL access
 apiVersion: v1
 kind: Service
 metadata:
@@ -115,9 +117,9 @@ spec:
   - port: 9000
     targetPort: 9000
     name: api
-  type: ClusterIP
+  type: LoadBalancer
 ---
-# MinIO Service (Console) - NodePort for external access
+# MinIO Service (Console) - LoadBalancer for easy external access
 apiVersion: v1
 kind: Service
 metadata:
@@ -129,6 +131,5 @@ spec:
   ports:
   - port: 9001
     targetPort: 9001
-    nodePort: 30901
     name: console
-  type: NodePort
+  type: LoadBalancer

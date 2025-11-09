@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     # RabbitMQ Configuration
     rabbitmq_url: str
-    document_authenticated_queue: str = "document_authenticated_response"
+    document_authenticated_queue: str = "documento.autenticado.queue"
 
     # External Services
     carpeta_ciudadana_service_url: str

@@ -17,6 +17,8 @@ data:
             password_hash VARCHAR(255) NOT NULL,     -- bcrypt hashed password
             email_verified BOOLEAN DEFAULT TRUE,
             email VARCHAR(255) NOT NULL,               -- User email address
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT valid_citizen_id CHECK (LENGTH(citizen_id) >= 6)
         );
 

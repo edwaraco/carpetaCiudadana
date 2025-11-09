@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { Document, DocumentStatus } from '@/contexts/documents/domain/types';
 import { DownloadDocumentButton } from '@/contexts/documents/components/DownloadDocumentButton';
+import { AuthenticateDocumentButton } from '@/contexts/documents/components/AuthenticateDocumentButton';
 
 interface DocumentCardProps {
   document: Document;
@@ -39,11 +40,11 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 }) => {
   const getStatusColor = (status: DocumentStatus): 'success' | 'warning' | 'error' => {
     switch (status) {
-      case 'CERTIFIED':
+      case 'AUTENTICADO':
         return 'success';
-      case 'TEMPORARY':
+      case 'TEMPORAL':
         return 'warning';
-      case 'REVOKED':
+      case 'RECHAZADO':
         return 'error';
       default:
         return 'warning';
@@ -52,9 +53,9 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 
   const getStatusIcon = (status: DocumentStatus) => {
     switch (status) {
-      case 'CERTIFIED':
+      case 'AUTENTICADO':
         return <CertifiedIcon fontSize="small" />;
-      case 'TEMPORARY':
+      case 'TEMPORAL':
         return <TemporaryIcon fontSize="small" />;
       default:
         return null;
@@ -73,7 +74,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
     }
   };
 
-  const canDelete = document.documentStatus !== 'CERTIFIED';
+  const canDelete = document.documentStatus !== 'AUTENTICADO';
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -125,6 +126,11 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
             </Tooltip>
           )}
           <DownloadDocumentButton
+            documentId={document.documentId}
+            documentTitle={document.metadata.title}
+            size="small"
+          />
+          <AuthenticateDocumentButton
             documentId={document.documentId}
             documentTitle={document.metadata.title}
             size="small"

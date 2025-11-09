@@ -12,7 +12,7 @@ export interface Document {
   receptionDate: Date;
 }
 
-export type DocumentStatus = 'TEMPORARY' | 'CERTIFIED' | 'REVOKED';
+export type DocumentStatus = 'TEMPORAL' | 'AUTENTICADO' | 'RECHAZADO';
 
 export interface DocumentMetadata {
   title: string;
@@ -75,6 +75,16 @@ export interface SignDocumentRequest {
 export interface SignDocumentResponse {
   documentId: string;
   certification: DocumentCertification;
+  message: string;
+}
+
+export interface AuthenticateDocumentRequest {
+  documentId: string;
+  documentTitle: string;
+}
+
+export interface AuthenticateDocumentResponse {
+  status: number;
   message: string;
 }
 
