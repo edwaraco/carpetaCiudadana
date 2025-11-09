@@ -38,6 +38,14 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
+# INSTALAR KUBERNETES DASHBOARD (OPCIONAL - para administración del cluster)
+# Este paso es opcional pero recomendado para tener una interfaz gráfica del cluster
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# Crear usuario administrador para el Dashboard
+kubectl create serviceaccount admin-user -n kubernetes-dashboard
+kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:admin-user
+
 # PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
 # Abre terminales separadas para cada servicio que quieras acceder:
 
@@ -54,10 +62,22 @@ kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
 kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
 
 # Terminal 5 - Carpeta Ciudadana API (OPCIONAL - Swagger UI)
-kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8082:8080
 
-# Terminal 6 - Document Authentication API (OPCIONAL - Swagger UI)
+# Terminal 6 - Ciudadano Registry API (OPCIONAL - Swagger UI)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-service 8081:8081
+
+# Terminal 7 - Document Authentication API (OPCIONAL - Swagger UI)
 kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+# Terminal 8 - Auth Service PostgreSQL (OPCIONAL - administración DB)
+kubectl port-forward -n carpeta-ciudadana svc/auth-postgres-service 5432:5432
+
+# Terminal 9 - Ciudadano Registry PostgreSQL (OPCIONAL - administración DB)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-postgres-service 5433:5432
+
+# Terminal 10 - Kubernetes Dashboard (OPCIONAL - administración cluster)
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
 
 
 # ======================================== ACCESO A LOS SERVICIOS ========================================
@@ -85,22 +105,45 @@ http://localhost:9001
 # - Políticas de acceso
 # - Monitoreo de uso
 
-# Kubernetes Dashboard (OPCIONAL - requiere instalación adicional)
-# kubectl proxy
-# http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
-# http://localhost:8001/api/v1/namespaces/
+# Kubernetes Dashboard (requiere token de autenticación)
+
+# Generar token:
+kubectl -n kubernetes-dashboard create token admin-user
+# Acceder:
+https://localhost:8443
 # - Monitoreo de pods y deployments
 # - Logs y eventos del cluster
 # - Gestión de recursos
 
 
+# BASES DE DATOS (usar cliente PostgreSQL como pgAdmin, DBeaver, etc.)
+# ---------------------------------------------------------------------
+# Auth Service PostgreSQL
+Host: localhost
+Port: 5432
+Database: auth_service_db
+User: auth_service_user
+Password: auth_service_password123
+
+# Ciudadano Registry PostgreSQL
+Host: localhost
+Port: 5433
+Database: ciudadano_registry_db
+User: ciudadano_registry_user
+Password: ciudadano_registry_password123
+
+
 # APIS Y DOCUMENTACIÓN
 # --------------------
 # Carpeta Ciudadana Service - Swagger UI
-http://localhost:8080/api/v1/swagger-ui.html
-# Documentación interactiva de la API principal
+http://localhost:8082/api/v1/swagger-ui.html
+# Documentación interactiva de la API principal de gestión de documentos
 
-# Document Authentication Service - API Docs
+# Ciudadano Registry Service - Swagger UI
+http://localhost:8081/ciudadano-registry/swagger-ui.html
+# Documentación de la API de registro de ciudadanos
+
+# Document Authentication Service - API Docs (FastAPI)
 http://localhost:8083/api/v1/docs
 # Documentación de la API de autenticación de documentos
 

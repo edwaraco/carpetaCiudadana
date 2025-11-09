@@ -336,12 +336,26 @@ kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
 cd ../..
 
 # ============================================================================
-# STEP 8: Update hosts file for local domain routing
+# STEP 8: Install Kubernetes Dashboard (OPTIONAL - Cluster Management UI)
 # ============================================================================
-# This allows accessing the frontend via citizen-web.local instead of IP
+# Provides a web-based UI for managing and monitoring your Kubernetes cluster
 
-# Run as Administrator
-powershell -ExecutionPolicy Bypass -File tools/update-minikube-hosts.ps1
+# 8.1 Deploy Kubernetes Dashboard
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# 8.2 Create admin user for Dashboard access
+kubectl create serviceaccount admin-user -n kubernetes-dashboard
+kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:admin-user
+
+# 8.3 Get access token (save this for later)
+kubectl -n kubernetes-dashboard create token admin-user
+# Copy the token output - you'll need it to login to the Dashboard
+
+# 8.4 Set up port-forward for Dashboard (KEEP THIS TERMINAL OPEN)
+# Open ANOTHER NEW PowerShell terminal and run:
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
+# Dashboard will be available at https://localhost:8443
+# Use the token from step 8.3 to login
 
 # ============================================================================
 # STEP 9: Verify all deployments
@@ -356,7 +370,10 @@ kubectl get svc -n carpeta-ciudadana
 # 9.3 Check RabbitMQ cluster
 kubectl get rabbitmqclusters -n carpeta-ciudadana
 
-# 9.4 Check resource usage
+# 9.4 Check Kubernetes Dashboard (if installed)
+kubectl get pods -n kubernetes-dashboard
+
+# 9.5 Check resource usage
 kubectl top pods -n carpeta-ciudadana
 kubectl top nodes
 
@@ -380,10 +397,22 @@ kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
 kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
 
 # Terminal 5 - Carpeta Ciudadana API (OPTIONAL - Swagger)
-kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8080:8080
+kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8082:8080
 
-# Terminal 6 - Document Authentication API (OPTIONAL - Swagger)
+# Terminal 6 - Ciudadano Registry API (OPTIONAL - Swagger)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-service 8081:8081
+
+# Terminal 7 - Document Authentication API (OPTIONAL - Swagger)
 kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+
+# Terminal 8 - Auth Service PostgreSQL (OPTIONAL - database admin)
+kubectl port-forward -n carpeta-ciudadana svc/auth-postgres-service 5432:5432
+
+# Terminal 9 - Ciudadano Registry PostgreSQL (OPTIONAL - database admin)
+kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-postgres-service 5433:5432
+
+# Terminal 10 - Kubernetes Dashboard (OPTIONAL - cluster management)
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
 
 # ====================================================================================
 # WEB INTERFACES - Open in your browser:
@@ -412,23 +441,26 @@ start http://localhost:9001
 # - Storage usage monitoring
 # - Object versioning
 
-# Kubernetes Dashboard (OPTIONAL - requires additional setup)
-# First, install the dashboard:
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
-# Then start proxy:
-# kubectl proxy
-# Access at:
-start http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+# Kubernetes Dashboard (requires token authentication)
+start https://localhost:8443
 # - Pod and deployment monitoring
 # - Cluster logs and events
 # - Resource management
 # - Real-time metrics
+#
+# To get access token:
+# kubectl -n kubernetes-dashboard create token admin-user
+# Then paste the token in the Dashboard login page
 
 # API DOCUMENTATION
 # -----------------
 # Carpeta Ciudadana Service - Swagger UI
-start http://localhost:8080/api/v1/swagger-ui.html
+start http://localhost:8082/api/v1/swagger-ui.html
 # Interactive API documentation for document management
+
+# Ciudadano Registry Service - Swagger UI
+start http://localhost:8081/ciudadano-registry/swagger-ui.html
+# Interactive API documentation for citizen registration
 
 # Document Authentication Service - API Docs  
 start http://localhost:8083/api/v1/docs
@@ -437,6 +469,18 @@ start http://localhost:8083/api/v1/docs
 # MinIO S3 API Endpoint
 # http://localhost:9000
 # Programmatic S3 API access (use AWS SDK or MinIO client)
+
+# DATABASES (use PostgreSQL clients like pgAdmin, DBeaver, etc.)
+# --------------------------------------------------------------
+# Auth Service PostgreSQL
+# Host: localhost, Port: 5432
+# Database: auth_service_db
+# User: auth_service_user, Password: auth_service_password123
+
+# Ciudadano Registry PostgreSQL
+# Host: localhost, Port: 5433
+# Database: ciudadano_registry_db
+# User: ciudadano_registry_user, Password: ciudadano_registry_password123
 
 # ============================================================================
 # IMPORTANT NOTES
@@ -447,10 +491,19 @@ start http://localhost:8083/api/v1/docs
 # 2. RabbitMQ: kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
 # 3. MinIO Console: kubectl port-forward -n carpeta-ciudadana svc/minio-console 9001:9001
 # 4. MinIO API: kubectl port-forward -n carpeta-ciudadana svc/minio 9000:9000
+# 5. Carpeta Ciudadana API: kubectl port-forward -n carpeta-ciudadana svc/carpeta-ciudadana-service 8082:8080
+# 6. Ciudadano Registry API: kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-service 8081:8081
+# 7. Document Auth API: kubectl port-forward -n carpeta-ciudadana svc/document-authentication-service 8083:8083
+# 8. Auth PostgreSQL: kubectl port-forward -n carpeta-ciudadana svc/auth-postgres-service 5432:5432
+# 9. Registry PostgreSQL: kubectl port-forward -n carpeta-ciudadana svc/ciudadano-registry-postgres-service 5433:5432
+# 10. Kubernetes Dashboard: kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
 #
 # Admin Credentials:
 # - RabbitMQ: admin / admin123
 # - MinIO: admin / admin123
+# - Auth PostgreSQL: auth_service_user / auth_service_password123
+# - Registry PostgreSQL: ciudadano_registry_user / ciudadano_registry_password123
+# - Kubernetes Dashboard: Use token from: kubectl -n kubernetes-dashboard create token admin-user
 #
 # To update a service after making changes:
 # Use the script: .\tools\k8s-update-service.ps1 -ServiceName <service-name>
