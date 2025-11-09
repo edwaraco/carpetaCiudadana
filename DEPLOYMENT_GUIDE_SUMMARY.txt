@@ -1,19 +1,51 @@
-# Luego de iniciar el cluster con los pasos de la guía completa...
-# Resumidamente con
+# ========================================================================================================
+# GUÍA RÁPIDA DE DESPLIEGUE - CARPETA CIUDADANA
+# ========================================================================================================
+# Esta guía proporciona comandos rápidos para despliegue en Windows (PowerShell) y Linux/Mac (Bash)
+# Para guía completa y detallada, ver: DEPLOYMENT_GUIDE.md
+# ========================================================================================================
+
+# ======================================== INSTALACIÓN INICIAL ========================================
+
+# WINDOWS (PowerShell):
+# ---------------------
 winget install -e --id Kubernetes.kubectl
 winget install -e --id Kubernetes.minikube
 
-# Esto en un PowerShell aparte
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass  # admin rights
+# LINUX/MAC (Bash):
+# -----------------
+# macOS:
+brew install kubectl
+brew install minikube
+
+# Linux (Debian/Ubuntu):
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# ======================================== INICIAR CLUSTER ========================================
+
+# WINDOWS (PowerShell - admin rights):
+# ------------------------------------
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 minikube start --driver=docker --memory=16384 --cpus=2
 minikube addons enable metrics-server
 minikube addons enable ingress
-# Y vuelves.
 
-# ========================================================================================================
+# LINUX/MAC (Bash):
+# -----------------
+minikube start --driver=docker --memory=16384 --cpus=2
+minikube addons enable metrics-server
+minikube addons enable ingress
 
-# Ahora sí
-# Vas a recompilar las imágenes Docker de los servicios locales
+# ======================================== CONSTRUIR Y CARGAR IMÁGENES ========================================
+
+# NOTA: Los comandos de construcción y carga son idénticos en Windows y Linux/Mac
+# Solo cambia el separador de comandos (PowerShell usa ';' mientras Bash usa '&&')
+
+# WINDOWS (PowerShell):
+# ---------------------
 cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 cd services/auth-service; docker build -t auth-service:latest .; cd ../..
 cd services/notifications-service; docker build -t notifications-service:latest .; cd ../..
@@ -21,7 +53,16 @@ cd services/carpeta-ciudadana-service; docker build -t carpeta-ciudadana-service
 cd services/document-authentication-service; docker build -t document-authentication-service:latest .; cd ../..
 cd services/ciudadano-registry-service; docker build -t ciudadano-registry-service:latest .; cd ../..
 
-# Luego, cargas las imágenes en minikube
+# LINUX/MAC (Bash):
+# -----------------
+cd services/citizen-web && docker build -t citizen-web:latest . && cd ../..
+cd services/auth-service && docker build -t auth-service:latest . && cd ../..
+cd services/notifications-service && docker build -t notifications-service:latest . && cd ../..
+cd services/carpeta-ciudadana-service && docker build -t carpeta-ciudadana-service:latest . && cd ../..
+cd services/document-authentication-service && docker build -t document-authentication-service:latest . && cd ../..
+cd services/ciudadano-registry-service && docker build -t ciudadano-registry-service:latest . && cd ../..
+
+# Cargar imágenes en minikube (IDÉNTICO en Windows y Linux/Mac):
 minikube image load auth-service:latest
 minikube image load notifications-service:latest
 minikube image load carpeta-ciudadana-service:latest
@@ -29,14 +70,23 @@ minikube image load document-authentication-service:latest
 minikube image load citizen-web:latest
 minikube image load ciudadano-registry-service:latest
 
+# ======================================== CONFIGURACIÓN PRE-DESPLIEGUE ========================================
+
 # POBLAR SENDGRID_API_KEY
 # Antes de desplegar, hay que cambiar el placeholder de SENDGRID_API_KEY por la clave real
 # ve a services/notifications-service/k8s/00-configmap.yaml
 # edita la línea 22, que originalmente dice:
 #   SENDGRID_API_KEY: "SENDGRID_API_KEY"
 
-# Despliegas cada servicio con kubectl. pero comienzas por RabbitMQ (y su operador)
+# ======================================== DESPLEGAR SERVICIOS ========================================
+
+# Los comandos de despliegue son IDÉNTICOS en Windows (PowerShell) y Linux/Mac (Bash):
+
+# Desplegar RabbitMQ Cluster Operator
 kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+
+# WINDOWS (PowerShell):
+# ---------------------
 cd services/rabbitmq-service; kubectl apply -f k8s/; cd ../..
 cd services/auth-service; kubectl apply -f k8s/; cd ../..
 cd services/notifications-service; kubectl apply -f k8s/; cd ../..
@@ -45,31 +95,52 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
-# INSTALAR KUBERNETES DASHBOARD (OPCIONAL - para administración del cluster)
-# Este paso es opcional pero recomendado para tener una interfaz gráfica del cluster
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+# LINUX/MAC (Bash):
+# -----------------
+cd services/rabbitmq-service && kubectl apply -f k8s/ && cd ../..
+cd services/auth-service && kubectl apply -f k8s/ && cd ../..
+cd services/notifications-service && kubectl apply -f k8s/ && cd ../..
+cd services/carpeta-ciudadana-service && kubectl apply -f k8s/ && cd ../..
+cd services/document-authentication-service && kubectl apply -f k8s/ && cd ../..
+cd services/citizen-web && kubectl apply -f k8s/ && cd ../..
+cd services/ciudadano-registry-service && kubectl apply -f k8s/ && cd ../..
 
-# Crear usuario administrador para el Dashboard
+# ======================================== KUBERNETES DASHBOARD (OPCIONAL) ========================================
+
+# IDÉNTICO en Windows y Linux/Mac:
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 kubectl create serviceaccount admin-user -n kubernetes-dashboard
 kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:admin-user
 
-# PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
+# ======================================== PORT-FORWARDS ========================================
+# MANTENER ESTOS TERMINALES ABIERTOS
+
 # ===============================================================================
 # OPCIÓN 1: Script Automático (RECOMENDADO) - Inicia TODOS los port-forwards
-# -------------------------------------------------------------------------------
+# ===============================================================================
+
+# WINDOWS (PowerShell):
+# ---------------------
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-cd tools;
-.\port-forwards-start.ps1;
+cd tools
+.\port-forwards-start.ps1    # Inicia todos los port-forwards
+.\port-forwards-status.ps1   # Ver estado
+.\port-forwards-stop.ps1     # Detener todos
+cd ..
 
-# Ver estado de los port-forwards:
-.\port-forwards-status.ps1
-
-# Detener todos los port-forwards:
-.\port-forwards-stop.ps1
+# LINUX/MAC (Bash):
+# -----------------
+cd tools
+chmod +x port-forwards-start.sh port-forwards-status.sh port-forwards-stop.sh
+./port-forwards-start.sh     # Inicia todos los port-forwards
+./port-forwards-status.sh    # Ver estado
+./port-forwards-stop.sh      # Detener todos
+cd ..
 
 # ===============================================================================
 # OPCIÓN 2: Manual - Abre terminales separadas para cada servicio
-# -------------------------------------------------------------------------------
+# ===============================================================================
+# Los comandos son IDÉNTICOS en Windows (PowerShell) y Linux/Mac (Bash)
 
 # Terminal 1 - Frontend (REQUERIDO)
 kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
@@ -176,7 +247,8 @@ http://localhost:9000
 
 
 
-# =================================== VERIFICAR =======================================
+# =================================== VERIFICAR Y TROUBLESHOOT =======================================
+# Los comandos son IDÉNTICOS en Windows (PowerShell) y Linux/Mac (Bash)
 
 # Ver todos los pods
 kubectl get pods -n carpeta-ciudadana
@@ -198,7 +270,11 @@ kubectl get svc -n carpeta-ciudadana
 kubectl get networkpolicies -n carpeta-ciudadana
 
 # Ver eventos recientes del cluster (útil para debugging)
+# WINDOWS (PowerShell):
 kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp' | Select-Object -Last 20
+
+# LINUX/MAC (Bash):
+kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp' | tail -20
 
 # Ver descripción completa de un pod (para ver errores de scheduling, probes, etc)
 kubectl describe pod <pod-name> -n carpeta-ciudadana
@@ -227,34 +303,85 @@ kubectl rollout history deployment/carpeta-ciudadana-service -n carpeta-ciudadan
 kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl cluster_status
 kubectl exec -n carpeta-ciudadana carpeta-rabbitmq-server-0 -- rabbitmqctl list_queues
 
-# =================================== TROUBLESHOOT =======================================
+# =================================== ACTUALIZAR SERVICIOS =======================================
 
 # Cada que cambies el código de un servicio, recompila su imagen, cárgala en minikube, y haz un rollout restart
-# Ejemplo para el servicio citizen-web:
+
+# WINDOWS (PowerShell):
+# ---------------------
 cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
-# Si la imagen no se cambia, usa force remove de la imagen y luego carga la nueva
-# Este es el método más seguro sin bajar el deployment
+# LINUX/MAC (Bash):
+# -----------------
+cd services/citizen-web && docker build -t citizen-web:latest . && cd ../..
+minikube image load citizen-web:latest
+kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+
+# ===== Método más seguro si la imagen no se cambia (force remove) =====
+
+# WINDOWS (PowerShell):
 cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
-# Si aún así falla, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
+# LINUX/MAC (Bash):
+cd services/citizen-web && docker build -t citizen-web:latest . && cd ../..
+minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
+minikube image load citizen-web:latest
+kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+
+# ===== Si aún así falla, borra deployment, imagen, y redeploya =====
+
+# IDÉNTICO en Windows y Linux/Mac:
 kubectl delete deployment citizen-web -n carpeta-ciudadana
 minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
 minikube image load citizen-web:latest
+
+# WINDOWS:
 cd services/citizen-web; kubectl apply -f k8s/01-deployment.yaml; cd ../..
 
-# Si debes de cambiar alguna config de k8s, hazlo y luego aplica los cambios, y haz un rollout restart
+# LINUX/MAC:
+cd services/citizen-web && kubectl apply -f k8s/01-deployment.yaml && cd ../..
+
+# ===== Cambiar configuración de k8s =====
+
+# WINDOWS:
 cd services/carpeta-ciudadana-service; kubectl apply -f k8s/01-configmap.yaml; cd ../..
 kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
 
+# LINUX/MAC:
+cd services/carpeta-ciudadana-service && kubectl apply -f k8s/01-configmap.yaml && cd ../..
+kubectl rollout restart deployment carpeta-ciudadana-service -n carpeta-ciudadana
+
+# ===== IMPORTANTE: Reiniciar port-forwards después de actualizar servicios =====
+
 # Cada que actualices un servicio que tenga port forwardings (prácticamente todos), 
 # detén y vuelve a iniciar los port-forwards
-# Usando los scripts:
-cd tools;
-.\port-forwards-stop.ps1;
-.\port-forwards-start.ps1;
+
+# WINDOWS (PowerShell):
+cd tools
+.\port-forwards-stop.ps1
+.\port-forwards-start.ps1
+cd ..
+
+# LINUX/MAC (Bash):
+cd tools
+./port-forwards-stop.sh
+./port-forwards-start.sh
+cd ..
+
+# ===== O usa el script de actualización automática =====
+
+# WINDOWS (PowerShell):
+cd tools
+.\k8s-update-service.ps1 -ServiceName citizen-web
+cd ..
+
+# LINUX/MAC (Bash):
+cd tools
+chmod +x k8s-update-service.sh
+./k8s-update-service.sh citizen-web
+cd ..
