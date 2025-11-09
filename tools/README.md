@@ -9,6 +9,85 @@ Utilidades y scripts para desarrollo, deployment y gestión del proyecto Carpeta
 
 ## 📜 Scripts Disponibles
 
+### 🚀 Port-Forward Management (Nuevo)
+
+Scripts para gestionar port-forwards de forma automática en background.
+
+#### start-all-port-forwards.ps1
+
+Inicia TODOS los port-forwards necesarios en background como PowerShell jobs.
+
+**Uso:**
+
+```powershell
+cd tools
+.\start-all-port-forwards.ps1
+```
+
+**Características:**
+
+- ✅ Inicia 10 port-forwards simultáneamente en background
+- ✅ Separa servicios REQUERIDOS vs OPCIONALES
+- ✅ Muestra URLs de acceso y credenciales
+- ✅ Los jobs persisten incluso si cierras la terminal
+- ✅ Verificación automática de Minikube
+- ✅ Previene duplicación de port-forwards
+
+**Port-forwards incluidos:**
+
+- **REQUERIDOS:**
+  - Frontend (8080)
+  - RabbitMQ (5672, 15672)
+
+- **OPCIONALES - Administración:**
+  - MinIO Console (9001)
+  - MinIO API (9000)
+  - Kubernetes Dashboard (8443)
+
+- **OPCIONALES - APIs/Swagger:**
+  - Carpeta Ciudadana API (8082)
+  - Ciudadano Registry API (8081)
+  - Document Authentication API (8083)
+
+- **OPCIONALES - Bases de Datos:**
+  - Auth PostgreSQL (5432)
+  - Registry PostgreSQL (5433)
+
+#### status-port-forwards.ps1
+
+Verifica el estado de todos los port-forwards activos.
+
+**Uso:**
+
+```powershell
+.\status-port-forwards.ps1
+```
+
+**Muestra:**
+
+- Total de port-forwards activos
+- Servicios agrupados por estado (Running/Failed/Stopped)
+- Tabla con detalles (ID, hora de inicio, estado)
+- Comandos útiles para debugging
+
+#### stop-all-port-forwards.ps1
+
+Detiene TODOS los port-forwards activos.
+
+**Uso:**
+
+```powershell
+.\stop-all-port-forwards.ps1
+```
+
+**Características:**
+
+- ✅ Detiene todos los jobs de port-forward
+- ✅ Limpia los jobs del sistema
+- ✅ Confirmación visual de cada servicio detenido
+
+---
+
 ### k8s-update-service (.sh / .ps1)
 
 Script genérico para actualizar servicios en Kubernetes (Minikube).

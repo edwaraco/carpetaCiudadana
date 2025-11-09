@@ -3,7 +3,8 @@
 winget install -e --id Kubernetes.kubectl
 winget install -e --id Kubernetes.minikube
 
-# Esto en un PowerShell admin aparte
+# Esto en un PowerShell aparte
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass  # admin rights
 minikube start --driver=docker --memory=16384 --cpus=2
 minikube addons enable metrics-server
 minikube addons enable ingress
@@ -47,7 +48,22 @@ kubectl create serviceaccount admin-user -n kubernetes-dashboard
 kubectl create clusterrolebinding admin-user-binding --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:admin-user
 
 # PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
-# Abre terminales separadas para cada servicio que quieras acceder:
+# ===============================================================================
+# OPCIÓN 1: Script Automático (RECOMENDADO) - Inicia TODOS los port-forwards
+# -------------------------------------------------------------------------------
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+cd tools;
+.\start-all-port-forwards.ps1;
+
+# Ver estado de los port-forwards:
+.\status-port-forwards.ps1
+
+# Detener todos los port-forwards:
+.\stop-all-port-forwards.ps1
+
+# ===============================================================================
+# OPCIÓN 2: Manual - Abre terminales separadas para cada servicio
+# -------------------------------------------------------------------------------
 
 # Terminal 1 - Frontend (REQUERIDO)
 kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
