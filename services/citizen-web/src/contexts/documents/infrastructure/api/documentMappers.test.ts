@@ -218,16 +218,20 @@ describe('documentMappers', () => {
 
   describe('Status Mapping', () => {
     describe('mapBackendToFrontendStatus', () => {
-      it('should map TEMPORAL to TEMPORARY', () => {
-        expect(mapBackendToFrontendStatus('TEMPORAL')).toBe('TEMPORARY');
+      it('should map TEMPORAL to TEMPORAL', () => {
+        expect(mapBackendToFrontendStatus('TEMPORAL')).toBe('TEMPORAL');
       });
 
-      it('should map PROCESADO to AUTENTICADO', () => {
-        expect(mapBackendToFrontendStatus('PROCESADO')).toBe('AUTENTICADO');
+      it('should map EN_AUTENTICACION to TEMPORAL', () => {
+        expect(mapBackendToFrontendStatus('EN_AUTENTICACION')).toBe('TEMPORAL');
       });
 
-      it('should map CERTIFICADO to AUTENTICADO', () => {
-        expect(mapBackendToFrontendStatus('CERTIFICADO')).toBe('AUTENTICADO');
+      it('should map AUTENTICADO to AUTENTICADO', () => {
+        expect(mapBackendToFrontendStatus('AUTENTICADO')).toBe('AUTENTICADO');
+      });
+
+      it('should map RECHAZADO to RECHAZADO', () => {
+        expect(mapBackendToFrontendStatus('RECHAZADO')).toBe('RECHAZADO');
       });
 
       it('should map REVOCADO to REVOKED', () => {
@@ -320,7 +324,7 @@ describe('documentMappers', () => {
       titulo: 'Mi Diploma Universitario',
       tipoDocumento: 'ACTA_GRADO',
       contextoDocumento: 'EDUCACION',
-      estadoDocumento: 'CERTIFICADO',
+      estadoDocumento: 'AUTENTICADO',
       fechaRecepcion: '2024-01-15T10:30:00.000Z',
       fechaUltimaModificacion: '2024-01-15T10:30:00.000Z',
       esDescargable: true,
