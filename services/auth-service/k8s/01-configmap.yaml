@@ -10,5 +10,5 @@ data:
   LISTEN_PORT: "8080"
   EXCHANGE_NAME: "carpeta.events"
   IDENTITY_SERVICE_URL: "http://ciudadano-registry-service:8081"
-  FRONTEND_BASE_URL: "http://citizen-web.local:8080"
+  FRONTEND_BASE_URL: "http://citizen-web.local"
   ENVIRONMENT: "kubernetes"
