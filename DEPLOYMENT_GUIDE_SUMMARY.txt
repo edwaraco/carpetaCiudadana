@@ -127,6 +127,7 @@ http://localhost:9001
 kubectl -n kubernetes-dashboard create token admin-user
 # Acceder:
 https://localhost:8443
+https://localhost:8443/#/deployment?namespace=carpeta-ciudadana
 # - Monitoreo de pods y deployments
 # - Logs y eventos del cluster
 # - Gestión de recursos
@@ -228,9 +229,16 @@ cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
 minikube image load citizen-web:latest
 kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
 
-# Si la imagen no se cambia, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
+# Si la imagen no se cambia, usa force remove de la imagen y luego carga la nueva
+# Este es el método más seguro sin bajar el deployment
+cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
+minikube image load citizen-web:latest
+kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+
+# Si aún así falla, matamos al deployment (todos sus pods), borramos su imagen, volvemos a montar, y redeployamos
 kubectl delete deployment citizen-web -n carpeta-ciudadana
-minikube image rm docker.io/library/citizen-web:latest
+minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
 minikube image load citizen-web:latest
 cd services/citizen-web; kubectl apply -f k8s/01-deployment.yaml; cd ../..
 

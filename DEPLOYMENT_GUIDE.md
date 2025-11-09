@@ -509,6 +509,12 @@ start http://localhost:8083/api/v1/docs
 # Use the script: .\tools\k8s-update-service.ps1 -ServiceName <service-name>
 # Example: .\tools\k8s-update-service.ps1 -ServiceName citizen-web
 #
+# Manual update if image doesn't change (use force remove):
+# cd services/citizen-web; docker build -t citizen-web:latest .; cd ../..
+# minikube ssh "docker rmi -f docker.io/library/citizen-web:latest"
+# minikube image load citizen-web:latest
+# kubectl rollout restart deployment/citizen-web -n carpeta-ciudadana
+#
 # To check RAM usage:
 # kubectl top nodes
 # docker stats minikube --no-stream
