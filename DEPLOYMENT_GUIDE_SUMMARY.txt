@@ -59,6 +59,7 @@ kubectl get hpa -n carpeta-ciudadana
 # Ver network policies
 kubectl get svc -n carpeta-ciudadana
 kubectl get networkpolicies -n carpeta-ciudadana
+kubectl get ingress -n carpeta-ciudadana
 
 # Cada que cambies el código de un servicio, recompila su imagen, cárgala en minikube, y haz un rollout restart
 # Ejemplo para el servicio citizen-web:
