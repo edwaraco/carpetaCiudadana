@@ -38,24 +38,22 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
-# PORT FORWARD SERVICIOS (MANTENER ESTOS TERMINALES ABIERTOS)
+# PORT-FORWARDS REQUERIDOS (MANTENER ESTOS TERMINALES ABIERTOS)
+# Abre DOS terminales separadas y ejecuta uno en cada una:
+
+# Terminal 1 - Frontend
 kubectl port-forward -n carpeta-ciudadana svc/citizen-web 8080:8080
+
+# Terminal 2 - RabbitMQ
 kubectl port-forward -n carpeta-ciudadana svc/carpeta-rabbitmq 5672:5672 15672:15672
 
-# ACTUALIZAR ARCHIVO HOSTS (NECESARIO PARA ACCEDER AL FRONTEND)
-# En PowerShell como ADMINISTRADOR:
-cd c:<idk>/carpetaCiudadana/tools
-powershell -ExecutionPolicy Bypass -File update-minikube-hosts.ps1
-# O, bueno, corre su contraparte de linux
-# Esto agregará "192.168.49.2 citizen-web.local" a tu archivo hosts
 
-# Y ya podrás acceder
+# ACCESO A LOS SERVICIOS (después de tener los port-forwards activos)
 
 # Frontend
-http://localhost:8080/
+http://localhost:8080
 
-# RabbitMQ Management UI
-# admin / admin123
+# RabbitMQ Management UI (credenciales: admin / admin123)
 http://localhost:15672
 
 
@@ -80,7 +78,6 @@ kubectl get hpa -n carpeta-ciudadana
 # Ver network policies
 kubectl get svc -n carpeta-ciudadana
 kubectl get networkpolicies -n carpeta-ciudadana
-kubectl get ingress -n carpeta-ciudadana
 
 # Ver eventos recientes del cluster (útil para debugging)
 kubectl get events -n carpeta-ciudadana --sort-by='.lastTimestamp' | Select-Object -Last 20
@@ -96,10 +93,6 @@ kubectl top pods -n carpeta-ciudadana
 
 # Ver configuración de un ConfigMap
 kubectl get configmap carpeta-ciudadana-config -n carpeta-ciudadana -o yaml
-
-# Verificar que el Ingress esté funcionando
-kubectl get ingress -n carpeta-ciudadana
-kubectl describe ingress citizen-web-ingress -n carpeta-ciudadana
 
 # Probar conectividad desde un pod a otro servicio
 kubectl exec -n carpeta-ciudadana -l app=carpeta-ciudadana-service -it -- sh
