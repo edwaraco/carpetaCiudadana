@@ -5,10 +5,13 @@ This file is a compilation of most important things on each deployment guide, an
 - [Full deployment centralized guide](#full-deployment-centralized-guide)
   - [Individual deployment guides](#individual-deployment-guides)
   - [For windows users (Powershell)](#for-windows-users-powershell)
-    - [Tools and start cluster](#tools-and-start-cluster)
-    - [Run all services with Makefile](#run-all-services-with-makefile)
+    - [Tools and start cluster (Powershell)](#tools-and-start-cluster-powershell)
+    - [Run all services with Makefile (Powershell)](#run-all-services-with-makefile-powershell)
+    - [Run all services manually (Powershell)](#run-all-services-manually-powershell)
   - [For Linux/Mac users (bash)](#for-linuxmac-users-bash)
-
+    - [Tools and start cluster (bash)](#tools-and-start-cluster-bash)
+    - [Run all services with Makefile (bash)](#run-all-services-with-makefile-bash)
+    - [Run all services manually (bash)](#run-all-services-manually-bash)
 
 ## Individual deployment guides
 
@@ -39,7 +42,7 @@ This file is a compilation of most important things on each deployment guide, an
 
 ## For windows users (Powershell)
 
-### Tools and start cluster
+### Tools and start cluster (Powershell)
 
 ```powershell
 # Powershell:
@@ -63,7 +66,7 @@ kubectl top pods -A  # (verify)
 docker stats minikube --no-stream  # (verify)
 ```
 
-### Run all services with Makefile
+### Run all services with Makefile (Powershell)
 
 ```powershell
 # This on an admin powershell.
@@ -72,7 +75,27 @@ choco install make
 make powershell-deploy-all
 ```
 
+### Run all services manually (Powershell)
+
+```powershell
+```
+
 ## For Linux/Mac users (bash)
+
+```bash
+```
+
+### Tools and start cluster (bash)
+
+```bash
+```
+
+### Run all services with Makefile (bash)
+
+```bash
+```
+
+### Run all services manually (bash)
 
 ```bash
 ```
