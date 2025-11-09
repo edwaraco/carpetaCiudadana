@@ -62,5 +62,5 @@ data:
   NOTIFICATIONS_SERVICE_URL: "notifications-service:8080"
   PORTABILITY_SERVICE_URL: "carpeta-ciudadana-service:8080"
   REQUESTS_SERVICE_URL: "carpeta-ciudadana-service:8080"
-  DOCUMENT_AUTHENTICATION_SERVICE_URL: "document-authentication-service:8083"
+  DOCUMENT_AUTHENTICATION_PROXY_URL: "document-authentication-proxy:8084"
 
