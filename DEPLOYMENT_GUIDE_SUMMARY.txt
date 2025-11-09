@@ -38,13 +38,25 @@ cd services/document-authentication-service; kubectl apply -f k8s/; cd ../..
 cd services/citizen-web; kubectl apply -f k8s/; cd ../..
 cd services/ciudadano-registry-service; kubectl apply -f k8s/; cd ../..
 
-# ============== ACTUALIZAR ARCHIVO HOSTS (NECESARIO PARA ACCEDER AL FRONTEND) ==============
-# En PowerShell como ADMINISTRADOR (abre una nueva ventana con "Run as Administrator"):
-cd c:\Users\Esteban\Downloads\CODE\carpetaCiudadana
-powershell -ExecutionPolicy Bypass -File tools/update-minikube-hosts.ps1
-
+# ACTUALIZAR ARCHIVO HOSTS (NECESARIO PARA ACCEDER AL FRONTEND)
+# En PowerShell como ADMINISTRADOR:
+cd c:<idk>/carpetaCiudadana/tools
+powershell -ExecutionPolicy Bypass -File update-minikube-hosts.ps1
+# O doble click en el archivo tools/update-minikube-hosts.ps1
+# O, bueno, corre su contraparte de linux
 # Esto agregará "192.168.49.2 citizen-web.local" a tu archivo hosts
+
+
+# INICIAR MINIKUBE TUNNEL (NECESARIO PARA INGRESS)
+# En PowerShell como ADMINISTRADOR (abre OTRA ventana nueva y déjala abierta):
+minikube tunnel
+# IMPORTANTE: Esta ventana debe permanecer abierta mientras uses la aplicación
+# El tunnel permite que el Ingress funcione en el puerto 80
+
 # Ahora puedes acceder a la aplicación en: http://citizen-web.local
+
+
+
 
 
 # =================================== VERIFICAR =======================================

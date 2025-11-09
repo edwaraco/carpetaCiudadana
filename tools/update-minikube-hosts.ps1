@@ -6,6 +6,17 @@
 
 $ErrorActionPreference = "Stop"
 
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  Configuración de Minikube Hosts" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "⚠️  IMPORTANTE: Asegúrate de tener 'minikube tunnel' corriendo" -ForegroundColor Yellow
+Write-Host "   El tunnel es NECESARIO para que el Ingress funcione." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "   Si aún no lo has iniciado, abre OTRA ventana PowerShell ADMIN y ejecuta:" -ForegroundColor Yellow
+Write-Host "   minikube tunnel" -ForegroundColor Cyan
+Write-Host ""
+
 Write-Host "Actualizando hosts con la IP de Minikube..." -ForegroundColor Cyan
 
 # Obtener IP de Minikube
@@ -85,11 +96,16 @@ if (-not $success) {
     Write-Host "⚠️  No se pudo conectar al frontend después de $maxAttempts intentos" -ForegroundColor Yellow
     Write-Host "   Esto puede deberse a que los pods todavía se están iniciando." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "   Verifica el estado de los pods:" -ForegroundColor Yellow
-    Write-Host "   kubectl get pods -n carpeta-ciudadana" -ForegroundColor Cyan
+    Write-Host "   📋 Checklist de troubleshooting:" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "   Verifica el Ingress:" -ForegroundColor Yellow
-    Write-Host "   kubectl get ingress -n carpeta-ciudadana" -ForegroundColor Cyan
+    Write-Host "   1. ¿Está corriendo 'minikube tunnel'? (NECESARIO para Ingress)" -ForegroundColor Yellow
+    Write-Host "      En PowerShell ADMIN: minikube tunnel" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   2. Verifica el estado de los pods:" -ForegroundColor Yellow
+    Write-Host "      kubectl get pods -n carpeta-ciudadana" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   3. Verifica el Ingress:" -ForegroundColor Yellow
+    Write-Host "      kubectl get ingress -n carpeta-ciudadana" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "   Luego intenta acceder manualmente a: http://citizen-web.local" -ForegroundColor Cyan
 }

@@ -4,6 +4,17 @@
 
 set -e
 
+echo "========================================"
+echo "  Configuración de Minikube Hosts"
+echo "========================================"
+echo ""
+echo "⚠️  IMPORTANTE: Asegúrate de tener 'minikube tunnel' corriendo"
+echo "   El tunnel es NECESARIO para que el Ingress funcione."
+echo ""
+echo "   Si aún no lo has iniciado, abre OTRA terminal y ejecuta:"
+echo "   sudo minikube tunnel"
+echo ""
+
 echo "🔧 Actualizando hosts con la IP de Minikube..."
 
 MINIKUBE_IP=$(minikube ip)
